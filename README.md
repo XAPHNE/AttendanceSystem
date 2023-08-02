@@ -21,7 +21,7 @@ To run the application, you need to have Java 8 or higher, MySQL, and XAMPP inst
 | admin | admin |
 ## Screenshots
 
-![Attendance System Screenshot](src/main/resources/ScreenshotLoginScreen.png "Login Screen")
+![Attendance System Screenshot](src/main/resources/ScreenshotLoginScreen.jpeg "Login Screen")
 
 ## License
 This project is licensed under the GNU General Public License v3.0 - see the [LICENSE](/LICENSE) file for details.
