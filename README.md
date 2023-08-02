@@ -10,16 +10,16 @@ To run the application, you need to have Java 8 or higher, MySQL, and XAMPP inst
 * Clone or download the project from GitHub.
 * Open the project in IntelliJ IDEA and import the Maven dependencies.
 * Start XAMPP and create a database named attendance_system in MySQL.
-* Run the db.sql script in the src/main/resources folder to create the tables and insert some sample data.
+* Run the attendance_system.sql script in the src/main/resources folder to create the tables and insert some sample data.
 * Run the Main.java class in the src/main/java folder to launch the application.
-* Use the following credentials to log in:
+* Create and use the following credentials for databse connection:
 
 | Username | Password |
 | -------- | -------- |
 | admin | admin |
 ## Screenshots
 
-![Attendance System Screenshot](/ScreenshotLoginScreen.png "This is the Login Screen")
+![Attendance System Screenshot](ScreenshotLoginScreen.png)
 
 ## License
 This project is licensed under the GNU General Public License v3.0 - see the [LICENSE](/LICENSE) file for details.
