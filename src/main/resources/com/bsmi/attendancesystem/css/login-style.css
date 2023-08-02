@@ -1,0 +1,11 @@
+.close{
+    -fx-background-color:transparent;
+    -fx-cursor:hand;
+}
+.close:hover{
+    -fx-background-color: #c42b1c;
+}
+
+.left-form {
+    -fx-background-color: #3580BB;
+}

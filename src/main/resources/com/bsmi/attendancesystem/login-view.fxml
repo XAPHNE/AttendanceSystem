@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import io.github.palexdev.materialfx.controls.MFXButton?>
+<?import io.github.palexdev.materialfx.controls.MFXPasswordField?>
+<?import io.github.palexdev.materialfx.controls.MFXTextField?>
+<?import java.lang.String?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.text.Font?>
+
+<StackPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="583.0" prefWidth="938.0" xmlns="http://javafx.com/javafx/20.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.bsmi.attendancesystem.AttendanceController">
+    <children>
+        <AnchorPane prefHeight="583.0" prefWidth="938.0">
+            <children>
+                <AnchorPane prefHeight="583.0" prefWidth="469.0" style="-fx-background-color: #3580BB;" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="469.0" AnchorPane.topAnchor="0.0">
+                    <children>
+                        <Label layoutX="41.0" layoutY="334.0" text="Student Attendance System" textAlignment="CENTER" textFill="WHITE">
+                            <font>
+                                <Font name="System Bold" size="30.0" />
+                            </font>
+                        </Label>
+                    </children>
+                </AnchorPane>
+                <AnchorPane layoutX="471.0" prefHeight="583.0" prefWidth="469.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="469.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                    <children>
+                  <MFXButton fx:id="closeMFXButton" layoutX="400.0" layoutY="14.0" minWidth="45.0" onAction="#closeMFXButtonOnAction" prefHeight="32.0" prefWidth="45.0" stylesheets="@css/login-style.css" text="X" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                     <styleClass>
+                        <String fx:value="mfx-button" />
+                        <String fx:value="close" />
+                     </styleClass>
+                  </MFXButton>
+                        <Label layoutX="138.0" layoutY="186.0" text="Welcome Back" textFill="#3580bb">
+                            <font>
+                                <Font name="System Bold" size="28.0" />
+                            </font>
+                        </Label>
+                        <Label fx:id="errorMessage" alignment="CENTER" contentDisplay="CENTER" layoutX="85.0" layoutY="235.0" prefHeight="50.0" prefWidth="300.0" textAlignment="CENTER" textFill="#971111">
+                            <font>
+                                <Font name="Calibri Bold" size="18.0" />
+                            </font>
+                        </Label>
+                        <MFXTextField fx:id="usernameMFXTextField" floatMode="BORDER" floatingText="Username" layoutX="83.0" layoutY="306.0" prefHeight="50.0" prefWidth="300.0" styleClass="mfx-text-field">
+                            <font>
+                                <Font size="18.0" />
+                            </font>
+                        </MFXTextField>
+                        <MFXPasswordField fx:id="passwordMFXPasswordField" floatMode="BORDER" floatingText="Password" layoutX="84.0" layoutY="390.0" prefHeight="50.0" prefWidth="300.0" styleClass="mfx-password-field">
+                            <font>
+                                <Font size="18.0" />
+                            </font>
+                        </MFXPasswordField>
+                        <MFXButton fx:id="loginButton" buttonType="RAISED" layoutX="83.0" layoutY="474.0" onAction="#loginButtonOnAction" prefHeight="50.0" prefWidth="300.0" style="-fx-background-color: #3580BB;" styleClass="mfx-button" text="Login" textFill="WHITE">
+                            <font>
+                                <Font name="Calibri" size="18.0" />
+                            </font>
+                        </MFXButton>
+                    </children>
+                </AnchorPane>
+            </children>
+        </AnchorPane>
+    </children>
+</StackPane>
