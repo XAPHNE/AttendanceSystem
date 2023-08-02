@@ -21,7 +21,7 @@ To run the application, you need to have Java 8 or higher, MySQL, and XAMPP inst
 | admin | admin |
 ## Screenshots
 
-![Attendance System Screenshot](https://github.com/XAPHNE/AttendanceSystem/blob/master/src/main/resources/ScreenshotLoginScreen.jpeg "Login Screen")
+![Attendance System Screenshot]([https://github.com/XAPHNE/AttendanceSystem/blob/master/src/main/resources/ScreenshotLoginScreen.jpeg](https://user-images.githubusercontent.com/127822494/257903527-0e72b5ec-21c2-4c30-87fc-3f47bed03d33.png) "Login Screen")
 
 ## License
 This project is licensed under the GNU General Public License v3.0 - see the [LICENSE](/LICENSE) file for details.
