@@ -1,9 +1,11 @@
-# AttendanceSystem
+# Attendance System
 AttendanceSystem is a JavaFX application that allows users to manage and track the attendance of students or employees. It uses MySQL as the database and Maven as the build tool. It is developed using IntelliJ IDEA as the IDE.
 
 ## Features
 - Login page: Users can log in to the application using their username and password. The login information is verified with the database.
-- TODO: Add more features as you develop them.
+- TODO: 
+  - New Dashboard to be created.
+  - The Icon integration problem needs to be fixed with FontawesomeFX, MaterialFX and BootstrapFX
 ## Installation
 To run the application, you need to have Java 8 or higher, MySQL, and XAMPP installed on your system. You also need to have Maven configured in your IDE.
 
