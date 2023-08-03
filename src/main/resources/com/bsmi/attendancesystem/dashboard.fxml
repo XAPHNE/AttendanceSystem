@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import io.github.palexdev.materialfx.controls.MFXButton?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.shape.Line?>
+<?import javafx.scene.text.Font?>
+
+<StackPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="600.0" prefWidth="1100.0" xmlns="http://javafx.com/javafx/20.0.1" xmlns:fx="http://javafx.com/fxml/1">
+   <children>
+      <AnchorPane prefHeight="200.0" prefWidth="200.0">
+         <children>
+            <BorderPane layoutX="150.0" layoutY="156.0" prefHeight="600.0" prefWidth="1100.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+               <left>
+                  <AnchorPane prefHeight="600.0" prefWidth="275.0" styleClass="bootstrap-color-Basic" stylesheets="@css/login-style.css" BorderPane.alignment="CENTER">
+                     <children>
+                        <BorderPane layoutX="26.0" layoutY="173.0" prefHeight="600.0" prefWidth="346.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                           <bottom>
+                              <AnchorPane prefHeight="46.0" prefWidth="346.0" BorderPane.alignment="CENTER">
+                                 <children>
+                                    <MFXButton layoutX="14.0" layoutY="7.0" text="Log out" />
+                                 </children>
+                              </AnchorPane>
+                           </bottom>
+                           <top>
+                              <AnchorPane prefHeight="545.0" prefWidth="346.0" BorderPane.alignment="CENTER">
+                                 <children>
+                                    <Label layoutX="96.0" layoutY="162.0" text="Welcome">
+                                       <font>
+                                          <Font size="20.0" />
+                                       </font>
+                                    </Label>
+                                    <Label alignment="CENTER" layoutX="13.0" layoutY="203.0" prefHeight="30.0" prefWidth="250.0" text="Username">
+                                       <font>
+                                          <Font size="20.0" />
+                                       </font>
+                                    </Label>
+                                    <MFXButton layoutX="38.0" layoutY="273.0" prefHeight="35.0" prefWidth="200.0" text="Home" />
+                                    <MFXButton layoutX="38.0" layoutY="314.0" prefHeight="35.0" prefWidth="200.0" text="Add New Record" />
+                                    <MFXButton layoutX="38.0" layoutY="355.0" prefHeight="35.0" prefWidth="200.0" text="Attendance" />
+                                    <Line endX="100.0" layoutX="137.0" layoutY="245.0" startX="-100.0" />
+                                 </children>
+                              </AnchorPane>
+                           </top>
+                        </BorderPane>
+                     </children>
+                  </AnchorPane>
+               </left>
+            </BorderPane>
+         </children>
+      </AnchorPane>
+   </children>
+</StackPane>
