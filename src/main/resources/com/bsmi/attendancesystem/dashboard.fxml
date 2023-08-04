@@ -118,7 +118,7 @@
                                        <children>
                                           <AnchorPane layoutX="20.0" layoutY="19.0" prefHeight="432.0" prefWidth="353.0" styleClass="bootstrap-color-Basic" stylesheets="@css/login-style.css">
                                              <children>
-                                                <Label layoutX="87.0" layoutY="26.0" text="Total Strength Chart">
+                                                <Label layoutX="87.0" layoutY="14.0" text="Total Strength Chart">
                                                    <font>
                                                       <Font size="20.0" />
                                                    </font>
@@ -133,7 +133,7 @@
                                              <children>
                                                 <AnchorPane layoutX="14.0" layoutY="21.0" prefHeight="191.0" prefWidth="408.0" styleClass="bootstrap-color-Basic" stylesheets="@css/login-style.css">
                                                    <children>
-                                                      <Label layoutX="115.0" layoutY="22.0" text="Total Present Chart">
+                                                      <Label layoutX="120.0" layoutY="14.0" text="Present Today Chart">
                                                          <font>
                                                             <Font size="20.0" />
                                                          </font>
@@ -146,7 +146,7 @@
                                              <children>
                                                 <AnchorPane layoutX="15.0" layoutY="22.0" prefHeight="197.0" prefWidth="408.0" styleClass="bootstrap-color-Basic" stylesheets="@css/login-style.css">
                                                    <children>
-                                                      <Label layoutX="120.0" layoutY="16.0" text="Total Present Chart">
+                                                      <Label layoutX="120.0" layoutY="16.0" text="Abscent Today Chart">
                                                          <font>
                                                             <Font size="20.0" />
                                                          </font>

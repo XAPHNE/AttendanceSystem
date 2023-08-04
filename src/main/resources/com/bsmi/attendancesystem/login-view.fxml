@@ -50,7 +50,7 @@
                                 <Font size="18.0" />
                             </font>
                         </MFXPasswordField>
-                        <MFXButton fx:id="loginButton" buttonType="RAISED" layoutX="83.0" layoutY="474.0" onAction="#loginButtonOnAction" prefHeight="50.0" prefWidth="300.0" style="-fx-background-color: #3580BB;" styleClass="mfx-button" text="Login" textFill="WHITE">
+                        <MFXButton fx:id="loginButton" layoutX="83.0" layoutY="474.0" onAction="#loginButtonOnAction" prefHeight="50.0" prefWidth="300.0" style="-fx-background-color: #3580BB;" styleClass="mfx-button" text="Login" textFill="WHITE">
                             <font>
                                 <Font name="Calibri" size="18.0" />
                             </font>
