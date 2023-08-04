@@ -4,7 +4,9 @@
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
 <?import javafx.scene.shape.Line?>
 <?import javafx.scene.text.Font?>
 
@@ -20,7 +22,7 @@
                            <bottom>
                               <AnchorPane prefHeight="46.0" prefWidth="346.0" BorderPane.alignment="CENTER">
                                  <children>
-                                    <MFXButton layoutX="14.0" layoutY="7.0" text="Log out" />
+                                    <MFXButton layoutX="14.0" layoutY="7.0" styleClass="mfx-button" text="Log out" />
                                  </children>
                               </AnchorPane>
                            </bottom>
@@ -37,9 +39,18 @@
                                           <Font size="20.0" />
                                        </font>
                                     </Label>
-                                    <MFXButton layoutX="38.0" layoutY="273.0" prefHeight="35.0" prefWidth="200.0" text="Home" />
-                                    <MFXButton layoutX="38.0" layoutY="314.0" prefHeight="35.0" prefWidth="200.0" text="Add New Record" />
-                                    <MFXButton layoutX="38.0" layoutY="355.0" prefHeight="35.0" prefWidth="200.0" text="Attendance" />
+                                    <MFXButton layoutX="38.0" layoutY="273.0" prefHeight="35.0" prefWidth="200.0" styleClass="mfx-button" text="Home">
+                                       <font>
+                                          <Font size="18.0" />
+                                       </font></MFXButton>
+                                    <MFXButton layoutX="38.0" layoutY="314.0" prefHeight="35.0" prefWidth="200.0" styleClass="mfx-button" text="Add New Record">
+                                       <font>
+                                          <Font size="18.0" />
+                                       </font></MFXButton>
+                                    <MFXButton layoutX="38.0" layoutY="355.0" prefHeight="35.0" prefWidth="200.0" styleClass="mfx-button" text="Attendance">
+                                       <font>
+                                          <Font size="18.0" />
+                                       </font></MFXButton>
                                     <Line endX="100.0" layoutX="137.0" layoutY="245.0" startX="-100.0" />
                                  </children>
                               </AnchorPane>
@@ -48,6 +59,111 @@
                      </children>
                   </AnchorPane>
                </left>
+               <right>
+                  <AnchorPane prefHeight="600.0" prefWidth="825.0" BorderPane.alignment="CENTER">
+                     <children>
+                        <BorderPane layoutX="313.0" layoutY="200.0" prefHeight="600.0" prefWidth="825.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                           <top>
+                              <AnchorPane prefHeight="131.0" prefWidth="825.0" BorderPane.alignment="CENTER">
+                                 <children>
+                                    <AnchorPane layoutX="21.0" layoutY="16.0" prefHeight="99.0" prefWidth="222.0" styleClass="bootstrap-color-Basic" stylesheets="@css/login-style.css">
+                                       <children>
+                                          <Label layoutX="73.0" layoutY="58.0" text="Total Strength">
+                                             <font>
+                                                <Font size="18.0" />
+                                             </font>
+                                          </Label>
+                                          <Label layoutX="176.0" layoutY="14.0" text="0">
+                                             <font>
+                                                <Font size="18.0" />
+                                             </font>
+                                          </Label>
+                                       </children>
+                                    </AnchorPane>
+                                    <AnchorPane layoutX="302.0" layoutY="16.0" prefHeight="99.0" prefWidth="222.0" styleClass="bootstrap-color-Basic" stylesheets="@css/login-style.css">
+                                       <children>
+                                          <Label layoutX="69.0" layoutY="58.0" text="Present Today">
+                                             <font>
+                                                <Font size="18.0" />
+                                             </font>
+                                          </Label>
+                                          <Label layoutX="172.0" layoutY="14.0" text="0">
+                                             <font>
+                                                <Font size="18.0" />
+                                             </font>
+                                          </Label>
+                                       </children>
+                                    </AnchorPane>
+                                    <AnchorPane layoutX="589.0" layoutY="16.0" prefHeight="99.0" prefWidth="222.0" styleClass="bootstrap-color-Basic" stylesheets="@css/login-style.css">
+                                       <children>
+                                          <Label layoutX="68.0" layoutY="58.0" text="Abscent Today">
+                                             <font>
+                                                <Font size="18.0" />
+                                             </font>
+                                          </Label>
+                                          <Label layoutX="176.0" layoutY="14.0" text="0">
+                                             <font>
+                                                <Font size="18.0" />
+                                             </font>
+                                          </Label>
+                                       </children>
+                                    </AnchorPane>
+                                 </children>
+                              </AnchorPane>
+                           </top>
+                           <bottom>
+                              <HBox prefHeight="466.0" prefWidth="825.0" BorderPane.alignment="CENTER">
+                                 <children>
+                                    <AnchorPane prefHeight="466.0" prefWidth="390.0">
+                                       <children>
+                                          <AnchorPane layoutX="20.0" layoutY="19.0" prefHeight="432.0" prefWidth="353.0" styleClass="bootstrap-color-Basic" stylesheets="@css/login-style.css">
+                                             <children>
+                                                <Label layoutX="87.0" layoutY="26.0" text="Total Strength Chart">
+                                                   <font>
+                                                      <Font size="20.0" />
+                                                   </font>
+                                                </Label>
+                                             </children>
+                                          </AnchorPane>
+                                       </children>
+                                    </AnchorPane>
+                                    <VBox prefHeight="466.0" prefWidth="437.0">
+                                       <children>
+                                          <AnchorPane prefHeight="236.0" prefWidth="436.0">
+                                             <children>
+                                                <AnchorPane layoutX="14.0" layoutY="21.0" prefHeight="191.0" prefWidth="408.0" styleClass="bootstrap-color-Basic" stylesheets="@css/login-style.css">
+                                                   <children>
+                                                      <Label layoutX="115.0" layoutY="22.0" text="Total Present Chart">
+                                                         <font>
+                                                            <Font size="20.0" />
+                                                         </font>
+                                                      </Label>
+                                                   </children>
+                                                </AnchorPane>
+                                             </children>
+                                          </AnchorPane>
+                                          <AnchorPane prefHeight="243.0" prefWidth="436.0">
+                                             <children>
+                                                <AnchorPane layoutX="15.0" layoutY="22.0" prefHeight="197.0" prefWidth="408.0" styleClass="bootstrap-color-Basic" stylesheets="@css/login-style.css">
+                                                   <children>
+                                                      <Label layoutX="120.0" layoutY="16.0" text="Total Present Chart">
+                                                         <font>
+                                                            <Font size="20.0" />
+                                                         </font>
+                                                      </Label>
+                                                   </children>
+                                                </AnchorPane>
+                                             </children>
+                                          </AnchorPane>
+                                       </children>
+                                    </VBox>
+                                 </children>
+                              </HBox>
+                           </bottom>
+                        </BorderPane>
+                     </children>
+                  </AnchorPane>
+               </right>
             </BorderPane>
          </children>
       </AnchorPane>
