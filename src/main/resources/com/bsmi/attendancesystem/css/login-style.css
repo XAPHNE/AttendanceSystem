@@ -12,3 +12,8 @@
 .bootstrap-color-Basic{
     -fx-background-color: #f0f0f0;
 }
+.login-button{
+    -fx-background-color:#3580BB;
+    -fx-font-size:18;
+    -fx-font-color:#ffffff;
+}

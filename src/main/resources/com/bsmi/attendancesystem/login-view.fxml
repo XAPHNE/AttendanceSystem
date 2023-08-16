@@ -4,10 +4,12 @@
 <?import io.github.palexdev.materialfx.controls.MFXPasswordField?>
 <?import io.github.palexdev.materialfx.controls.MFXTextField?>
 <?import java.lang.String?>
+<?import javafx.scene.Cursor?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.text.Font?>
+<?import org.kordamp.ikonli.javafx.FontIcon?>
 
 <StackPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="583.0" prefWidth="938.0" xmlns="http://javafx.com/javafx/20.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.bsmi.attendancesystem.AttendanceController">
     <children>
@@ -20,15 +22,23 @@
                                 <Font name="System Bold" size="30.0" />
                             </font>
                         </Label>
+                  <FontIcon iconColor="WHITE" iconLiteral="fas-graduation-cap" iconSize="200" layoutX="112.0" layoutY="242.0" />
                     </children>
                 </AnchorPane>
                 <AnchorPane layoutX="471.0" prefHeight="583.0" prefWidth="469.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="469.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
                     <children>
-                  <MFXButton fx:id="closeMFXButton" layoutX="400.0" layoutY="14.0" minWidth="45.0" onAction="#closeMFXButtonOnAction" prefHeight="32.0" prefWidth="45.0" stylesheets="@css/login-style.css" text="X" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                  <MFXButton fx:id="closeMFXButton" contentDisplay="CENTER" layoutX="400.0" layoutY="14.0" minWidth="45.0" onAction="#closeMFXButtonOnAction" prefHeight="32.0" prefWidth="45.0" stylesheets="@css/login-style.css" text=" " AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
                      <styleClass>
                         <String fx:value="mfx-button" />
                         <String fx:value="close" />
                      </styleClass>
+                     <graphic>
+                        <FontIcon accessibleRole="BUTTON" iconLiteral="fa-close" iconSize="20">
+                           <cursor>
+                              <Cursor fx:constant="HAND" />
+                           </cursor>
+                        </FontIcon>
+                     </graphic>
                   </MFXButton>
                         <Label layoutX="138.0" layoutY="186.0" text="Welcome Back" textFill="#3580bb">
                             <font>
@@ -44,17 +54,31 @@
                             <font>
                                 <Font size="18.0" />
                             </font>
+                     <cursor>
+                        <Cursor fx:constant="TEXT" />
+                     </cursor>
                         </MFXTextField>
-                        <MFXPasswordField fx:id="passwordMFXPasswordField" floatMode="BORDER" floatingText="Password" layoutX="84.0" layoutY="390.0" prefHeight="50.0" prefWidth="300.0" styleClass="mfx-password-field">
+                        <MFXPasswordField fx:id="passwordMFXPasswordField" accessibleRole="PASSWORD_FIELD" floatMode="BORDER" floatingText="Password" layoutX="84.0" layoutY="390.0" prefHeight="50.0" prefWidth="300.0" styleClass="mfx-password-field">
                             <font>
                                 <Font size="18.0" />
                             </font>
+                     <cursor>
+                        <Cursor fx:constant="TEXT" />
+                     </cursor>
                         </MFXPasswordField>
-                        <MFXButton fx:id="loginButton" layoutX="83.0" layoutY="474.0" onAction="#loginButtonOnAction" prefHeight="50.0" prefWidth="300.0" style="-fx-background-color: #3580BB;" styleClass="mfx-button" text="Login" textFill="WHITE">
+                        <MFXButton fx:id="loginButton" defaultButton="true" layoutX="83.0" layoutY="474.0" onAction="#loginButtonOnAction" prefHeight="50.0" prefWidth="300.0" stylesheets="@css/login-style.css" text="Login" textFill="WHITE">
                             <font>
                                 <Font name="Calibri" size="18.0" />
                             </font>
+                     <cursor>
+                        <Cursor fx:constant="HAND" />
+                     </cursor>
+                     <styleClass>
+                        <String fx:value="mfx-button" />
+                        <String fx:value="login-button" />
+                     </styleClass>
                         </MFXButton>
+                  <FontIcon iconColor="#3580bb" iconLiteral="fas-users" iconSize="100" layoutX="172.0" layoutY="141.0" />
                     </children>
                 </AnchorPane>
             </children>
