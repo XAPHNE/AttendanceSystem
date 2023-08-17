@@ -15,17 +15,17 @@
     <children>
         <AnchorPane prefHeight="583.0" prefWidth="938.0">
             <children>
-                <AnchorPane layoutY="-18.0" prefHeight="583.0" prefWidth="529.0" style="-fx-background-color: #3580BB;" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="409.0" AnchorPane.topAnchor="0.0">
+                <AnchorPane layoutY="-18.0" prefHeight="583.0" prefWidth="469.0" styleClass="left-form" stylesheets="@css/login-style.css" AnchorPane.leftAnchor="0.0" AnchorPane.topAnchor="0.0">
                     <children>
-                        <Label layoutX="28.0" layoutY="334.0" text="Student Attendance System" textAlignment="CENTER" textFill="WHITE">
+                        <Label layoutX="69.0" layoutY="354.0" text="Attendance System" textAlignment="CENTER" textFill="WHITE">
                             <font>
                                 <Font name="System Bold" size="30.0" />
                             </font>
                         </Label>
-                  <FontIcon iconColor="WHITE" iconLiteral="fas-graduation-cap" iconSize="200" layoutX="112.0" layoutY="242.0" />
+                  <FontIcon iconColor="WHITE" iconLiteral="fas-graduation-cap" iconSize="200" layoutX="127.0" layoutY="245.0" />
                     </children>
                 </AnchorPane>
-                <AnchorPane layoutX="471.0" prefHeight="583.0" prefWidth="469.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="469.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                <AnchorPane layoutX="471.0" prefHeight="583.0" prefWidth="469.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
                     <children>
                   <MFXButton fx:id="closeMFXButton" contentDisplay="CENTER" layoutX="400.0" layoutY="14.0" minWidth="45.0" onAction="#closeMFXButtonOnAction" prefHeight="32.0" prefWidth="45.0" stylesheets="@css/login-style.css" text=" " AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
                      <styleClass>
@@ -40,7 +40,7 @@
                         </FontIcon>
                      </graphic>
                   </MFXButton>
-                        <Label layoutX="138.0" layoutY="186.0" text="Welcome Back" textFill="#3580bb">
+                        <Label layoutX="121.0" layoutY="189.0" styleClass="text-color" stylesheets="@css/login-style.css" text="Welcome Back">
                             <font>
                                 <Font name="System Bold" size="28.0" />
                             </font>
@@ -78,7 +78,7 @@
                         <String fx:value="login-button" />
                      </styleClass>
                         </MFXButton>
-                  <FontIcon iconColor="#3580bb" iconLiteral="fas-users" iconSize="100" layoutX="172.0" layoutY="141.0" />
+                  <FontIcon iconColor="#9400ff" iconLiteral="fas-users" iconSize="100" layoutX="172.0" layoutY="141.0" />
                     </children>
                 </AnchorPane>
             </children>
