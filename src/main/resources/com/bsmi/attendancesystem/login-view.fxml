@@ -15,9 +15,9 @@
     <children>
         <AnchorPane prefHeight="583.0" prefWidth="938.0">
             <children>
-                <AnchorPane prefHeight="583.0" prefWidth="469.0" style="-fx-background-color: #3580BB;" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="469.0" AnchorPane.topAnchor="0.0">
+                <AnchorPane layoutY="-18.0" prefHeight="583.0" prefWidth="529.0" style="-fx-background-color: #3580BB;" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="409.0" AnchorPane.topAnchor="0.0">
                     <children>
-                        <Label layoutX="41.0" layoutY="334.0" text="Student Attendance System" textAlignment="CENTER" textFill="WHITE">
+                        <Label layoutX="28.0" layoutY="334.0" text="Student Attendance System" textAlignment="CENTER" textFill="WHITE">
                             <font>
                                 <Font name="System Bold" size="30.0" />
                             </font>
