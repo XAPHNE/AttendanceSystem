@@ -11,7 +11,7 @@ import java.io.IOException;
 public class AttendanceApplication extends Application {
     @Override
     public void start(Stage stage) throws IOException {
-        FXMLLoader fxmlLoader = new FXMLLoader(AttendanceApplication.class.getResource("login-view.fxml"));
+        FXMLLoader fxmlLoader = new FXMLLoader(AttendanceApplication.class.getResource("fxml/login-view.fxml"));
         Scene scene = new Scene(fxmlLoader.load(), 938, 583);
         stage.initStyle(StageStyle.UNDECORATED);
         //stage.setTitle("Login");

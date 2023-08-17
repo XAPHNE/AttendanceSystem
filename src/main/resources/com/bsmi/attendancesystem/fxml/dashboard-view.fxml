@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <?import io.github.palexdev.materialfx.controls.MFXButton?>
+<?import javafx.scene.Cursor?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.layout.BorderPane?>
@@ -9,6 +10,7 @@
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.shape.Line?>
 <?import javafx.scene.text.Font?>
+<?import org.kordamp.ikonli.javafx.FontIcon?>
 
 <StackPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="600.0" prefWidth="1100.0" xmlns="http://javafx.com/javafx/20.0.1" xmlns:fx="http://javafx.com/fxml/1">
    <children>
@@ -16,13 +18,16 @@
          <children>
             <BorderPane layoutX="150.0" layoutY="156.0" prefHeight="600.0" prefWidth="1100.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
                <left>
-                  <AnchorPane prefHeight="600.0" prefWidth="275.0" styleClass="bootstrap-color-Basic" stylesheets="@css/login-style.css" BorderPane.alignment="CENTER">
+                  <AnchorPane prefHeight="600.0" prefWidth="275.0" styleClass="bootstrap-color-Basic" stylesheets="@../css/login-style.css" BorderPane.alignment="CENTER">
                      <children>
                         <BorderPane layoutX="26.0" layoutY="173.0" prefHeight="600.0" prefWidth="346.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
                            <bottom>
                               <AnchorPane prefHeight="46.0" prefWidth="346.0" BorderPane.alignment="CENTER">
                                  <children>
-                                    <MFXButton layoutX="14.0" layoutY="7.0" styleClass="mfx-button" text="Log out" />
+                                    <MFXButton cancelButton="true" layoutX="14.0" layoutY="7.0" styleClass="mfx-button" text="Log out">
+                                       <graphic>
+                                          <FontIcon iconLiteral="fa-sign-out" />
+                                       </graphic></MFXButton>
                                  </children>
                               </AnchorPane>
                            </bottom>
@@ -42,16 +47,35 @@
                                     <MFXButton layoutX="38.0" layoutY="273.0" prefHeight="35.0" prefWidth="200.0" styleClass="mfx-button" text="Home">
                                        <font>
                                           <Font size="18.0" />
-                                       </font></MFXButton>
+                                       </font>
+                                       <graphic>
+                                          <FontIcon iconLiteral="fas-home" />
+                                       </graphic>
+                                       <cursor>
+                                          <Cursor fx:constant="HAND" />
+                                       </cursor></MFXButton>
                                     <MFXButton layoutX="38.0" layoutY="314.0" prefHeight="35.0" prefWidth="200.0" styleClass="mfx-button" text="Add New Record">
                                        <font>
                                           <Font size="18.0" />
-                                       </font></MFXButton>
+                                       </font>
+                                       <graphic>
+                                          <FontIcon iconLiteral="fas-plus" />
+                                       </graphic>
+                                       <cursor>
+                                          <Cursor fx:constant="HAND" />
+                                       </cursor></MFXButton>
                                     <MFXButton layoutX="38.0" layoutY="355.0" prefHeight="35.0" prefWidth="200.0" styleClass="mfx-button" text="Attendance">
                                        <font>
                                           <Font size="18.0" />
-                                       </font></MFXButton>
+                                       </font>
+                                       <graphic>
+                                          <FontIcon iconLiteral="fas-book" />
+                                       </graphic>
+                                       <cursor>
+                                          <Cursor fx:constant="HAND" />
+                                       </cursor></MFXButton>
                                     <Line endX="100.0" layoutX="137.0" layoutY="245.0" startX="-100.0" />
+                                    <FontIcon iconLiteral="fas-user" iconSize="100" layoutX="93.0" layoutY="127.0" />
                                  </children>
                               </AnchorPane>
                            </top>
@@ -66,42 +90,42 @@
                            <top>
                               <AnchorPane prefHeight="131.0" prefWidth="825.0" BorderPane.alignment="CENTER">
                                  <children>
-                                    <AnchorPane layoutX="21.0" layoutY="16.0" prefHeight="99.0" prefWidth="222.0" styleClass="bootstrap-color-Basic" stylesheets="@css/login-style.css">
+                                    <AnchorPane layoutX="21.0" layoutY="16.0" prefHeight="99.0" prefWidth="222.0" styleClass="bootstrap-color-Basic" stylesheets="@../css/login-style.css">
                                        <children>
                                           <Label layoutX="73.0" layoutY="58.0" text="Total Strength">
                                              <font>
                                                 <Font size="18.0" />
                                              </font>
                                           </Label>
-                                          <Label layoutX="176.0" layoutY="14.0" text="0">
+                                          <Label layoutX="191.0" layoutY="14.0" text="0">
                                              <font>
                                                 <Font size="18.0" />
                                              </font>
                                           </Label>
                                        </children>
                                     </AnchorPane>
-                                    <AnchorPane layoutX="302.0" layoutY="16.0" prefHeight="99.0" prefWidth="222.0" styleClass="bootstrap-color-Basic" stylesheets="@css/login-style.css">
+                                    <AnchorPane layoutX="302.0" layoutY="16.0" prefHeight="99.0" prefWidth="222.0" styleClass="bootstrap-color-Basic" stylesheets="@../css/login-style.css">
                                        <children>
                                           <Label layoutX="69.0" layoutY="58.0" text="Present Today">
                                              <font>
                                                 <Font size="18.0" />
                                              </font>
                                           </Label>
-                                          <Label layoutX="172.0" layoutY="14.0" text="0">
+                                          <Label layoutX="187.0" layoutY="14.0" text="0">
                                              <font>
                                                 <Font size="18.0" />
                                              </font>
                                           </Label>
                                        </children>
                                     </AnchorPane>
-                                    <AnchorPane layoutX="589.0" layoutY="16.0" prefHeight="99.0" prefWidth="222.0" styleClass="bootstrap-color-Basic" stylesheets="@css/login-style.css">
+                                    <AnchorPane layoutX="589.0" layoutY="16.0" prefHeight="99.0" prefWidth="222.0" styleClass="bootstrap-color-Basic" stylesheets="@../css/login-style.css">
                                        <children>
                                           <Label layoutX="68.0" layoutY="58.0" text="Abscent Today">
                                              <font>
                                                 <Font size="18.0" />
                                              </font>
                                           </Label>
-                                          <Label layoutX="176.0" layoutY="14.0" text="0">
+                                          <Label layoutX="190.0" layoutY="14.0" text="0">
                                              <font>
                                                 <Font size="18.0" />
                                              </font>
@@ -116,7 +140,7 @@
                                  <children>
                                     <AnchorPane prefHeight="466.0" prefWidth="390.0">
                                        <children>
-                                          <AnchorPane layoutX="20.0" layoutY="19.0" prefHeight="432.0" prefWidth="353.0" styleClass="bootstrap-color-Basic" stylesheets="@css/login-style.css">
+                                          <AnchorPane layoutX="20.0" layoutY="19.0" prefHeight="432.0" prefWidth="353.0" styleClass="bootstrap-color-Basic" stylesheets="@../css/login-style.css">
                                              <children>
                                                 <Label layoutX="87.0" layoutY="14.0" text="Total Strength Chart">
                                                    <font>
@@ -131,7 +155,7 @@
                                        <children>
                                           <AnchorPane prefHeight="236.0" prefWidth="436.0">
                                              <children>
-                                                <AnchorPane layoutX="14.0" layoutY="21.0" prefHeight="191.0" prefWidth="408.0" styleClass="bootstrap-color-Basic" stylesheets="@css/login-style.css">
+                                                <AnchorPane layoutX="14.0" layoutY="21.0" prefHeight="191.0" prefWidth="408.0" styleClass="bootstrap-color-Basic" stylesheets="@../css/login-style.css">
                                                    <children>
                                                       <Label layoutX="120.0" layoutY="14.0" text="Present Today Chart">
                                                          <font>
@@ -144,7 +168,7 @@
                                           </AnchorPane>
                                           <AnchorPane prefHeight="243.0" prefWidth="436.0">
                                              <children>
-                                                <AnchorPane layoutX="15.0" layoutY="22.0" prefHeight="197.0" prefWidth="408.0" styleClass="bootstrap-color-Basic" stylesheets="@css/login-style.css">
+                                                <AnchorPane layoutX="15.0" layoutY="22.0" prefHeight="197.0" prefWidth="408.0" styleClass="bootstrap-color-Basic" stylesheets="@../css/login-style.css">
                                                    <children>
                                                       <Label layoutX="120.0" layoutY="16.0" text="Abscent Today Chart">
                                                          <font>
