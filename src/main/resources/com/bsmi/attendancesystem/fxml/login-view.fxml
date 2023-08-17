@@ -40,7 +40,7 @@
                         </FontIcon>
                      </graphic>
                   </MFXButton>
-                        <Label layoutX="121.0" layoutY="189.0" styleClass="text-color" stylesheets="@../css/login-style.css" text="Welcome Back">
+                        <Label layoutX="121.0" layoutY="189.0" styleClass="material-default-text-color" stylesheets="@../css/login-style.css" text="Welcome Back">
                             <font>
                                 <Font name="System Bold" size="28.0" />
                             </font>

@@ -17,6 +17,6 @@
     -fx-font-size:18;
     -fx-font-color:#ffffff;
 }
-.text-color{
+.material-default-text-color{
     -fx-text-fill:#9400FF;
 }
