@@ -32,3 +32,6 @@ For more information about the GNU GPL v3.0 license, please visit the [GNU websi
 
 ## Author
 Subhankar Sarkar
+
+## Contributor
+Prithiraj Rabha
