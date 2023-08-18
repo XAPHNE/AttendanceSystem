@@ -21,6 +21,7 @@ To run the application, you need to have Java 8 or higher, MySQL, and XAMPP inst
 | Username | Password |
 | -------- | -------- |
 | admin | admin |
+
 ## Screenshots
 
 ![Attendance System Screenshot](https://user-images.githubusercontent.com/127822494/257903527-0e72b5ec-21c2-4c30-87fc-3f47bed03d33.png "Login Screen")
