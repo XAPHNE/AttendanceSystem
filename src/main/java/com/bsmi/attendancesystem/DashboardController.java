@@ -12,7 +12,7 @@ public class DashboardController {
         Stage window = new Stage();
         FXMLLoader fxmlLoader = new FXMLLoader(DashboardController.class.getResource("fxml/dashboard-view.fxml"));
         try {
-            Scene scene = new Scene(fxmlLoader.load(), 1080, 720);
+            Scene scene = new Scene(fxmlLoader.load(), 1100, 600);
             window.initStyle(StageStyle.UNDECORATED);
             window.setScene(scene);
             window.show();
