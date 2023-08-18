@@ -49,6 +49,8 @@ public class LoginController {
             while (queryResult.next()) {
                 if (queryResult.getInt(1) == 1) {
                     errorMessage.setText("Welcome!");
+                    DashboardController dashboardController = new DashboardController();
+                    dashboardController.display();
                 } else {
                     errorMessage.setText("Invalid Login. Please try again.");
                 }
