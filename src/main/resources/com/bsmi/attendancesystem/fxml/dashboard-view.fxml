@@ -2,6 +2,10 @@
 
 <?import io.github.palexdev.materialfx.controls.MFXButton?>
 <?import javafx.scene.Cursor?>
+<?import javafx.scene.chart.BarChart?>
+<?import javafx.scene.chart.CategoryAxis?>
+<?import javafx.scene.chart.LineChart?>
+<?import javafx.scene.chart.NumberAxis?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.layout.BorderPane?>
@@ -12,7 +16,7 @@
 <?import javafx.scene.text.Font?>
 <?import org.kordamp.ikonli.javafx.FontIcon?>
 
-<StackPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="600.0" prefWidth="1100.0" xmlns="http://javafx.com/javafx/17.0.6" xmlns:fx="http://javafx.com/fxml/1">
+<StackPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="600.0" prefWidth="1100.0" xmlns="http://javafx.com/javafx/" xmlns:fx="http://javafx.com/fxml/">
    <children>
       <AnchorPane prefHeight="200.0" prefWidth="200.0">
          <children>
@@ -80,7 +84,7 @@
                                        </cursor>
                                     </MFXButton>
                                     <Line endX="100.0" layoutX="137.0" layoutY="245.0" startX="-100.0" stroke="WHITE" />
-                                    <FontIcon iconColor="WHITE" iconLiteral="fas-user" iconSize="100" layoutX="93.0" layoutY="127.0" />
+                                    <FontIcon iconColor="WHITE" iconLiteral="fas-user" iconSize="100" layoutX="99.0" layoutY="127.0" />
                                  </children>
                               </AnchorPane>
                            </top>
@@ -107,6 +111,7 @@
                                                 <Font size="18.0" />
                                              </font>
                                           </Label>
+                                          <FontIcon iconColor="WHITE" iconLiteral="fas-users" iconSize="40" layoutX="14.0" layoutY="84.0" />
                                        </children>
                                     </AnchorPane>
                                     <AnchorPane layoutX="302.0" layoutY="16.0" prefHeight="99.0" prefWidth="222.0" styleClass="left-panel" stylesheets="@../css/dashboard-style.css">
@@ -121,6 +126,7 @@
                                                 <Font size="18.0" />
                                              </font>
                                           </Label>
+                                          <FontIcon iconColor="WHITE" iconLiteral="fas-fist-raised" iconSize="40" layoutX="14.0" layoutY="84.0" />
                                        </children>
                                     </AnchorPane>
                                     <AnchorPane layoutX="589.0" layoutY="16.0" prefHeight="99.0" prefWidth="222.0" styleClass="left-panel" stylesheets="@../css/dashboard-style.css">
@@ -135,6 +141,7 @@
                                                 <Font size="18.0" />
                                              </font>
                                           </Label>
+                                          <FontIcon iconColor="WHITE" iconLiteral="fas-users-slash" iconSize="40" layoutX="14.0" layoutY="84.0" />
                                        </children>
                                     </AnchorPane>
                                  </children>
@@ -145,41 +152,47 @@
                                  <children>
                                     <AnchorPane prefHeight="466.0" prefWidth="390.0">
                                        <children>
-                                          <AnchorPane layoutX="20.0" layoutY="19.0" prefHeight="432.0" prefWidth="353.0" styleClass="left-panel" stylesheets="@../css/dashboard-style.css">
-                                             <children>
-                                                <Label layoutX="87.0" layoutY="14.0" styleClass="white-text" stylesheets="@../css/dashboard-style.css" text="Total Strength Chart">
-                                                   <font>
-                                                      <Font size="20.0" />
-                                                   </font>
-                                                </Label>
-                                             </children>
-                                          </AnchorPane>
+                                          <AnchorPane layoutX="20.0" layoutY="19.0" prefHeight="432.0" prefWidth="353.0" />
+                                          <BarChart prefHeight="432.0" prefWidth="353.0" title="Total Strength Chart">
+                                            <xAxis>
+                                              <CategoryAxis side="BOTTOM" />
+                                            </xAxis>
+                                            <yAxis>
+                                              <NumberAxis side="LEFT" />
+                                            </yAxis>
+                                          </BarChart>
                                        </children>
                                     </AnchorPane>
                                     <VBox prefHeight="466.0" prefWidth="437.0">
                                        <children>
                                           <AnchorPane prefHeight="236.0" prefWidth="436.0">
                                              <children>
-                                                <AnchorPane layoutX="14.0" layoutY="21.0" prefHeight="191.0" prefWidth="408.0" styleClass="left-panel" stylesheets="@../css/dashboard-style.css">
+                                                <AnchorPane layoutX="14.0" layoutY="21.0" prefHeight="191.0" prefWidth="408.0">
                                                    <children>
-                                                      <Label layoutX="120.0" layoutY="14.0" styleClass="white-text" stylesheets="@../css/dashboard-style.css" text="Present Today Chart">
-                                                         <font>
-                                                            <Font size="20.0" />
-                                                         </font>
-                                                      </Label>
+                                                      <LineChart prefHeight="191.0" prefWidth="408.0" title="Present Today Chart">
+                                                        <xAxis>
+                                                          <CategoryAxis side="BOTTOM" />
+                                                        </xAxis>
+                                                        <yAxis>
+                                                          <NumberAxis side="LEFT" />
+                                                        </yAxis>
+                                                      </LineChart>
                                                    </children>
                                                 </AnchorPane>
                                              </children>
                                           </AnchorPane>
                                           <AnchorPane prefHeight="243.0" prefWidth="436.0">
                                              <children>
-                                                <AnchorPane layoutX="15.0" layoutY="22.0" prefHeight="197.0" prefWidth="408.0" styleClass="left-panel" stylesheets="@../css/dashboard-style.css">
+                                                <AnchorPane layoutX="15.0" layoutY="22.0" prefHeight="197.0" prefWidth="408.0">
                                                    <children>
-                                                      <Label layoutX="120.0" layoutY="16.0" styleClass="white-text" stylesheets="@../css/dashboard-style.css" text="Abscent Today Chart">
-                                                         <font>
-                                                            <Font size="20.0" />
-                                                         </font>
-                                                      </Label>
+                                                      <LineChart prefHeight="197.0" prefWidth="408.0" title="Abscent Today Chart">
+                                                        <xAxis>
+                                                          <CategoryAxis side="BOTTOM" />
+                                                        </xAxis>
+                                                        <yAxis>
+                                                          <NumberAxis side="LEFT" />
+                                                        </yAxis>
+                                                      </LineChart>
                                                    </children>
                                                 </AnchorPane>
                                              </children>
