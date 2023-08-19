@@ -11,7 +11,7 @@
 <?import javafx.scene.text.Font?>
 <?import org.kordamp.ikonli.javafx.FontIcon?>
 
-<StackPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="583.0" prefWidth="938.0" xmlns="http://javafx.com/javafx/17.0.6" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.bsmi.attendancesystem.LoginController">
+<StackPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="583.0" prefWidth="938.0" xmlns="http://javafx.com/javafx/" xmlns:fx="http://javafx.com/fxml/" fx:controller="com.bsmi.attendancesystem.LoginController">
     <children>
         <AnchorPane prefHeight="583.0" prefWidth="938.0">
             <children>
@@ -50,7 +50,7 @@
                                 <Font name="Calibri Bold" size="18.0" />
                             </font>
                         </Label>
-                        <MFXTextField fx:id="usernameMFXTextField" floatMode="BORDER" floatingText="Username" layoutX="83.0" layoutY="306.0" prefHeight="50.0" prefWidth="300.0" styleClass="mfx-text-field">
+                        <MFXTextField fx:id="usernameMFXTextField" floatMode="BORDER" floatingText="Username" layoutX="83.0" layoutY="306.0" prefHeight="50.0" prefWidth="300.0" styleClass="mfx-text-field" text="ET20BTHCS037">
                             <font>
                                 <Font size="18.0" />
                             </font>
@@ -58,7 +58,7 @@
                         <Cursor fx:constant="TEXT" />
                      </cursor>
                         </MFXTextField>
-                        <MFXPasswordField fx:id="passwordMFXPasswordField" accessibleRole="PASSWORD_FIELD" floatMode="BORDER" floatingText="Password" layoutX="84.0" layoutY="390.0" prefHeight="50.0" prefWidth="300.0" styleClass="mfx-password-field">
+                        <MFXPasswordField fx:id="passwordMFXPasswordField" accessibleRole="PASSWORD_FIELD" floatMode="BORDER" floatingText="Password" layoutX="84.0" layoutY="390.0" prefHeight="50.0" prefWidth="300.0" styleClass="mfx-password-field" text="ku123456">
                             <font>
                                 <Font size="18.0" />
                             </font>
