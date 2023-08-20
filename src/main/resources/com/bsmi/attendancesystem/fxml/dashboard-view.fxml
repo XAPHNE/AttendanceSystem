@@ -16,7 +16,7 @@
 <?import javafx.scene.text.Font?>
 <?import org.kordamp.ikonli.javafx.FontIcon?>
 
-<StackPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="600.0" prefWidth="1100.0" xmlns="http://javafx.com/javafx/" xmlns:fx="http://javafx.com/fxml/>
+<StackPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="600.0" prefWidth="1100.0" xmlns="http://javafx.com/javafx/" xmlns:fx="http://javafx.com/fxml/">
    <children>
       <AnchorPane prefHeight="200.0" prefWidth="200.0">
          <children>
@@ -131,7 +131,7 @@
                                     </AnchorPane>
                                     <AnchorPane layoutX="589.0" layoutY="16.0" prefHeight="99.0" prefWidth="222.0" styleClass="left-panel" stylesheets="@../css/dashboard-style.css">
                                        <children>
-                                          <Label layoutX="68.0" layoutY="58.0" styleClass="white-text" stylesheets="@../css/dashboard-style.css" text="Absent Today">
+                                          <Label layoutX="68.0" layoutY="58.0" styleClass="white-text" stylesheets="@../css/dashboard-style.css" text="Abscent Today">
                                              <font>
                                                 <Font size="18.0" />
                                              </font>
@@ -185,7 +185,7 @@
                                              <children>
                                                 <AnchorPane layoutX="15.0" layoutY="22.0" prefHeight="197.0" prefWidth="408.0">
                                                    <children>
-                                                      <LineChart prefHeight="197.0" prefWidth="408.0" title="Absent Today Chart">
+                                                      <LineChart prefHeight="197.0" prefWidth="408.0" title="Abscent Today Chart">
                                                         <xAxis>
                                                           <CategoryAxis side="BOTTOM" />
                                                         </xAxis>
