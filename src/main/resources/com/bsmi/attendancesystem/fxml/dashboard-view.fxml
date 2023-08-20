@@ -32,6 +32,9 @@
                                        <graphic>
                                           <FontIcon iconLiteral="fas-sign-out-alt" />
                                        </graphic>
+                                       <cursor>
+                                          <Cursor fx:constant="HAND" />
+                                       </cursor>
                                     </MFXButton>
                                  </children>
                               </AnchorPane>
