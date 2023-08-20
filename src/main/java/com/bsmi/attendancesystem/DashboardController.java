@@ -21,6 +21,8 @@ public class DashboardController {
     public void logoutMFXButtonOnAction(ActionEvent event){
         window = (Stage) logoutMFXButton.getScene().getWindow();
         window.close();
+        Stage stage = AttendanceApplication.getWindow();
+        stage.show();
     }
 
     public void display(){

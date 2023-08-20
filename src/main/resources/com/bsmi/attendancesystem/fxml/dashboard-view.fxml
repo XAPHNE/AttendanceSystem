@@ -16,7 +16,7 @@
 <?import javafx.scene.text.Font?>
 <?import org.kordamp.ikonli.javafx.FontIcon?>
 
-<StackPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="600.0" prefWidth="1100.0" xmlns="http://javafx.com/javafx/" xmlns:fx="http://javafx.com/fxml/">
+<StackPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="600.0" prefWidth="1100.0" xmlns="http://javafx.com/javafx/" xmlns:fx="http://javafx.com/fxml/" fx:controller="com.bsmi.attendancesystem.DashboardController">
    <children>
       <AnchorPane prefHeight="200.0" prefWidth="200.0">
          <children>
@@ -28,13 +28,11 @@
                            <bottom>
                               <AnchorPane prefHeight="46.0" prefWidth="346.0" styleClass="left-panel" stylesheets="@../css/dashboard-style.css" BorderPane.alignment="CENTER">
                                  <children>
-                                    <MFXButton cancelButton="true" layoutX="14.0" layoutY="7.0" styleClass="mfx-button" text="Log out">
+                                    <MFXButton fx:id="logoutMFXButton" layoutX="23.0" layoutY="10.0" onAction="#logoutMFXButtonOnAction" styleClass="mfx-button" text="Logout">
                                        <graphic>
-                                          <FontIcon iconLiteral="fa-sign-out" />
+                                          <FontIcon iconLiteral="fas-sign-out-alt" />
                                        </graphic>
-                                       <cursor>
-                                          <Cursor fx:constant="HAND" />
-                                       </cursor></MFXButton>
+                                    </MFXButton>
                                  </children>
                               </AnchorPane>
                            </bottom>
