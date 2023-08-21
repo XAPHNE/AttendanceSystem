@@ -1,22 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import io.github.palexdev.materialfx.controls.MFXButton?>
-<?import javafx.scene.Cursor?>
-<?import javafx.scene.chart.BarChart?>
-<?import javafx.scene.chart.CategoryAxis?>
-<?import javafx.scene.chart.LineChart?>
-<?import javafx.scene.chart.NumberAxis?>
-<?import javafx.scene.control.Label?>
-<?import javafx.scene.layout.AnchorPane?>
-<?import javafx.scene.layout.BorderPane?>
-<?import javafx.scene.layout.HBox?>
-<?import javafx.scene.layout.StackPane?>
-<?import javafx.scene.layout.VBox?>
-<?import javafx.scene.shape.Line?>
-<?import javafx.scene.text.Font?>
-<?import org.kordamp.ikonli.javafx.FontIcon?>
+<?import io.github.palexdev.materialfx.controls.*?>
+<?import javafx.scene.*?>
+<?import javafx.scene.chart.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.shape.*?>
+<?import javafx.scene.text.*?>
+<?import org.kordamp.ikonli.javafx.*?>
 
-<StackPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="600.0" prefWidth="1100.0" xmlns="http://javafx.com/javafx/" xmlns:fx="http://javafx.com/fxml/" fx:controller="com.bsmi.attendancesystem.DashboardController">
+<StackPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="600.0" prefWidth="1100.0" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.bsmi.attendancesystem.DashboardController">
    <children>
       <AnchorPane prefHeight="200.0" prefWidth="200.0">
          <children>
@@ -132,7 +125,7 @@
                                     </AnchorPane>
                                     <AnchorPane layoutX="589.0" layoutY="16.0" prefHeight="99.0" prefWidth="222.0" styleClass="left-panel" stylesheets="@../css/dashboard-style.css">
                                        <children>
-                                          <Label layoutX="68.0" layoutY="58.0" styleClass="white-text" stylesheets="@../css/dashboard-style.css" text="Abscent Today">
+                                          <Label layoutX="68.0" layoutY="58.0" styleClass="white-text" stylesheets="@../css/dashboard-style.css" text="Absent Today">
                                              <font>
                                                 <Font size="18.0" />
                                              </font>
@@ -186,7 +179,7 @@
                                              <children>
                                                 <AnchorPane layoutX="15.0" layoutY="22.0" prefHeight="197.0" prefWidth="408.0">
                                                    <children>
-                                                      <LineChart prefHeight="197.0" prefWidth="408.0" title="Abscent Today Chart">
+                                                      <LineChart prefHeight="197.0" prefWidth="408.0" title="Absent Today Chart">
                                                         <xAxis>
                                                           <CategoryAxis side="BOTTOM" />
                                                         </xAxis>
