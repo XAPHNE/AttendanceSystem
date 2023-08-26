@@ -3,8 +3,8 @@ Attendance System is a JavaFX application that allows users to manage and track 
 
 ## Features
 - Login page: Users can log in to the application using their username and password. The login information is verified with the database.
+- Dashboard is created.
 - TODO:
-    - New Dashboard to be created.
     - New Person adding method to be created
     - Attendance registering method to be created
     - Full screen table view to be created
@@ -32,7 +32,7 @@ This project is licensed under the GNU General Public License v3.0 - see the [LI
 For more information about the GNU GPL v3.0 license, please visit the [GNU website](https://www.gnu.org/licenses/gpl-3.0.en.html).
 
 ## Author
-Subhankar Sarkar
+[Subhankar Sarkar](https://xaphne.github.io/about)
 
 ## Contributor
-Prithiraj Rabha
+[Prithiraj Rabha](https://github.com/XAPHNE/AttendanceSystem)
