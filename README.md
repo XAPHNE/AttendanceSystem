@@ -60,7 +60,7 @@ Attendance System is a JavaFX application that allows users to manage and track 
    ```
    **NOTE:** Ignore the above `CREATE USER 'admin'@'localhost' IDENTIFIED BY 'admin';` line if you already have a user in your MySQL server named as **admin**
 
-5. Refresh the page and select the **studentManagementSystem** database from the left panel.
+5. Refresh the page and select the **attendance_system** database from the left panel.
 6. Click on **Import** in the top navigation panel.
 7. Select **Choose file** and navigate to the `src/main/resources/attendance_system.sql` file within the project directory. Then click **Import**.
 
