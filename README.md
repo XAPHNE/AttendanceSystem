@@ -10,6 +10,7 @@ Attendance System is a JavaFX application that allows users to manage and track 
     - Attendance marking view needs to be designed
     - Attendance marking methods needs to be designed
     - Attendance marking table needs to be designed
+
 ## Software Requirements
 ### Before you dive in, make sure to download and install the following:
 
