@@ -4,20 +4,17 @@ import  java.sql.Connection;
 import java.sql.DriverManager;
 
 public class DatabaseConnection {
-    public Connection databaseLink;
-
-    public Connection getConnection(){
+    public static Connection databaseLink;
+    public static Connection connectDb(){
         String databaseName = "attendance_system";
+        String url = "jdbc:mysql://localhost/" + databaseName;
         String databaseUser = "admin";
         String databasePassword = "admin";
-        String url = "jdbc:mysql://localhost/" + databaseName;
-
         try {
             Class.forName("com.mysql.cj.jdbc.Driver");
             databaseLink = DriverManager.getConnection(url, databaseUser, databasePassword);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return databaseLink;
+            return databaseLink;
+        }catch (Exception e){e.printStackTrace();}
+        return null;
     }
 }

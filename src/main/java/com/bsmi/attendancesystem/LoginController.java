@@ -1,62 +1,106 @@
 package com.bsmi.attendancesystem;
 
-import io.github.palexdev.materialfx.controls.MFXButton;
 import io.github.palexdev.materialfx.controls.MFXPasswordField;
 import io.github.palexdev.materialfx.controls.MFXTextField;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Button;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
-import javafx.scene.control.Label;
 import javafx.stage.Stage;
+import javafx.stage.StageStyle;
+import javafx.scene.input.MouseEvent;
 
 import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-import java.sql.Statement;
 
 public class LoginController {
     @FXML
-    private MFXButton closeMFXButton;
+    public MFXTextField usernameMFXTextField;
     @FXML
-    private Label errorMessage;
+    public MFXPasswordField passwordMFXPasswordField;
     @FXML
-    private MFXTextField usernameMFXTextField;
+    public Button loginButton;
     @FXML
-    private MFXPasswordField passwordMFXPasswordField;
+    private Button closeButton;
+
+    private Connection connect;
+    private PreparedStatement prepare;
+    private ResultSet result;
+
+    private double xOffset = 0;
+    private double yOffset = 0;
+    private Button home_btn;
 
     @FXML
-    public void closeMFXButtonOnAction(ActionEvent e){
-        Stage stage = (Stage) closeMFXButton.getScene().getWindow();
-        stage.close();
-    }
-    @FXML
-    protected void loginButtonOnAction() {
-        if (!usernameMFXTextField.getText().isBlank() && !passwordMFXPasswordField.getText().isBlank()){
-            //errorMessage.setText("You try to login!");
-            validateLogin();
-        } else {
-            errorMessage.setText("Please enter Username and Password");
-        }
-    }
-
-    public void validateLogin() {
-        DatabaseConnection connectNow = new DatabaseConnection();
-        Connection connectDB = connectNow.getConnection();
-        String verifyLogin = "SELECT count(1) FROM useraccounts WHERE username = '" + usernameMFXTextField.getText() + "' AND password = '" + passwordMFXPasswordField.getText() + "'";
-
+    protected void loginButtonOnAction(){
+        String sql = "SELECT * FROM admin WHERE username = ? AND password = ?";
+        connect = DatabaseConnection.connectDb();
         try {
-            Statement statement = connectDB.createStatement();
-            ResultSet queryResult = statement.executeQuery(verifyLogin);
+            Alert alert;
+            prepare = connect.prepareStatement(sql);
+            prepare.setString(1, usernameMFXTextField.getText());
+            prepare.setString(2, passwordMFXPasswordField.getText());
+            result = prepare.executeQuery();
+//            EMPTY FIELD CHECK
+            if (usernameMFXTextField.getText().isEmpty() || passwordMFXPasswordField.getText().isEmpty()){
+                alert = new Alert(Alert.AlertType.ERROR);
+                alert.setTitle("Error Message");
+                alert.setHeaderText(null);
+                alert.setContentText("Please fill all blank fields");
+                alert.showAndWait();
+            }else {
+                if (result.next()) {
+//                    PROCEDING TO DASHBOARD FORM
+                    GetData.username = usernameMFXTextField.getText();
+                    alert = new Alert(Alert.AlertType.INFORMATION);
+                    alert.setTitle("Information Message");
+                    alert.setHeaderText(null);
+                    alert.setContentText("Login Successful");
+                    alert.showAndWait();
+//                    HIDING LOGIN FORM
+                    loginButton.getScene().getWindow().hide();
+//                    LINKING DASHBOARD
+                    Parent root = FXMLLoader.load(getClass().getResource("fxml/dashboard-view.fxml"));
+                    Stage stage = new Stage();
+                    Scene scene = new Scene(root);
+                    stage.setTitle("Dashboard | Student Management System");
+                    // Make the window draggable
+                    root.setOnMousePressed((MouseEvent event) -> {
+                        xOffset = event.getSceneX();
+                        yOffset = event.getSceneY();
+                    });
+                    root.setOnMouseDragged((MouseEvent event) -> {
+                        stage.setX(event.getScreenX() - xOffset);
+                        stage.setY(event.getScreenY() - yOffset);
+                        stage.setOpacity(.6);
+                    });
 
-            while (queryResult.next()) {
-                if (queryResult.getInt(1) == 1) {
-                    errorMessage.setText("Welcome!");
-                    DashboardController dashboardController = new DashboardController();
-                    dashboardController.display();
-                } else {
-                    errorMessage.setText("Invalid Login. Please try again.");
+                    // Reset opacity on mouse release
+                    root.setOnMouseReleased((MouseEvent event) -> {
+                        stage.setOpacity(1);
+                    });
+                    stage.initStyle(StageStyle.TRANSPARENT);
+                    stage.setScene(scene);
+                    stage.show();
+                }else {
+//                    ERROR MESSAGE WILL APPEAR
+                    alert = new Alert(Alert.AlertType.ERROR);
+                    alert.setTitle("Error Message");
+                    alert.setHeaderText(null);
+                    alert.setContentText("Incorrect Username/Password");
+                    alert.showAndWait();
                 }
             }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        }catch (Exception e){e.printStackTrace();}
+    }
+    @FXML
+    public void closeButtonOnAction(ActionEvent e) {
+//        Stage stage = (Stage) closeButton.getScene().getWindow();
+//        stage.close();
+        System.exit(0);
     }
 }

@@ -1,86 +1,57 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import io.github.palexdev.materialfx.controls.MFXButton?>
 <?import io.github.palexdev.materialfx.controls.MFXPasswordField?>
 <?import io.github.palexdev.materialfx.controls.MFXTextField?>
-<?import java.lang.String?>
 <?import javafx.scene.Cursor?>
+<?import javafx.scene.control.Button?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.text.Font?>
 <?import org.kordamp.ikonli.javafx.FontIcon?>
 
-<StackPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="583.0" prefWidth="938.0" xmlns="http://javafx.com/javafx/" xmlns:fx="http://javafx.com/fxml/" fx:controller="com.bsmi.attendancesystem.LoginController">
+<StackPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.bsmi.attendancesystem.LoginController">
     <children>
-        <AnchorPane prefHeight="583.0" prefWidth="938.0">
+        <AnchorPane fx:id="main_form" prefHeight="200.0" prefWidth="200.0">
             <children>
-                <AnchorPane layoutY="-18.0" prefHeight="583.0" prefWidth="469.0" styleClass="left-form" stylesheets="@../css/login-style.css" AnchorPane.leftAnchor="0.0" AnchorPane.topAnchor="0.0">
+                <AnchorPane prefHeight="400.0" prefWidth="300.0" styleClass="left-form" stylesheets="@../css/login-style.css" AnchorPane.leftAnchor="0.0" AnchorPane.topAnchor="0.0">
                     <children>
-                        <Label layoutX="69.0" layoutY="354.0" text="Attendance System" textAlignment="CENTER" textFill="WHITE">
+                        <FontIcon iconColor="WHITE" iconLiteral="fas-graduation-cap" iconSize="150" layoutX="56.0" layoutY="214.0" />
+                        <Label layoutX="32.0" layoutY="243.0" text="Attendance System" textFill="WHITE">
                             <font>
-                                <Font name="System Bold" size="30.0" />
+                                <Font size="24.0" />
                             </font>
                         </Label>
-                  <FontIcon iconColor="WHITE" iconLiteral="fas-graduation-cap" iconSize="200" layoutX="127.0" layoutY="245.0" />
-                    </children>
-                </AnchorPane>
-                <AnchorPane layoutX="471.0" prefHeight="583.0" prefWidth="469.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                    </children></AnchorPane>
+                <AnchorPane layoutX="10.0" layoutY="10.0" prefHeight="400.0" prefWidth="300.0" styleClass="right-form" stylesheets="@../css/login-style.css" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
                     <children>
-                  <MFXButton fx:id="closeMFXButton" contentDisplay="CENTER" layoutX="400.0" layoutY="14.0" minWidth="45.0" onAction="#closeMFXButtonOnAction" prefHeight="32.0" prefWidth="45.0" stylesheets="@../css/login-style.css" text=" " AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
-                     <styleClass>
-                        <String fx:value="mfx-button" />
-                        <String fx:value="close" />
-                     </styleClass>
-                     <graphic>
-                        <FontIcon accessibleRole="BUTTON" iconLiteral="fa-close" iconSize="20">
-                           <cursor>
-                              <Cursor fx:constant="HAND" />
-                           </cursor>
-                        </FontIcon>
-                     </graphic>
-                  </MFXButton>
-                        <Label layoutX="121.0" layoutY="189.0" styleClass="material-default-text-color" stylesheets="@../css/login-style.css" text="Welcome Back">
-                            <font>
-                                <Font name="System Bold" size="28.0" />
-                            </font>
-                        </Label>
-                        <Label fx:id="errorMessage" alignment="CENTER" contentDisplay="CENTER" layoutX="85.0" layoutY="235.0" prefHeight="50.0" prefWidth="300.0" textAlignment="CENTER" textFill="#971111">
-                            <font>
-                                <Font name="Calibri Bold" size="18.0" />
-                            </font>
-                        </Label>
-                        <MFXTextField fx:id="usernameMFXTextField" floatMode="BORDER" floatingText="Username" layoutX="83.0" layoutY="306.0" prefHeight="50.0" prefWidth="300.0" styleClass="mfx-text-field" text="ET20BTHCS037">
+                        <FontIcon iconLiteral="fas-user" iconSize="100" layoutX="106.0" layoutY="117.0" />
+                        <Label layoutX="83.0" layoutY="148.0" text="Welcome Back">
                             <font>
                                 <Font size="18.0" />
                             </font>
-                     <cursor>
-                        <Cursor fx:constant="TEXT" />
-                     </cursor>
+                        </Label>
+                        <MFXTextField fx:id="usernameMFXTextField" floatMode="BORDER" floatingText="Username" layoutX="22.0" layoutY="194.0" prefHeight="30.0" prefWidth="250.0" styleClass="mfx-text-field" text="admin">
+                            <cursor>
+                                <Cursor fx:constant="TEXT" />
+                            </cursor>
                         </MFXTextField>
-                        <MFXPasswordField fx:id="passwordMFXPasswordField" accessibleRole="PASSWORD_FIELD" floatMode="BORDER" floatingText="Password" layoutX="84.0" layoutY="390.0" prefHeight="50.0" prefWidth="300.0" styleClass="mfx-password-field" text="ku123456">
-                            <font>
-                                <Font size="18.0" />
-                            </font>
-                     <cursor>
-                        <Cursor fx:constant="TEXT" />
-                     </cursor>
+                        <MFXPasswordField fx:id="passwordMFXPasswordField" floatMode="BORDER" floatingText="Password" layoutX="22.0" layoutY="243.0" prefHeight="30.0" prefWidth="250.0" styleClass="mfx-password-field" text="admin123">
+                            <cursor>
+                                <Cursor fx:constant="TEXT" />
+                            </cursor>
                         </MFXPasswordField>
-                        <MFXButton fx:id="loginButton" defaultButton="true" layoutX="83.0" layoutY="474.0" onAction="#loginButtonOnAction" prefHeight="50.0" prefWidth="300.0" stylesheets="@../css/login-style.css" text="Login" textFill="WHITE">
-                            <font>
-                                <Font name="Calibri" size="18.0" />
-                            </font>
-                     <cursor>
-                        <Cursor fx:constant="HAND" />
-                     </cursor>
-                     <styleClass>
-                        <String fx:value="mfx-button" />
-                        <String fx:value="login-button" />
-                     </styleClass>
-                        </MFXButton>
-                  <FontIcon iconColor="#9400ff" iconLiteral="fas-users" iconSize="100" layoutX="172.0" layoutY="141.0" />
-                    </children>
-                </AnchorPane>
+                        <Button fx:id="loginButton" layoutX="22.0" layoutY="294.0" mnemonicParsing="false" onAction="#loginButtonOnAction" prefHeight="40.0" prefWidth="250.0" styleClass="login-btn" stylesheets="@../css/login-style.css" text="Login">
+                            <cursor>
+                                <Cursor fx:constant="HAND" />
+                            </cursor>
+                        </Button>
+                        <Button fx:id="closeButton" layoutX="241.0" layoutY="14.0" mnemonicParsing="false" onAction="#closeButtonOnAction" styleClass="close" stylesheets="@../css/login-style.css" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                            <graphic>
+                                <FontIcon iconLiteral="fa-close" />
+                            </graphic>
+                        </Button>
+                    </children></AnchorPane>
             </children>
         </AnchorPane>
     </children>
