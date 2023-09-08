@@ -25,7 +25,9 @@ import java.net.URL;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.sql.Statement;
+import java.sql.Timestamp;
 import java.util.*;
 import java.util.stream.Stream;
 
@@ -154,7 +156,37 @@ public class DashboardController implements Initializable {
     private Button studentAttendance_btn;
 
     @FXML
+    private TableColumn<StudentAttendanceData, String> studentAttendance_col_course;
+
+    @FXML
+    private TableColumn<StudentAttendanceData, String> studentAttendance_col_entryTime;
+
+    @FXML
+    private TableColumn<StudentAttendanceData, String> studentAttendance_col_exitTime;
+
+    @FXML
+    private TableColumn<StudentAttendanceData, String> studentAttendance_col_status;
+
+    @FXML
+    private TableColumn<StudentAttendanceData, String> studentAttendance_col_studentNum;
+
+    @FXML
+    private TableColumn<StudentAttendanceData, String> studentAttendance_col_year;
+
+    @FXML
+    private ComboBox<String> studentAttendance_course;
+
+    @FXML
     private AnchorPane studentAttendance_form;
+
+    @FXML
+    private ComboBox<String> studentAttendance_studentNum;
+
+    @FXML
+    private TableView<StudentAttendanceData> studentAttendance_tableView;
+
+    @FXML
+    private ComboBox<String> studentAttendance_year;
 
     @FXML
     private Label username;
@@ -248,6 +280,11 @@ public class DashboardController implements Initializable {
             addStudent_btn.setStyle("-fx-background-color: transparent");
             availableCourses_btn.setStyle("-fx-background-color: transparent");
             studentAttendance_btn.setStyle("-fx-background-color: linear-gradient(to bottom right, #3f82ae, #26bf7d);");
+
+            studentAttendanceShowListData();
+            studentAttendanceYearList();
+            studentAttendanceCourseList();
+            studentAttendanceStudentNumList();
         }
     }
 //    END CODE FOR FORM SWITCHING
@@ -766,6 +803,222 @@ public class DashboardController implements Initializable {
         } catch (Exception e) {e.printStackTrace();}
     }
 //    END CODE FOR AVAILABLE COURSES FORM
+
+//    START CODE FOR STUDENT ATTENDANCE FORM
+    public List <StudentAttendanceData> studentAttendanceListData(){
+        List <StudentAttendanceData> listStudentAttendance = new ArrayList<>();
+        connect = DatabaseConnection.connectDb();
+        if (connect != null) {
+            try {
+                String query = "SELECT student.studentNum, student.year, student.course, " +
+                        "student_attendance.entry_time, student_attendance.exit_time, student_attendance.status " +
+                        "FROM student_attendance " +
+                        "INNER JOIN student ON student_attendance.student_id = student.id " +
+                        "INNER JOIN course ON student_attendance.course_id = course.id";
+                prepare = connect.prepareStatement(query);
+                result = prepare.executeQuery();
+                while (result.next()) {
+                    StudentAttendanceData record = new StudentAttendanceData();
+                    record.setStudentNum(result.getString("studentNum"));
+                    record.setYear(result.getString("year"));
+                    record.setCourse(result.getString("course"));
+                    record.setEntryTime(result.getString("entry_time"));
+                    record.setExitTime(result.getString("exit_time"));
+                    record.setStatus(result.getString("status"));
+                    listStudentAttendance.add(record);
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+        return listStudentAttendance;
+    }
+    @FXML
+    public void studentAttendanceShowListData(){
+        studentAttendance_col_studentNum.setCellValueFactory(new PropertyValueFactory<>("studentNum"));
+        studentAttendance_col_year.setCellValueFactory(new PropertyValueFactory<>("year"));
+        studentAttendance_col_course.setCellValueFactory(new PropertyValueFactory<>("course"));
+        studentAttendance_col_entryTime.setCellValueFactory(new PropertyValueFactory<>("entryTime"));
+        studentAttendance_col_exitTime.setCellValueFactory(new PropertyValueFactory<>("exitTime"));
+        studentAttendance_col_status.setCellValueFactory(new PropertyValueFactory<>("status"));
+
+        studentAttendance_tableView.getColumns().addAll(studentAttendance_col_studentNum, studentAttendance_col_year, studentAttendance_col_course, studentAttendance_col_entryTime, studentAttendance_col_exitTime, studentAttendance_col_status);
+
+        List<StudentAttendanceData> attendanceData = studentAttendanceListData();
+        ObservableList<StudentAttendanceData> observableAttendanceData = FXCollections.observableArrayList(attendanceData);
+        studentAttendance_tableView.setItems(observableAttendanceData);
+    }
+    @FXML
+    public void studentAttendanceYearList(){
+        //  studentAttendance_year.getItems().clear();
+        List <String> yearL = new ArrayList<>();
+        for (String data: yearList){
+            yearL.add(data);
+        }
+        ObservableList <String> ObList = FXCollections.observableArrayList(yearL);
+        studentAttendance_year.setItems(ObList);
+    }
+    @FXML
+    public void studentAttendanceCourseList(){
+        //  studentAttendance_course.getItems().clear();
+        connect = DatabaseConnection.connectDb();
+        if (connect != null){
+            try {
+                String query = "SELECT course FROM course";
+                prepare = connect.prepareStatement(query);
+                result = prepare.executeQuery();
+                ObservableList <String> courseList = FXCollections.observableArrayList();
+                while (result.next()){
+                    String course = result.getString("course");
+                    courseList.add(course);
+                }
+                studentAttendance_course.setItems(courseList);
+                result.close();
+                prepare.close();
+                connect.close();
+            } catch (SQLException e) {e.printStackTrace();}
+        }
+    }
+    @FXML
+    public void studentAttendanceStudentNumList(){
+        /*
+          String selectedYear = (String) studentAttendance_year.getSelectionModel().getSelectedItem();
+          String selectedCourse = (String) studentAttendance_course.getSelectionModel().getSelectedItem();
+          studentAttendance_studentNum.getItems().clear();
+        */
+        connect = DatabaseConnection.connectDb();
+        if (connect != null) {
+            try {
+
+                String query = "SELECT studentNum FROM student";
+                prepare = connect.prepareStatement(query);
+                /*
+                prepare.setString(1, selectedYear);
+                prepare.setString(2, selectedCourse);
+                */
+                result = prepare.executeQuery();
+                ObservableList <String> studentNumList = FXCollections.observableArrayList();
+                while (result.next()) {
+                    String studentNum = result.getString("studentNum");
+                    studentNumList.add(studentNum);
+                }
+                studentAttendance_studentNum.setItems(studentNumList);
+                result.close();
+                prepare.close();
+                connect.close();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+    // Method to fetch student_id based on studentNum, year, and course
+    private int fetchStudentId(String studentNum, String year, String course) {
+        int studentId = -1; // Initialize to a default value (e.g., -1) to indicate no matching student found
+
+        connect = DatabaseConnection.connectDb();
+
+        if (connect != null) {
+            try {
+                String query = "SELECT id FROM student WHERE studentNum = ? AND year = ? AND course = ?";
+                PreparedStatement preparedStatement = connect.prepareStatement(query);
+                preparedStatement.setString(1, studentNum);
+                preparedStatement.setString(2, year);
+                preparedStatement.setString(3, course);
+
+                ResultSet resultSet = preparedStatement.executeQuery();
+
+                if (resultSet.next()) {
+                    studentId = resultSet.getInt("id");
+                }
+
+                // Close resources
+                resultSet.close();
+                preparedStatement.close();
+                connect.close();
+            } catch (SQLException e) {
+                e.printStackTrace();
+                // Handle any database-related exceptions here
+            }
+        }
+
+        return studentId;
+    }
+    // Method to fetch course_id based on course
+    private int fetchCourseId(String course) {
+        int courseId = -1; // Initialize to a default value (e.g., -1) to indicate no matching course found
+
+        connect = DatabaseConnection.connectDb();
+
+        if (connect != null) {
+            try {
+                String query = "SELECT id FROM course WHERE course = ?";
+                PreparedStatement preparedStatement = connect.prepareStatement(query);
+                preparedStatement.setString(1, course);
+
+                ResultSet resultSet = preparedStatement.executeQuery();
+
+                if (resultSet.next()) {
+                    courseId = resultSet.getInt("id");
+                }
+
+                // Close resources
+                resultSet.close();
+                preparedStatement.close();
+                connect.close();
+            } catch (SQLException e) {
+                e.printStackTrace();
+                // Handle any database-related exceptions here
+            }
+        }
+
+        return courseId;
+    }
+    @FXML
+    public void studentAttendanceMarkEntryBtnOnAction() {
+        String selectedStudentNum = studentAttendance_studentNum.getValue();
+        String selectedYear = studentAttendance_year.getValue();
+        String selectedCourse = studentAttendance_course.getValue();
+
+        // Check if all required fields are selected
+        if (selectedStudentNum != null && selectedYear != null && selectedCourse != null) {
+            // Get the current timestamp
+            Timestamp entryTime = new Timestamp(new Date().getTime());
+
+            // Database connection and SQL query to insert data
+            connect = DatabaseConnection.connectDb(); // Replace with your actual database connection code
+
+            if (connect != null) {
+                try {
+                    String query = "INSERT INTO student_attendance (student_id, course_id, entry_time, exit_time, status) VALUES (?, ?, ?, NULL, 'Present')";
+                    PreparedStatement preparedStatement = connect.prepareStatement(query);
+
+                    // You need to fetch the student_id and course_id based on the selected studentNum, year, and course
+                    int studentId = fetchStudentId(selectedStudentNum, selectedYear, selectedCourse);
+                    int courseId = fetchCourseId(selectedCourse);
+
+                    preparedStatement.setInt(1, studentId);
+                    preparedStatement.setInt(2, courseId);
+                    preparedStatement.setTimestamp(3, entryTime);
+
+                    // Execute the insert query
+                    preparedStatement.executeUpdate();
+
+                    // Close the database connection and resources
+                    preparedStatement.close();
+                    connect.close();
+
+                    // Optionally, you can show a success message or perform any other actions here
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                    // Handle any database-related exceptions here
+                }
+            }
+        } else {
+            // Handle the case where not all required fields are selected
+            // Display an error message or take appropriate action
+        }
+    }
+//    END CODE FOR STUDENT ATTENDANCE FORM
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
         displayUsername();
@@ -780,5 +1033,11 @@ public class DashboardController implements Initializable {
         addStudent_search_onKeyTyped();
 
         availableCourseShowListData();
+
+        //  Initialize the ComboBox when the controller is loaded
+        studentAttendanceYearList();
+        studentAttendanceCourseList();
+        studentAttendanceStudentNumList();
+        studentAttendanceShowListData();
     }
 }
