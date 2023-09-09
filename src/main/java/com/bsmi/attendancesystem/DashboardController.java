@@ -868,15 +868,19 @@ public class DashboardController implements Initializable {
         }
         ObservableList <String> ObList = FXCollections.observableArrayList(yearL);
         studentAttendance_year.setItems(ObList);
+
+        studentAttendance_year.setOnAction(e -> studentAttendanceCourseList());
     }
     @FXML
     public void studentAttendanceCourseList(){
         //  studentAttendance_course.getItems().clear();
+        String selectedYear = studentAttendance_year.getSelectionModel().getSelectedItem();
         connect = DatabaseConnection.connectDb();
         if (connect != null){
             try {
-                String query = "SELECT course FROM course";
+                String query = "SELECT DISTINCT course FROM student WHERE year = ?";
                 prepare = connect.prepareStatement(query);
+                prepare.setString(1, selectedYear);
                 result = prepare.executeQuery();
                 ObservableList <String> courseList = FXCollections.observableArrayList();
                 while (result.next()){
@@ -889,24 +893,25 @@ public class DashboardController implements Initializable {
                 connect.close();
             } catch (SQLException e) {e.printStackTrace();}
         }
+        
+        studentAttendance_course.setOnAction(e -> studentAttendanceStudentNumList());
     }
     @FXML
     public void studentAttendanceStudentNumList(){
+        String selectedYear = (String) studentAttendance_year.getSelectionModel().getSelectedItem();
+        String selectedCourse = (String) studentAttendance_course.getSelectionModel().getSelectedItem();
         /*
-          String selectedYear = (String) studentAttendance_year.getSelectionModel().getSelectedItem();
-          String selectedCourse = (String) studentAttendance_course.getSelectionModel().getSelectedItem();
           studentAttendance_studentNum.getItems().clear();
         */
         connect = DatabaseConnection.connectDb();
         if (connect != null) {
             try {
 
-                String query = "SELECT studentNum FROM student";
+                String query = "SELECT DISTINCT studentNum FROM student WHERE year = ? AND course = ?";
                 prepare = connect.prepareStatement(query);
-                /*
                 prepare.setString(1, selectedYear);
                 prepare.setString(2, selectedCourse);
-                */
+                
                 result = prepare.executeQuery();
                 ObservableList <String> studentNumList = FXCollections.observableArrayList();
                 while (result.next()) {
