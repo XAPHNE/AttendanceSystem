@@ -1047,7 +1047,7 @@ public class DashboardController implements Initializable {
                 String query = "UPDATE student_attendance SET exit_time = ? " +
                         "WHERE entry_time >= ? AND entry_time < ? " +
                         "AND exit_time IS NULL " +
-                        "AND student_id IN (SELECT student_id FROM student WHERE year = ? AND course = ? AND studentNum = ?)";
+                        "AND student_id IN (SELECT id FROM student WHERE year = ? AND course = ? AND studentNum = ?)";
 
                 // Set a time range for checking entry_time (e.g., for the current day)
                 // You may need to adjust this time range based on your specific requirements
