@@ -61,7 +61,7 @@ Attendance System is a JavaFX application that allows users to manage and track 
    ```
    **NOTE:** Ignore the above `CREATE USER 'admin'@'localhost' IDENTIFIED BY 'admin';` line if you already have a user in your MySQL server named as **admin**
 
-5. Refresh the page and select the **attendance_system** database from the left panel.
+5. Refresh the page or just the database panel on the left and select the **attendance_system** database from the panel.
 6. Click on **Import** in the top navigation panel.
 7. Select **Choose file** and navigate to the `src/main/resources/attendance_system.sql` file within the project directory. Then click **Import**.
 
@@ -83,4 +83,4 @@ For more information about the GNU GPL v3.0 license, please visit the [GNU websi
 [Subhankar Sarkar](https://xaphne.github.io/about)
 
 ## Contributor
-[Prithiraj Rabha](https://github.com/XAPHNE/AttendanceSystem)
+[Prithiraj Rabha](https://github.com/prithirabha)
