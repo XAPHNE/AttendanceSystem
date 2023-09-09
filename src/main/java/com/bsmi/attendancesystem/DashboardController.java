@@ -156,6 +156,9 @@ public class DashboardController implements Initializable {
     private Button studentAttendance_btn;
 
     @FXML
+    private Button studentAttendance_clearBtn;
+
+    @FXML
     private TableColumn<StudentAttendanceData, String> studentAttendance_col_course;
 
     @FXML
@@ -178,6 +181,15 @@ public class DashboardController implements Initializable {
 
     @FXML
     private AnchorPane studentAttendance_form;
+
+    @FXML
+    private Button studentAttendance_markEntryBtn;
+
+    @FXML
+    private Button studentAttendance_markExitBtn;
+
+    @FXML
+    private TextField studentAttendance_search;
 
     @FXML
     private ComboBox<String> studentAttendance_studentNum;
@@ -285,6 +297,7 @@ public class DashboardController implements Initializable {
             studentAttendanceYearList();
             studentAttendanceCourseList();
             studentAttendanceStudentNumList();
+            studentAttendanceSearchOnKeyTyped();
         }
     }
 //    END CODE FOR FORM SWITCHING
@@ -805,8 +818,8 @@ public class DashboardController implements Initializable {
 //    END CODE FOR AVAILABLE COURSES FORM
 
 //    START CODE FOR STUDENT ATTENDANCE FORM
-    public List <StudentAttendanceData> studentAttendanceListData(){
-        List <StudentAttendanceData> listStudentAttendance = new ArrayList<>();
+    public ObservableList <StudentAttendanceData> studentAttendanceListData(){
+        ObservableList <StudentAttendanceData> listStudentAttendance = FXCollections.observableArrayList();
         connect = DatabaseConnection.connectDb();
         if (connect != null) {
             try {
@@ -833,8 +846,10 @@ public class DashboardController implements Initializable {
         }
         return listStudentAttendance;
     }
+    private ObservableList<StudentAttendanceData> observableAttendanceData;
     @FXML
     public void studentAttendanceShowListData(){
+        observableAttendanceData = studentAttendanceListData();
         studentAttendance_col_studentNum.setCellValueFactory(new PropertyValueFactory<>("studentNum"));
         studentAttendance_col_year.setCellValueFactory(new PropertyValueFactory<>("year"));
         studentAttendance_col_course.setCellValueFactory(new PropertyValueFactory<>("course"));
@@ -842,10 +857,6 @@ public class DashboardController implements Initializable {
         studentAttendance_col_exitTime.setCellValueFactory(new PropertyValueFactory<>("exitTime"));
         studentAttendance_col_status.setCellValueFactory(new PropertyValueFactory<>("status"));
 
-        studentAttendance_tableView.getColumns().addAll(studentAttendance_col_studentNum, studentAttendance_col_year, studentAttendance_col_course, studentAttendance_col_entryTime, studentAttendance_col_exitTime, studentAttendance_col_status);
-
-        List<StudentAttendanceData> attendanceData = studentAttendanceListData();
-        ObservableList<StudentAttendanceData> observableAttendanceData = FXCollections.observableArrayList(attendanceData);
         studentAttendance_tableView.setItems(observableAttendanceData);
     }
     @FXML
@@ -990,24 +1001,26 @@ public class DashboardController implements Initializable {
             if (connect != null) {
                 try {
                     String query = "INSERT INTO student_attendance (student_id, course_id, entry_time, exit_time, status) VALUES (?, ?, ?, NULL, 'Present')";
-                    PreparedStatement preparedStatement = connect.prepareStatement(query);
+                    prepare = connect.prepareStatement(query);
 
                     // You need to fetch the student_id and course_id based on the selected studentNum, year, and course
                     int studentId = fetchStudentId(selectedStudentNum, selectedYear, selectedCourse);
                     int courseId = fetchCourseId(selectedCourse);
 
-                    preparedStatement.setInt(1, studentId);
-                    preparedStatement.setInt(2, courseId);
-                    preparedStatement.setTimestamp(3, entryTime);
+                    prepare.setInt(1, studentId);
+                    prepare.setInt(2, courseId);
+                    prepare.setTimestamp(3, entryTime);
 
                     // Execute the insert query
-                    preparedStatement.executeUpdate();
+                    prepare.executeUpdate();
 
                     // Close the database connection and resources
-                    preparedStatement.close();
+                    prepare.close();
                     connect.close();
 
                     // Optionally, you can show a success message or perform any other actions here
+                    studentAttendanceShowListData();
+                    studentAttendanceClearBtnOnAction();
                 } catch (SQLException e) {
                     e.printStackTrace();
                     // Handle any database-related exceptions here
@@ -1017,6 +1030,106 @@ public class DashboardController implements Initializable {
             // Handle the case where not all required fields are selected
             // Display an error message or take appropriate action
         }
+    }
+    @FXML
+    public void studentAttendanceMarkExitOnAction() {
+        String selectedYear = studentAttendance_year.getSelectionModel().getSelectedItem();
+        String selectedCourse = studentAttendance_course.getSelectionModel().getSelectedItem();
+        String selectedStudentNum = studentAttendance_studentNum.getSelectionModel().getSelectedItem();
+        connect = DatabaseConnection.connectDb(); // Replace with your actual database connection code
+
+        if (connect != null) {
+            try {
+                // Get the current date and time as a Timestamp
+                Timestamp currentTimestamp = new Timestamp(new Date().getTime());
+
+                // Define a SQL query to update the exit_time
+                String query = "UPDATE student_attendance SET exit_time = ? " +
+                        "WHERE entry_time >= ? AND entry_time < ? " +
+                        "AND exit_time IS NULL " +
+                        "AND student_id IN (SELECT student_id FROM student WHERE year = ? AND course = ? AND studentNum = ?)";
+
+                // Set a time range for checking entry_time (e.g., for the current day)
+                // You may need to adjust this time range based on your specific requirements
+                Timestamp startOfDay = new Timestamp(new Date().getTime());
+                startOfDay.setHours(0);
+                startOfDay.setMinutes(0);
+                startOfDay.setSeconds(0);
+
+                Timestamp endOfDay = new Timestamp(new Date().getTime());
+                endOfDay.setHours(23);
+                endOfDay.setMinutes(59);
+                endOfDay.setSeconds(59);
+
+                // Create a PreparedStatement for the query
+                prepare = connect.prepareStatement(query);
+                prepare.setTimestamp(1, currentTimestamp);
+                prepare.setTimestamp(2, startOfDay);
+                prepare.setTimestamp(3, endOfDay);
+                prepare.setString(4, selectedYear);
+                prepare.setString(5, selectedCourse);
+                prepare.setString(6, selectedStudentNum);
+
+                // Execute the update query
+                int updatedRows = prepare.executeUpdate();
+
+                // Close the PreparedStatement and database connection
+                prepare.close();
+                connect.close();
+
+                if (updatedRows > 0) {
+                    System.out.println("Exit times updated for " + updatedRows + " records.");
+                    studentAttendanceShowListData();
+                    studentAttendanceClearBtnOnAction();
+                } else {
+                    System.out.println("No records found for update.");
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+                // Handle any database-related exceptions here
+            }
+        }
+    }
+    @FXML
+    public void studentAttendanceClearBtnOnAction() {
+        studentAttendance_year.getSelectionModel().clearSelection();
+        studentAttendance_year.setPromptText("Choose"); // Set the prompt text for year ComboBox
+        studentAttendance_course.getSelectionModel().clearSelection();
+        studentAttendance_course.setPromptText("Choose"); // Set the prompt text for course ComboBox
+        studentAttendance_studentNum.getSelectionModel().clearSelection();
+        studentAttendance_studentNum.setPromptText("Choose"); // Set the prompt text for studentNum ComboBox
+    }
+    @FXML
+    public void studentAttendanceSearchOnKeyTyped() {
+        // Assuming observableAttendanceData is a properly populated ObservableList<StudentAttendanceData>
+        FilteredList<StudentAttendanceData> filter = new FilteredList<>(observableAttendanceData, e -> true);
+
+        // Assuming addStudent_search is your TextField for searching
+        studentAttendance_search.textProperty().addListener((Observable, oldValue, newValue) -> {
+            filter.setPredicate(predicateStudentData -> {
+                if (newValue == null || newValue.isEmpty()) {
+                    return true;
+                }
+
+                String searchKey = newValue.toLowerCase();
+
+                // You can simplify the conditions using a stream and anyMatch
+                return Stream.of(
+                        predicateStudentData.getStudentNum().toString(),
+                        predicateStudentData.getYear(),
+                        predicateStudentData.getCourse(),
+                        predicateStudentData.getEntryTime(),
+                        //predicateStudentData.getExitTime(),
+                        predicateStudentData.getStatus()
+                ).anyMatch(data -> data.toLowerCase().contains(searchKey));
+            });
+        });
+
+        SortedList<StudentAttendanceData> sortList = new SortedList<>(filter);
+
+        // Assuming studentAttendance_tableView is your TableView
+        sortList.comparatorProperty().bind(studentAttendance_tableView.comparatorProperty());
+        studentAttendance_tableView.setItems(sortList);
     }
 //    END CODE FOR STUDENT ATTENDANCE FORM
     @Override
@@ -1039,5 +1152,6 @@ public class DashboardController implements Initializable {
         studentAttendanceCourseList();
         studentAttendanceStudentNumList();
         studentAttendanceShowListData();
+        studentAttendanceSearchOnKeyTyped();
     }
 }

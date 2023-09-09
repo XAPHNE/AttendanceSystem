@@ -391,8 +391,8 @@
                                           <Font size="15.0" />
                                        </font>
                                     </Label>
-                                    <Button fx:id="studentAttendance_markExitBtn" layoutX="164.0" layoutY="366.0" mnemonicParsing="false" prefHeight="35.0" prefWidth="95.0" styleClass="update-btn" stylesheets="@../css/dashboard-style.css" text="Mark Exit" />
-                                    <Button fx:id="studentAttendance_clearBtn" layoutX="59.0" layoutY="366.0" mnemonicParsing="false" prefHeight="35.0" prefWidth="95.0" styleClass="clear-btn" stylesheets="@../css/dashboard-style.css" text="Clear" />
+                                    <Button fx:id="studentAttendance_markExitBtn" layoutX="164.0" layoutY="366.0" mnemonicParsing="false" onAction="#studentAttendanceMarkExitOnAction" prefHeight="35.0" prefWidth="95.0" styleClass="update-btn" stylesheets="@../css/dashboard-style.css" text="Mark Exit" />
+                                    <Button fx:id="studentAttendance_clearBtn" layoutX="59.0" layoutY="366.0" mnemonicParsing="false" onAction="#studentAttendanceClearBtnOnAction" prefHeight="35.0" prefWidth="95.0" styleClass="clear-btn" stylesheets="@../css/dashboard-style.css" text="Clear" />
                                     <ComboBox fx:id="studentAttendance_year" layoutX="113.0" layoutY="50.0" onAction="#studentAttendanceYearList" prefHeight="24.0" prefWidth="190.0" promptText="Choose" styleClass="textfield" stylesheets="@../css/dashboard-style.css" />
                                     <ComboBox fx:id="studentAttendance_course" layoutX="112.0" layoutY="87.0" onAction="#studentAttendanceCourseList" prefHeight="24.0" prefWidth="190.0" promptText="Choose" styleClass="textfield" stylesheets="@../css/dashboard-style.css" />
                                     <ComboBox fx:id="studentAttendance_studentNum" layoutX="113.0" layoutY="125.0" onAction="#studentAttendanceStudentNumList" prefHeight="24.0" prefWidth="190.0" promptText="Choose" styleClass="textfield" stylesheets="@../css/dashboard-style.css" />
@@ -415,7 +415,7 @@
                                           <TableColumn fx:id="studentAttendance_col_status" prefWidth="86.0" text="Status" />
                                        </columns>
                                     </TableView>
-                                    <TextField fx:id="studentAttendance_search" layoutX="14.0" layoutY="14.0" prefHeight="24.0" prefWidth="270.0" promptText="Search" styleClass="search" stylesheets="@../css/dashboard-style.css" />
+                                    <TextField fx:id="studentAttendance_search" layoutX="14.0" layoutY="14.0" onAction="#studentAttendanceSearchOnKeyTyped" prefHeight="24.0" prefWidth="270.0" promptText="Search" styleClass="search" stylesheets="@../css/dashboard-style.css" />
                                     <FontIcon iconLiteral="fa-search" iconSize="20" layoutX="21.0" layoutY="33.0" />
                                  </children>
                               </AnchorPane>
