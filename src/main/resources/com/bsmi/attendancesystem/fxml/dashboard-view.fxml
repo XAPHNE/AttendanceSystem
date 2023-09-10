@@ -57,7 +57,7 @@
                         <AnchorPane prefHeight="564.0" prefWidth="200.0" styleClass="nav-form" stylesheets="@../css/dashboard-style.css" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
                            <children>
                               <FontIcon iconColor="WHITE" iconLiteral="fas-user" iconSize="100" layoutX="57.0" layoutY="117.0" />
-                              <Label layoutX="62.0" layoutY="142.0" text="Welcome" textFill="WHITE">
+                              <Label layoutX="62.0" layoutY="142.0" text="Welcome," textFill="WHITE">
                                  <font>
                                     <Font size="17.0" />
                                  </font>
@@ -146,7 +146,7 @@
                                                       <Font size="15.0" />
                                                    </font>
                                                 </Label>
-                                                <Label fx:id="home_totalFemale" alignment="CENTER_RIGHT" layoutX="86.0" layoutY="18.0" prefHeight="30.0" prefWidth="168.0" text="0" textFill="WHITE">
+                                                <Label fx:id="home_presentToday" alignment="CENTER_RIGHT" layoutX="86.0" layoutY="18.0" prefHeight="30.0" prefWidth="168.0" text="0" textFill="WHITE">
                                                    <font>
                                                       <Font size="25.0" />
                                                    </font>
@@ -162,7 +162,7 @@
                                                       <Font size="15.0" />
                                                    </font>
                                                 </Label>
-                                                <Label fx:id="home_totalMale" alignment="CENTER_RIGHT" layoutX="86.0" layoutY="18.0" prefHeight="30.0" prefWidth="168.0" text="0" textFill="WHITE">
+                                                <Label fx:id="home_absentToday" alignment="CENTER_RIGHT" layoutX="86.0" layoutY="18.0" prefHeight="30.0" prefWidth="168.0" text="0" textFill="WHITE">
                                                    <font>
                                                       <Font size="25.0" />
                                                    </font>
@@ -193,7 +193,7 @@
                                           <String fx:value="shadow" />
                                        </styleClass>
                                        <children>
-                                          <LineChart fx:id="home_totalFemaleChart" layoutX="-49.0" layoutY="-117.0" prefHeight="283.0" prefWidth="451.0" title="Students Present Chart" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                                          <LineChart fx:id="home_presentTodayChart" layoutX="-49.0" layoutY="-117.0" prefHeight="283.0" prefWidth="451.0" title="Students Present Chart" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
                                              <xAxis>
                                                 <CategoryAxis side="BOTTOM" />
                                              </xAxis>
@@ -209,7 +209,7 @@
                                           <String fx:value="shadow" />
                                        </styleClass>
                                        <children>
-                                          <LineChart fx:id="home_totalMaleChart" layoutX="-49.0" layoutY="-117.0" prefHeight="283.0" prefWidth="451.0" title="Students Absent Chart" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                                          <LineChart fx:id="home_absentTodayChart" layoutX="-49.0" layoutY="-117.0" prefHeight="283.0" prefWidth="451.0" title="Students Absent Chart" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
                                              <xAxis>
                                                 <CategoryAxis side="BOTTOM" />
                                              </xAxis>

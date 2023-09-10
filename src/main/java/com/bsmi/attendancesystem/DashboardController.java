@@ -8,6 +8,9 @@ import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
+import javafx.scene.chart.BarChart;
+import javafx.scene.chart.LineChart;
+import javafx.scene.chart.XYChart;
 import javafx.scene.control.*;
 import javafx.scene.Parent;
 import javafx.scene.control.cell.PropertyValueFactory;
@@ -28,6 +31,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
+import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.stream.Stream;
 
@@ -138,10 +142,28 @@ public class DashboardController implements Initializable {
     private Button close_btn;
 
     @FXML
+    private Label home_absentToday;
+
+    @FXML
+    private LineChart<String, Integer> home_absentTodayChart;
+
+    @FXML
     private Button home_btn;
 
     @FXML
     private AnchorPane home_form;
+
+    @FXML
+    private Label home_presentToday;
+
+    @FXML
+    private LineChart<String, Integer> home_presentTodayChart;
+
+    @FXML
+    private Label home_totalEnrolled;
+
+    @FXML
+    private BarChart<?, ?> home_totalEnrolledChart;
 
     @FXML
     private Button logout_btn;
@@ -253,6 +275,14 @@ public class DashboardController implements Initializable {
             addStudent_btn.setStyle("-fx-background-color: transparent");
             availableCourses_btn.setStyle("-fx-background-color: transparent");
             studentAttendance_btn.setStyle("-fx-background-color: transparent");
+
+            homeDisplayTotalEnrolledStudents();
+            homeDisplayPresentToday();
+            homeDisplayAbsentToday();
+
+            homeDisplayTotalEnrolledChart();
+            homeDisplayPresentTodayChart();
+            homeDisplayAbsentTodayChart();
         } else if (event.getSource() == addStudent_btn) {
             home_form.setVisible(false);
             addStudent_form.setVisible(true);
@@ -340,6 +370,133 @@ public class DashboardController implements Initializable {
         }catch (Exception e) {e.printStackTrace();}
     }
 //    END CODE FOR LOGOUT BUTTON
+
+//    START CODE FOR HOME FORM
+    public void homeDisplayTotalEnrolledStudents() {
+        String query = "SELECT COUNT(DISTINCT studentNum) AS enrolledCount FROM student WHERE status = 'Enrolled'";
+        connect = DatabaseConnection.connectDb();
+        try {
+            int countEnrolled = 0;
+            prepare = connect.prepareStatement(query);
+            result = prepare.executeQuery();
+            if (result.next()){
+                countEnrolled = result.getInt("enrolledCount");
+            }
+            home_totalEnrolled.setText(String.valueOf(countEnrolled));
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+    public void homeDisplayPresentToday() {
+        // Get the current date as a string in the format "yyyy-MM-dd"
+        String absentToday = home_totalEnrolled.getText();
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+        String currentDate = dateFormat.format(new Date());
+
+        String query = "SELECT COUNT(DISTINCT student_id) AS presentCount " +
+                "FROM student_attendance " +
+                "WHERE status = 'Present' " +
+                "AND DATE(entry_time) = ?";
+
+        connect = DatabaseConnection.connectDb();
+        try {
+            int countPresentToday = 0;
+            prepare = connect.prepareStatement(query);
+            prepare.setString(1, currentDate); // Bind the current date to the query parameter
+            result = prepare.executeQuery();
+            if (result.next()) {
+                countPresentToday = result.getInt("presentCount");
+            }
+            home_presentToday.setText(String.valueOf(countPresentToday));
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+    public void homeDisplayAbsentToday() {
+        // Get the total enrolled students from the home_totalEnrolled label
+        int totalEnrolled = Integer.parseInt(home_totalEnrolled.getText());
+
+        // Get the students present today from the home_presentToday label
+        int studentsPresentToday = Integer.parseInt(home_presentToday.getText());
+
+        // Calculate the number of absent students today
+        int studentsAbsentToday = totalEnrolled - studentsPresentToday;
+
+        // Set the text of the home_absentToday label to display the number of absent students
+        home_absentToday.setText(String.valueOf(studentsAbsentToday));
+    }
+    public void homeDisplayTotalEnrolledChart () {
+        home_totalEnrolledChart.getData().clear();
+        String query = "SELECT date, COUNT(DISTINCT id) FROM student WHERE status = 'Enrolled' GROUP BY date ORDER BY TIMESTAMP(date) ASC LIMIT 5";
+        connect = DatabaseConnection.connectDb();
+        try {
+            XYChart.Series chart = new XYChart.Series();
+            prepare = connect.prepareStatement(query);
+            result = prepare.executeQuery();
+            while (result.next()){
+                chart.getData().add(new XYChart.Data(result.getString(1), result.getInt(2)));
+            }
+            home_totalEnrolledChart.getData().add(chart);
+        } catch (Exception e) {e.printStackTrace();}
+    }
+    public void homeDisplayPresentTodayChart() {
+        // Clear any existing data from the chart
+        home_presentTodayChart.getData().clear();
+
+        // Define the SQL query to retrieve data for the chart
+        String sql = "SELECT DATE(entry_time) AS date, COUNT(DISTINCT id) FROM student_attendance WHERE DATE(entry_time) = CURDATE() GROUP BY DATE(entry_time)";
+
+        // Establish a database connection (replace with your connection code)
+        connect = DatabaseConnection.connectDb();
+
+        try {
+            // Create a new XYChart.Series for the line chart
+            XYChart.Series<String, Integer> series = new XYChart.Series<>();
+
+            // Prepare the SQL statement
+            prepare = connect.prepareStatement(sql);
+
+            // Execute the query and retrieve the result set
+            result = prepare.executeQuery();
+
+            // Iterate through the result set and add data to the series
+            while (result.next()) {
+                String date = result.getString("date");
+                int count = result.getInt(2);
+                series.getData().add(new XYChart.Data<>(date, count));
+            }
+
+            // Add the series to the line chart
+            home_presentTodayChart.getData().add(series);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+    public void homeDisplayAbsentTodayChart() {
+        // Clear any existing data from the chart
+        home_absentTodayChart.getData().clear();
+
+        // Get the total enrolled students from the home_totalEnrolled label
+        int totalEnrolled = Integer.parseInt(home_totalEnrolled.getText());
+
+        // Get the students present today from the home_presentTodayChart line chart
+        LineChart.Series<String, Integer> presentSeries = (LineChart.Series<String, Integer>) home_presentTodayChart.getData().get(0);
+
+        // Create a new XYChart.Series for the absent students
+        XYChart.Series<String, Integer> absentSeries = new XYChart.Series<>();
+
+        // Iterate through the data in the presentSeries and calculate absent students
+        for (XYChart.Data<String, Integer> data : presentSeries.getData()) {
+            String date = data.getXValue();
+            int presentCount = data.getYValue();
+            int absentCount = totalEnrolled - presentCount;
+            absentSeries.getData().add(new XYChart.Data<>(date, absentCount));
+        }
+
+        // Add the absentSeries to the home_absentTodayChart line chart
+        home_absentTodayChart.getData().add(absentSeries);
+    }
+//    END CODE FOR HOME FORM
 
 //    START CODE FOR ADD STUDENT FORM
     public ObservableList<StudentData> addStudentListData () {
@@ -898,8 +1055,8 @@ public class DashboardController implements Initializable {
     }
     @FXML
     public void studentAttendanceStudentNumList(){
-        String selectedYear = (String) studentAttendance_year.getSelectionModel().getSelectedItem();
-        String selectedCourse = (String) studentAttendance_course.getSelectionModel().getSelectedItem();
+        String selectedYear = studentAttendance_year.getSelectionModel().getSelectedItem();
+        String selectedCourse = studentAttendance_course.getSelectionModel().getSelectedItem();
         /*
           studentAttendance_studentNum.getItems().clear();
         */
@@ -1023,17 +1180,36 @@ public class DashboardController implements Initializable {
                     prepare.close();
                     connect.close();
 
-                    // Optionally, you can show a success message or perform any other actions here
+                    // Show a success message
+                    Alert successAlert = new Alert(Alert.AlertType.INFORMATION);
+                    successAlert.setTitle("Information Message");
+                    successAlert.setHeaderText(null);
+                    successAlert.setContentText("Attendance marked successfully!");
+                    successAlert.showAndWait();
+
+                    // Optionally, you can perform any other actions here
                     studentAttendanceShowListData();
                     studentAttendanceClearBtnOnAction();
                 } catch (SQLException e) {
                     e.printStackTrace();
                     // Handle any database-related exceptions here
+
+                    // Display a database error message
+                    Alert errorAlert = new Alert(Alert.AlertType.ERROR);
+                    errorAlert.setTitle("Error Message");
+                    errorAlert.setHeaderText(null);
+                    errorAlert.setContentText("An error occurred while marking attendance. Please try again later.");
+                    errorAlert.showAndWait();
                 }
             }
         } else {
             // Handle the case where not all required fields are selected
             // Display an error message or take appropriate action
+            Alert missingFieldsAlert = new Alert(Alert.AlertType.ERROR);
+            missingFieldsAlert.setTitle("Error Message");
+            missingFieldsAlert.setHeaderText(null);
+            missingFieldsAlert.setContentText("Please select all required fields.");
+            missingFieldsAlert.showAndWait();
         }
     }
     @FXML
@@ -1083,16 +1259,42 @@ public class DashboardController implements Initializable {
                 connect.close();
 
                 if (updatedRows > 0) {
-                    System.out.println("Exit times updated for " + updatedRows + " records.");
+                    // Show a success message
+                    Alert successAlert = new Alert(Alert.AlertType.INFORMATION);
+                    successAlert.setTitle("Information Message");
+                    successAlert.setHeaderText(null);
+                    successAlert.setContentText("Exit times updated for " + updatedRows + " records.");
+                    successAlert.showAndWait();
+
+                    // Optionally, you can perform any other actions here
                     studentAttendanceShowListData();
                     studentAttendanceClearBtnOnAction();
                 } else {
-                    System.out.println("No records found for update.");
+                    // Show a message when no records were updated
+                    Alert noRecordsAlert = new Alert(Alert.AlertType.INFORMATION);
+                    noRecordsAlert.setTitle("Information Message");
+                    noRecordsAlert.setHeaderText(null);
+                    noRecordsAlert.setContentText("No records found for update.");
+                    noRecordsAlert.showAndWait();
                 }
             } catch (SQLException e) {
                 e.printStackTrace();
                 // Handle any database-related exceptions here
+
+                // Display a database error message
+                Alert errorAlert = new Alert(Alert.AlertType.ERROR);
+                errorAlert.setTitle("Error Message");
+                errorAlert.setHeaderText(null);
+                errorAlert.setContentText("An error occurred while updating exit times. Please try again later.");
+                errorAlert.showAndWait();
             }
+        } else {
+            // Handle the case where the database connection is null
+            Alert dbConnectionErrorAlert = new Alert(Alert.AlertType.ERROR);
+            dbConnectionErrorAlert.setTitle("Error Message");
+            dbConnectionErrorAlert.setHeaderText(null);
+            dbConnectionErrorAlert.setContentText("Unable to connect to the database. Please check your database connection.");
+            dbConnectionErrorAlert.showAndWait();
         }
     }
     @FXML
@@ -1141,6 +1343,12 @@ public class DashboardController implements Initializable {
     public void initialize(URL url, ResourceBundle resourceBundle) {
         displayUsername();
         defaultNav();
+        homeDisplayTotalEnrolledStudents();
+        homeDisplayPresentToday();
+        homeDisplayAbsentToday();
+        homeDisplayTotalEnrolledChart();
+        homeDisplayPresentTodayChart();
+        homeDisplayAbsentTodayChart();
 
         //  TO SHOW IMMEDIATELY WHEN PROCEEDED TO DASHBOARD APPLICATION FORM
         addStudentShowListData();

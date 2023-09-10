@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost
--- Generation Time: Sep 08, 2023 at 04:05 PM
+-- Generation Time: Sep 10, 2023 at 05:32 PM
 -- Server version: 10.4.28-MariaDB
 -- PHP Version: 8.0.28
 
@@ -53,14 +53,6 @@ CREATE TABLE `course` (
   `degree` varchar(200) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
---
--- Dumping data for table `course`
---
-
-INSERT INTO `course` (`id`, `course`, `description`, `degree`) VALUES
-(5, 'IWT', 'Internet and Web Technology', 'B.Tech (CSE)'),
-(6, 'DBMS', 'Database Management System', 'B.Tech (CSE)');
-
 -- --------------------------------------------------------
 
 --
@@ -81,14 +73,6 @@ CREATE TABLE `student` (
   `date` date NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
---
--- Dumping data for table `student`
---
-
-INSERT INTO `student` (`id`, `studentNum`, `year`, `course`, `firstName`, `lastName`, `gender`, `birthDate`, `status`, `image`, `date`) VALUES
-(2, 1001, '1st Year', 'IWT', 'Prithiraj', 'Rabha', 'Male', '2000-09-04', 'Enrolled', '/home/xaphene/IdeaProjects/AttendanceSystem/src/main/resources/com/bsmi/attendancesystem/images/avatar-male.png', '2023-09-07'),
-(3, 1002, '2nd Year', 'DBMS', 'Anjali', 'Kumari', 'Female', '2001-09-05', 'Enrolled', '/home/xaphene/IdeaProjects/AttendanceSystem/src/main/resources/com/bsmi/attendancesystem/images/avatar-female.png', '2023-09-07');
-
 -- --------------------------------------------------------
 
 --
@@ -103,14 +87,6 @@ CREATE TABLE `student_attendance` (
   `exit_time` datetime DEFAULT NULL,
   `status` enum('Present','Absent','Late') NOT NULL DEFAULT 'Absent'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Dumping data for table `student_attendance`
---
-
-INSERT INTO `student_attendance` (`id`, `student_id`, `course_id`, `entry_time`, `exit_time`, `status`) VALUES
-(1, 2, 5, '2023-09-08 12:29:08', NULL, 'Present'),
-(2, 2, 5, '2023-09-08 19:31:31', NULL, 'Present');
 
 --
 -- Indexes for dumped tables
@@ -157,19 +133,19 @@ ALTER TABLE `admin`
 -- AUTO_INCREMENT for table `course`
 --
 ALTER TABLE `course`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
 
 --
 -- AUTO_INCREMENT for table `student`
 --
 ALTER TABLE `student`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT for table `student_attendance`
 --
 ALTER TABLE `student_attendance`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=17;
 
 --
 -- Constraints for dumped tables
