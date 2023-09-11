@@ -984,7 +984,8 @@ public class DashboardController implements Initializable {
                         "student_attendance.entry_time, student_attendance.exit_time, student_attendance.status " +
                         "FROM student_attendance " +
                         "INNER JOIN student ON student_attendance.student_id = student.id " +
-                        "INNER JOIN course ON student_attendance.course_id = course.id";
+                        "INNER JOIN course ON student_attendance.course_id = course.id " +
+                        "WHERE DATE(student_attendance.entry_time) = CURDATE()";
                 prepare = connect.prepareStatement(query);
                 result = prepare.executeQuery();
                 while (result.next()) {
