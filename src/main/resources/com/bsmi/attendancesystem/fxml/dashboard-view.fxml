@@ -259,7 +259,7 @@
                                        </font>
                                     </Label>
                                     <TextField fx:id="addStudent_studentNum" layoutX="107.0" layoutY="287.0" prefHeight="24.0" prefWidth="166.0" styleClass="textfield" stylesheets="@../css/dashboard-style.css" />
-                                    <Label layoutX="57.0" layoutY="323.0" text="Semester:">
+                                    <Label layoutX="17.0" layoutY="323.0" text="Semester:">
                                        <font>
                                           <Font size="15.0" />
                                        </font>
@@ -381,7 +381,7 @@
                                           <Font size="15.0" />
                                        </font>
                                     </Label>
-                                    <Label layoutX="63.0" layoutY="53.0" text="Semester:">
+                                    <Label layoutX="26.0" layoutY="54.0" text="Semester:">
                                        <font>
                                           <Font size="15.0" />
                                        </font>
