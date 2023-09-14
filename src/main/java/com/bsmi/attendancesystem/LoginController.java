@@ -95,6 +95,9 @@ public class LoginController {
                     alert.showAndWait();
                 }
             }
+            result.close();
+            prepare.close();
+            connect.close();
         }catch (Exception e){e.printStackTrace();}
     }
     @FXML

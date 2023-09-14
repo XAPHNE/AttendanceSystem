@@ -383,6 +383,9 @@ public class DashboardController implements Initializable {
                 countEnrolled = result.getInt("enrolledCount");
             }
             home_totalEnrolled.setText(String.valueOf(countEnrolled));
+            result.close();
+            prepare.close();
+            connect.close();
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -408,6 +411,9 @@ public class DashboardController implements Initializable {
                 countPresentToday = result.getInt("presentCount");
             }
             home_presentToday.setText(String.valueOf(countPresentToday));
+            result.close();
+            prepare.close();
+            connect.close();
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -437,6 +443,9 @@ public class DashboardController implements Initializable {
                 chart.getData().add(new XYChart.Data(result.getString(1), result.getInt(2)));
             }
             home_totalEnrolledChart.getData().add(chart);
+            result.close();
+            prepare.close();
+            connect.close();
         } catch (Exception e) {e.printStackTrace();}
     }
     public void homeDisplayPresentTodayChart() {
@@ -468,6 +477,9 @@ public class DashboardController implements Initializable {
 
             // Add the series to the line chart
             home_presentTodayChart.getData().add(series);
+            result.close();
+            prepare.close();
+            connect.close();
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -519,6 +531,9 @@ public class DashboardController implements Initializable {
                         result.getString("image"));
                 listStudents.add(studentD);
             }
+            result.close();
+            prepare.close();
+            connect.close();
         }catch (Exception e) {e.printStackTrace();}
         return listStudents;
     }
@@ -594,6 +609,9 @@ public class DashboardController implements Initializable {
                 listC.add(result.getString("course"));
             }
             addStudent_course.setItems(listC);
+            result.close();
+            prepare.close();
+            connect.close();
         } catch (Exception e) {e.printStackTrace();}
     }
     @FXML
@@ -669,6 +687,10 @@ public class DashboardController implements Initializable {
                     addStudent_clearBtn_onAction();
                 }
             }
+            prepare.close();
+            result.close();
+            statement.close();
+            connect.close();
         } catch (Exception e) {e.printStackTrace();}
     }
     @FXML
@@ -722,6 +744,8 @@ public class DashboardController implements Initializable {
                     addStudent_clearBtn_onAction();
                 } else return;
             }
+            statement.close();
+            connect.close();
         } catch (Exception e) {e.printStackTrace();}
     }
     @FXML
@@ -764,6 +788,8 @@ public class DashboardController implements Initializable {
                     addStudent_clearBtn_onAction();
                 } else return;
             }
+            statement.close();
+            connect.close();
         } catch (Exception e) {e.printStackTrace();}
     }
     @FXML
@@ -830,6 +856,9 @@ public class DashboardController implements Initializable {
                         result.getString("degree"));
                 listCourses.add(courseD);
             }
+            result.close();
+            prepare.close();
+            connect.close();
         }catch (Exception e) {e.printStackTrace();}
         return listCourses;
     }
@@ -892,6 +921,10 @@ public class DashboardController implements Initializable {
                     availableCourse_clearBtn_onAction();
                 }
             }
+            prepare.close();
+            result.close();
+            statement.close();
+            connect.close();
         }catch (Exception e) {e.printStackTrace();}
     }
     @FXML
@@ -929,6 +962,8 @@ public class DashboardController implements Initializable {
                     availableCourse_clearBtn_onAction();
                 } else return;
             }
+            statement.close();
+            connect.close();
         } catch (Exception e) {e.printStackTrace();}
     }
     @FXML
@@ -970,6 +1005,8 @@ public class DashboardController implements Initializable {
                     availableCourse_clearBtn_onAction();
                 } else return;;
             }
+            statement.close();
+            connect.close();
         } catch (Exception e) {e.printStackTrace();}
     }
 //    END CODE FOR AVAILABLE COURSES FORM
