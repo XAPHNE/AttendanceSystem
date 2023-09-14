@@ -64,7 +64,7 @@ public class DashboardController implements Initializable {
     private TableColumn<StudentData, String> addStudent_col_studentNum;
 
     @FXML
-    private TableColumn<StudentData, String> addStudent_col_year;
+    private TableColumn<StudentData, String> addStudent_col_semester;
 
     @FXML
     private ComboBox<?> addStudent_course;
@@ -97,7 +97,7 @@ public class DashboardController implements Initializable {
     private TableView<StudentData> addStudent_tableView;
 
     @FXML
-    private ComboBox<?> addStudent_year;
+    private ComboBox<?> addStudent_semester;
 
     @FXML
     private Button availableCourse_addBtn;
@@ -196,7 +196,7 @@ public class DashboardController implements Initializable {
     private TableColumn<StudentAttendanceData, String> studentAttendance_col_studentNum;
 
     @FXML
-    private TableColumn<StudentAttendanceData, String> studentAttendance_col_year;
+    private TableColumn<StudentAttendanceData, String> studentAttendance_col_semester;
 
     @FXML
     private ComboBox<String> studentAttendance_course;
@@ -220,7 +220,7 @@ public class DashboardController implements Initializable {
     private TableView<StudentAttendanceData> studentAttendance_tableView;
 
     @FXML
-    private ComboBox<String> studentAttendance_year;
+    private ComboBox<String> studentAttendance_semester;
 
     @FXML
     private Label username;
@@ -232,8 +232,8 @@ public class DashboardController implements Initializable {
     private Statement statement;
     private ResultSet result;
     private Image image;
-    private String[] yearList = {"1st Year", "2nd Year", "3rd Year", "4th Year", "Graduated"};
-    private String[] genderList = {"Male", "Female", "Others"};
+    private String[] semesterList = {"1st Sem", "2nd Sem", "3rd Sem", "4th Sem", "5th Sem", "6th Sem", "7th Sem", "8th Sem", "Graduated"};
+    private String[] genderList = {"Male", "Female", "Other"};
     private String[] statusList = {"Enrolled", "Graduated", "Dropped Out"};
 
 //    START CODE FOR MINIMIZE BUTTON
@@ -295,7 +295,7 @@ public class DashboardController implements Initializable {
             studentAttendance_btn.setStyle("-fx-background-color: transparent");
             //  TO DISPLAY DATA FROM STUDENT TABLE WHEN ADD STUDENT BUTTON IS CLICKED
             addStudentShowListData();
-            addStudent_yearList();
+            addStudent_semesterList();
             addStudent_genderList();
             addStudent_statusList();
             setAddStudent_courseList();
@@ -324,7 +324,7 @@ public class DashboardController implements Initializable {
             studentAttendance_btn.setStyle("-fx-background-color: linear-gradient(to bottom right, #3f82ae, #26bf7d);");
 
             studentAttendanceShowListData();
-            studentAttendanceYearList();
+            studentAttendanceSemesterList();
             studentAttendanceCourseList();
             studentAttendanceStudentNumList();
             studentAttendanceSearchOnKeyTyped();
@@ -427,7 +427,7 @@ public class DashboardController implements Initializable {
     }
     public void homeDisplayTotalEnrolledChart () {
         home_totalEnrolledChart.getData().clear();
-        String query = "SELECT date, COUNT(DISTINCT id) FROM student WHERE status = 'Enrolled' GROUP BY date ORDER BY TIMESTAMP(date) ASC LIMIT 5";
+        String query = "SELECT added_on, COUNT(DISTINCT id) FROM student WHERE status = 'Enrolled' GROUP BY added_on ORDER BY TIMESTAMP(added_on) ASC LIMIT 5";
         connect = DatabaseConnection.connectDb();
         try {
             XYChart.Series chart = new XYChart.Series();
@@ -509,7 +509,7 @@ public class DashboardController implements Initializable {
             result = prepare.executeQuery();
             while (result.next()) {
                 studentD = new StudentData(result.getInt("studentNum"),
-                        result.getString("year"),
+                        result.getString("semester"),
                         result.getString("course"),
                         result.getString("firstName"),
                         result.getString("lastName"),
@@ -527,7 +527,7 @@ public class DashboardController implements Initializable {
         addStudentListD = addStudentListData();
 
         addStudent_col_studentNum.setCellValueFactory(new PropertyValueFactory<>("studentNum"));
-        addStudent_col_year.setCellValueFactory(new PropertyValueFactory<>("year"));
+        addStudent_col_semester.setCellValueFactory(new PropertyValueFactory<>("semester"));
         addStudent_col_course.setCellValueFactory(new PropertyValueFactory<>("course"));
         addStudent_col_firstName.setCellValueFactory(new PropertyValueFactory<>("firstName"));
         addStudent_col_lastName.setCellValueFactory(new PropertyValueFactory<>("lastName"));
@@ -556,13 +556,13 @@ public class DashboardController implements Initializable {
         GetData.path = studentD.getImage();
     }
     @FXML
-    public void addStudent_yearList() {
-        List<String> yearL = new ArrayList<>();
-        for (String data: yearList) {
-            yearL.add(data);
+    public void addStudent_semesterList() {
+        List<String> semesterL = new ArrayList<>();
+        for (String data: semesterList) {
+            semesterL.add(data);
         }
-        ObservableList ObList = FXCollections.observableArrayList(yearL);
-        addStudent_year.setItems(ObList);
+        ObservableList ObList = FXCollections.observableArrayList(semesterL);
+        addStudent_semester.setItems(ObList);
     }
     @FXML
     public void addStudent_genderList(){
@@ -611,13 +611,13 @@ public class DashboardController implements Initializable {
     @FXML
     public void addStudent_addBtn_onAction(){
         String insertData = "INSERT INTO student "
-                + "(studentNum, year, course, firstName, lastName, gender, birthDate, status, image, date) "
+                + "(studentNum, semester, course, firstName, lastName, gender, birthDate, status, image, added_on) "
                 + "VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
         connect = DatabaseConnection.connectDb();
         try {
             Alert alert;
             if (addStudent_studentNum.getText().isEmpty()
-                    || addStudent_year.getSelectionModel().getSelectedItem() == null
+                    || addStudent_semester.getSelectionModel().getSelectedItem() == null
                     || addStudent_course.getSelectionModel().getSelectedItem() == null
                     || addStudent_firstName.getText().isEmpty()
                     || addStudent_lastName.getText().isEmpty()
@@ -644,7 +644,7 @@ public class DashboardController implements Initializable {
                 } else {
                     prepare = connect.prepareStatement(insertData);
                     prepare.setString(1, addStudent_studentNum.getText());
-                    prepare.setString(2, (String) addStudent_year.getSelectionModel().getSelectedItem());
+                    prepare.setString(2, (String) addStudent_semester.getSelectionModel().getSelectedItem());
                     prepare.setString(3, (String) addStudent_course.getSelectionModel().getSelectedItem());
                     prepare.setString(4, addStudent_firstName.getText());
                     prepare.setString(5, addStudent_lastName.getText());
@@ -676,7 +676,7 @@ public class DashboardController implements Initializable {
         String uri = GetData.path;
         uri = uri.replace("\\", "\\\\");
         String updateData = "UPDATE student SET "
-                + "year = '" + addStudent_year.getSelectionModel().getSelectedItem()
+                + "semester = '" + addStudent_semester.getSelectionModel().getSelectedItem()
                 + "', course = '" + addStudent_course.getSelectionModel().getSelectedItem()
                 + "', firstName = '" + addStudent_firstName.getText()
                 + "', lastName = '" + addStudent_lastName.getText()
@@ -689,7 +689,7 @@ public class DashboardController implements Initializable {
         try {
             Alert alert;
             if (addStudent_studentNum.getText().isEmpty()
-                    || addStudent_year.getSelectionModel().getSelectedItem() == null
+                    || addStudent_semester.getSelectionModel().getSelectedItem() == null
                     || addStudent_course.getSelectionModel().getSelectedItem() == null
                     || addStudent_firstName.getText().isEmpty()
                     || addStudent_lastName.getText().isEmpty()
@@ -731,7 +731,7 @@ public class DashboardController implements Initializable {
         try {
             Alert alert;
             if (addStudent_studentNum.getText().isEmpty()
-                    || addStudent_year.getSelectionModel().getSelectedItem() == null
+                    || addStudent_semester.getSelectionModel().getSelectedItem() == null
                     || addStudent_course.getSelectionModel().getSelectedItem() == null
                     || addStudent_firstName.getText().isEmpty()
                     || addStudent_lastName.getText().isEmpty()
@@ -769,7 +769,7 @@ public class DashboardController implements Initializable {
     @FXML
     public void addStudent_clearBtn_onAction () {
         addStudent_studentNum.setText("");
-        addStudent_year.getSelectionModel().clearSelection();
+        addStudent_semester.getSelectionModel().clearSelection();
         addStudent_course.getSelectionModel().clearSelection();
         addStudent_firstName.setText("");
         addStudent_lastName.setText("");
@@ -796,7 +796,7 @@ public class DashboardController implements Initializable {
                 // You can simplify the conditions using a stream and anyMatch
                 return Stream.of(
                         predicateStudentData.getStudentNum().toString(),
-                        predicateStudentData.getYear(),
+                        predicateStudentData.getSemester(),
                         predicateStudentData.getCourse(),
                         predicateStudentData.getFirstName(),
                         predicateStudentData.getLastName(),
@@ -977,28 +977,31 @@ public class DashboardController implements Initializable {
 //    START CODE FOR STUDENT ATTENDANCE FORM
     public ObservableList <StudentAttendanceData> studentAttendanceListData(){
         ObservableList <StudentAttendanceData> listStudentAttendance = FXCollections.observableArrayList();
+        String query = "SELECT student.studentNum, student.semester, student.course, " +
+                "student_attendance.entry_time, student_attendance.exit_time, student_attendance.status " +
+                "FROM student_attendance " +
+                "INNER JOIN student ON student_attendance.student_id = student.id " +
+                "INNER JOIN course ON student_attendance.course_id = course.id " +
+                "WHERE DATE(student_attendance.entry_time) = CURDATE()";
         connect = DatabaseConnection.connectDb();
         if (connect != null) {
             try {
-                String query = "SELECT student.studentNum, student.year, student.course, " +
-                        "student_attendance.entry_time, student_attendance.exit_time, student_attendance.status " +
-                        "FROM student_attendance " +
-                        "INNER JOIN student ON student_attendance.student_id = student.id " +
-                        "INNER JOIN course ON student_attendance.course_id = course.id " +
-                        "WHERE DATE(student_attendance.entry_time) = CURDATE()";
+                StudentAttendanceData record;
                 prepare = connect.prepareStatement(query);
                 result = prepare.executeQuery();
                 while (result.next()) {
-                    StudentAttendanceData record = new StudentAttendanceData();
-                    record.setStudentNum(result.getString("studentNum"));
-                    record.setYear(result.getString("year"));
-                    record.setCourse(result.getString("course"));
-                    record.setEntryTime(result.getString("entry_time"));
-                    record.setExitTime(result.getString("exit_time"));
-                    record.setStatus(result.getString("status"));
+                    record = new StudentAttendanceData(result.getString("studentNum"),
+                            result.getString("semester"),
+                            result.getString("course"),
+                            result.getString("entry_time"),
+                            result.getString("exit_time"),
+                            result.getString("status"));
                     listStudentAttendance.add(record);
                 }
-            } catch (Exception e) {
+                result.close();
+                prepare.close();
+                connect.close();
+            } catch (SQLException e) {
                 e.printStackTrace();
             }
         }
@@ -1009,7 +1012,7 @@ public class DashboardController implements Initializable {
     public void studentAttendanceShowListData(){
         observableAttendanceData = studentAttendanceListData();
         studentAttendance_col_studentNum.setCellValueFactory(new PropertyValueFactory<>("studentNum"));
-        studentAttendance_col_year.setCellValueFactory(new PropertyValueFactory<>("year"));
+        studentAttendance_col_semester.setCellValueFactory(new PropertyValueFactory<>("semester"));
         studentAttendance_col_course.setCellValueFactory(new PropertyValueFactory<>("course"));
         studentAttendance_col_entryTime.setCellValueFactory(new PropertyValueFactory<>("entryTime"));
         studentAttendance_col_exitTime.setCellValueFactory(new PropertyValueFactory<>("exitTime"));
@@ -1018,27 +1021,27 @@ public class DashboardController implements Initializable {
         studentAttendance_tableView.setItems(observableAttendanceData);
     }
     @FXML
-    public void studentAttendanceYearList(){
-        //  studentAttendance_year.getItems().clear();
-        List <String> yearL = new ArrayList<>();
-        for (String data: yearList){
-            yearL.add(data);
+    public void studentAttendanceSemesterList(){
+        //  studentAttendance_semester.getItems().clear();
+        List <String> semesterL = new ArrayList<>();
+        for (String data: semesterList){
+            semesterL.add(data);
         }
-        ObservableList <String> ObList = FXCollections.observableArrayList(yearL);
-        studentAttendance_year.setItems(ObList);
+        ObservableList <String> ObList = FXCollections.observableArrayList(semesterL);
+        studentAttendance_semester.setItems(ObList);
 
-        studentAttendance_year.setOnAction(e -> studentAttendanceCourseList());
+        studentAttendance_semester.setOnAction(e -> studentAttendanceCourseList());
     }
     @FXML
     public void studentAttendanceCourseList(){
         //  studentAttendance_course.getItems().clear();
-        String selectedYear = studentAttendance_year.getSelectionModel().getSelectedItem();
+        String selectedSemester = studentAttendance_semester.getSelectionModel().getSelectedItem();
         connect = DatabaseConnection.connectDb();
         if (connect != null){
             try {
-                String query = "SELECT DISTINCT course FROM student WHERE year = ?";
+                String query = "SELECT DISTINCT course FROM student WHERE semester = ?";
                 prepare = connect.prepareStatement(query);
-                prepare.setString(1, selectedYear);
+                prepare.setString(1, selectedSemester);
                 result = prepare.executeQuery();
                 ObservableList <String> courseList = FXCollections.observableArrayList();
                 while (result.next()){
@@ -1056,7 +1059,7 @@ public class DashboardController implements Initializable {
     }
     @FXML
     public void studentAttendanceStudentNumList(){
-        String selectedYear = studentAttendance_year.getSelectionModel().getSelectedItem();
+        String selectedSemester = studentAttendance_semester.getSelectionModel().getSelectedItem();
         String selectedCourse = studentAttendance_course.getSelectionModel().getSelectedItem();
         /*
           studentAttendance_studentNum.getItems().clear();
@@ -1065,9 +1068,9 @@ public class DashboardController implements Initializable {
         if (connect != null) {
             try {
 
-                String query = "SELECT DISTINCT studentNum FROM student WHERE year = ? AND course = ?";
+                String query = "SELECT DISTINCT studentNum FROM student WHERE semester = ? AND course = ?";
                 prepare = connect.prepareStatement(query);
-                prepare.setString(1, selectedYear);
+                prepare.setString(1, selectedSemester);
                 prepare.setString(2, selectedCourse);
                 
                 result = prepare.executeQuery();
@@ -1085,18 +1088,18 @@ public class DashboardController implements Initializable {
             }
         }
     }
-    // Method to fetch student_id based on studentNum, year, and course
-    private int fetchStudentId(String studentNum, String year, String course) {
+    // Method to fetch student_id based on studentNum, semester, and course
+    private int fetchStudentId(String studentNum, String semester, String course) {
         int studentId = -1; // Initialize to a default value (e.g., -1) to indicate no matching student found
 
         connect = DatabaseConnection.connectDb();
 
         if (connect != null) {
             try {
-                String query = "SELECT id FROM student WHERE studentNum = ? AND year = ? AND course = ?";
+                String query = "SELECT id FROM student WHERE studentNum = ? AND semester = ? AND course = ?";
                 PreparedStatement preparedStatement = connect.prepareStatement(query);
                 preparedStatement.setString(1, studentNum);
-                preparedStatement.setString(2, year);
+                preparedStatement.setString(2, semester);
                 preparedStatement.setString(3, course);
 
                 ResultSet resultSet = preparedStatement.executeQuery();
@@ -1150,11 +1153,11 @@ public class DashboardController implements Initializable {
     @FXML
     public void studentAttendanceMarkEntryBtnOnAction() {
         String selectedStudentNum = studentAttendance_studentNum.getValue();
-        String selectedYear = studentAttendance_year.getValue();
+        String selectedSemester = studentAttendance_semester.getValue();
         String selectedCourse = studentAttendance_course.getValue();
 
         // Check if all required fields are selected
-        if (selectedStudentNum != null && selectedYear != null && selectedCourse != null) {
+        if (selectedStudentNum != null && selectedSemester != null && selectedCourse != null) {
             // Get the current timestamp
             Timestamp entryTime = new Timestamp(new Date().getTime());
 
@@ -1166,8 +1169,8 @@ public class DashboardController implements Initializable {
                     String query = "INSERT INTO student_attendance (student_id, course_id, entry_time, exit_time, status) VALUES (?, ?, ?, NULL, 'Present')";
                     prepare = connect.prepareStatement(query);
 
-                    // You need to fetch the student_id and course_id based on the selected studentNum, year, and course
-                    int studentId = fetchStudentId(selectedStudentNum, selectedYear, selectedCourse);
+                    // You need to fetch the student_id and course_id based on the selected studentNum, semester, and course
+                    int studentId = fetchStudentId(selectedStudentNum, selectedSemester, selectedCourse);
                     int courseId = fetchCourseId(selectedCourse);
 
                     prepare.setInt(1, studentId);
@@ -1215,7 +1218,7 @@ public class DashboardController implements Initializable {
     }
     @FXML
     public void studentAttendanceMarkExitOnAction() {
-        String selectedYear = studentAttendance_year.getSelectionModel().getSelectedItem();
+        String selectedSemester = studentAttendance_semester.getSelectionModel().getSelectedItem();
         String selectedCourse = studentAttendance_course.getSelectionModel().getSelectedItem();
         String selectedStudentNum = studentAttendance_studentNum.getSelectionModel().getSelectedItem();
         connect = DatabaseConnection.connectDb(); // Replace with your actual database connection code
@@ -1229,7 +1232,7 @@ public class DashboardController implements Initializable {
                 String query = "UPDATE student_attendance SET exit_time = ? " +
                         "WHERE entry_time >= ? AND entry_time < ? " +
                         "AND exit_time IS NULL " +
-                        "AND student_id IN (SELECT id FROM student WHERE year = ? AND course = ? AND studentNum = ?)";
+                        "AND student_id IN (SELECT id FROM student WHERE semester = ? AND course = ? AND studentNum = ?)";
 
                 // Set a time range for checking entry_time (e.g., for the current day)
                 // You may need to adjust this time range based on your specific requirements
@@ -1248,7 +1251,7 @@ public class DashboardController implements Initializable {
                 prepare.setTimestamp(1, currentTimestamp);
                 prepare.setTimestamp(2, startOfDay);
                 prepare.setTimestamp(3, endOfDay);
-                prepare.setString(4, selectedYear);
+                prepare.setString(4, selectedSemester);
                 prepare.setString(5, selectedCourse);
                 prepare.setString(6, selectedStudentNum);
 
@@ -1300,8 +1303,8 @@ public class DashboardController implements Initializable {
     }
     @FXML
     public void studentAttendanceClearBtnOnAction() {
-        studentAttendance_year.getSelectionModel().clearSelection();
-        studentAttendance_year.setPromptText("Choose"); // Set the prompt text for year ComboBox
+        studentAttendance_semester.getSelectionModel().clearSelection();
+        studentAttendance_semester.setPromptText("Choose"); // Set the prompt text for semester ComboBox
         studentAttendance_course.getSelectionModel().clearSelection();
         studentAttendance_course.setPromptText("Choose"); // Set the prompt text for course ComboBox
         studentAttendance_studentNum.getSelectionModel().clearSelection();
@@ -1324,7 +1327,7 @@ public class DashboardController implements Initializable {
                 // You can simplify the conditions using a stream and anyMatch
                 return Stream.of(
                         predicateStudentData.getStudentNum().toString(),
-                        predicateStudentData.getYear(),
+                        predicateStudentData.getSemester(),
                         predicateStudentData.getCourse(),
                         predicateStudentData.getEntryTime(),
                         //predicateStudentData.getExitTime(),
@@ -1353,7 +1356,7 @@ public class DashboardController implements Initializable {
 
         //  TO SHOW IMMEDIATELY WHEN PROCEEDED TO DASHBOARD APPLICATION FORM
         addStudentShowListData();
-        addStudent_yearList();
+        addStudent_semesterList();
         addStudent_genderList();
         addStudent_statusList();
         setAddStudent_courseList();
@@ -1362,7 +1365,7 @@ public class DashboardController implements Initializable {
         availableCourseShowListData();
 
         //  Initialize the ComboBox when the controller is loaded
-        studentAttendanceYearList();
+        studentAttendanceSemesterList();
         studentAttendanceCourseList();
         studentAttendanceStudentNumList();
         studentAttendanceShowListData();

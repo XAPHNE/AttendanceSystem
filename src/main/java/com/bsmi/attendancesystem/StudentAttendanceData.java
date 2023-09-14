@@ -2,14 +2,14 @@ package com.bsmi.attendancesystem;
 
 public class StudentAttendanceData {
     private String studentNum;
-    private String year;
+    private String semester;
     private String course;
     private String entryTime;
     private String exitTime;
     private String status;
-    public StudentAttendanceData() {
+    public StudentAttendanceData(String studentNum, String semester,String course, String entryTime, String exitTime, String status) {
         this.studentNum = studentNum;
-        this.year = year;
+        this.semester = semester;
         this.course = course;
         this.entryTime = entryTime;
         this.exitTime = exitTime;
@@ -23,12 +23,12 @@ public class StudentAttendanceData {
         this.studentNum = studentNum;
     }
 
-    public String getYear() {
-        return year;
+    public String getSemester() {
+        return semester;
     }
 
-    public void setYear(String year) {
-        this.year = year;
+    public void setSemester(String semester) {
+        this.semester = semester;
     }
 
     public String getCourse() {

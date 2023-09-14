@@ -4,7 +4,7 @@ import java.sql.Date;
 
 public class StudentData {
     private Integer studentNum;
-    private String year;
+    private String semester;
     private String course;
     private String firstName;
     private String lastName;
@@ -13,9 +13,9 @@ public class StudentData {
     private String status;
     private String image;
 
-    public StudentData (Integer studentNum, String year, String course, String firstName, String lastName, String gender, Date birthDate, String status, String image) {
+    public StudentData (Integer studentNum, String semester, String course, String firstName, String lastName, String gender, Date birthDate, String status, String image) {
         this.studentNum = studentNum;
-        this.year = year;
+        this.semester = semester;
         this.course = course;
         this.firstName = firstName;
         this.lastName = lastName;
@@ -29,8 +29,8 @@ public class StudentData {
         return studentNum;
     }
 
-    public String getYear() {
-        return year;
+    public String getSemester() {
+        return semester;
     }
 
     public String getCourse() {

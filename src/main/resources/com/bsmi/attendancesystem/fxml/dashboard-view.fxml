@@ -242,7 +242,7 @@
                                           <TableView fx:id="addStudent_tableView" layoutX="14.0" layoutY="53.0" onMouseClicked="#addStudentSelect" prefHeight="200.0" prefWidth="847.0">
                                              <columns>
                                                 <TableColumn fx:id="addStudent_col_studentNum" prefWidth="75.0" text="Student#" />
-                                                <TableColumn fx:id="addStudent_col_year" prefWidth="75.0" text="Year" />
+                                                <TableColumn fx:id="addStudent_col_semester" prefWidth="75.0" text="Semester" />
                                                 <TableColumn fx:id="addStudent_col_course" prefWidth="87.0" text="Course" />
                                                 <TableColumn fx:id="addStudent_col_firstName" prefWidth="145.0" text="First Name" />
                                                 <TableColumn fx:id="addStudent_col_lastName" prefWidth="161.0" text="Last Name" />
@@ -259,12 +259,12 @@
                                        </font>
                                     </Label>
                                     <TextField fx:id="addStudent_studentNum" layoutX="107.0" layoutY="287.0" prefHeight="24.0" prefWidth="166.0" styleClass="textfield" stylesheets="@../css/dashboard-style.css" />
-                                    <Label layoutX="57.0" layoutY="323.0" text="Year:">
+                                    <Label layoutX="57.0" layoutY="323.0" text="Semester:">
                                        <font>
                                           <Font size="15.0" />
                                        </font>
                                     </Label>
-                                    <ComboBox fx:id="addStudent_year" layoutX="107.0" layoutY="321.0" onAction="#addStudent_yearList" prefWidth="166.0" promptText="Choose" styleClass="textfield" stylesheets="@../css/dashboard-style.css" />
+                                    <ComboBox fx:id="addStudent_semester" layoutX="107.0" layoutY="321.0" onAction="#addStudent_semesterList" prefWidth="166.0" promptText="Choose" styleClass="textfield" stylesheets="@../css/dashboard-style.css" />
                                     <Label layoutX="38.0" layoutY="361.0" text="Course:">
                                        <font>
                                           <Font size="15.0" />
@@ -381,7 +381,7 @@
                                           <Font size="15.0" />
                                        </font>
                                     </Label>
-                                    <Label layoutX="63.0" layoutY="53.0" text="Year:">
+                                    <Label layoutX="63.0" layoutY="53.0" text="Semester:">
                                        <font>
                                           <Font size="15.0" />
                                        </font>
@@ -393,7 +393,7 @@
                                     </Label>
                                     <Button fx:id="studentAttendance_markExitBtn" layoutX="164.0" layoutY="366.0" mnemonicParsing="false" onAction="#studentAttendanceMarkExitOnAction" prefHeight="35.0" prefWidth="95.0" styleClass="update-btn" stylesheets="@../css/dashboard-style.css" text="Mark Exit" />
                                     <Button fx:id="studentAttendance_clearBtn" layoutX="59.0" layoutY="366.0" mnemonicParsing="false" onAction="#studentAttendanceClearBtnOnAction" prefHeight="35.0" prefWidth="95.0" styleClass="clear-btn" stylesheets="@../css/dashboard-style.css" text="Clear" />
-                                    <ComboBox fx:id="studentAttendance_year" layoutX="113.0" layoutY="50.0" onAction="#studentAttendanceYearList" prefHeight="24.0" prefWidth="190.0" promptText="Choose" styleClass="textfield" stylesheets="@../css/dashboard-style.css" />
+                                    <ComboBox fx:id="studentAttendance_semester" layoutX="113.0" layoutY="50.0" onAction="#studentAttendanceSemesterList" prefHeight="24.0" prefWidth="190.0" promptText="Choose" styleClass="textfield" stylesheets="@../css/dashboard-style.css" />
                                     <ComboBox fx:id="studentAttendance_course" layoutX="112.0" layoutY="87.0" onAction="#studentAttendanceCourseList" prefHeight="24.0" prefWidth="190.0" promptText="Choose" styleClass="textfield" stylesheets="@../css/dashboard-style.css" />
                                     <ComboBox fx:id="studentAttendance_studentNum" layoutX="113.0" layoutY="125.0" onAction="#studentAttendanceStudentNumList" prefHeight="24.0" prefWidth="190.0" promptText="Choose" styleClass="textfield" stylesheets="@../css/dashboard-style.css" />
                                     <Button fx:id="studentAttendance_markEntryBtn" layoutX="164.0" layoutY="321.0" mnemonicParsing="false" onAction="#studentAttendanceMarkEntryBtnOnAction" prefHeight="35.0" prefWidth="95.0" styleClass="add-btn" stylesheets="@../css/dashboard-style.css" text="Mark Entry" />
@@ -408,7 +408,7 @@
                                     <TableView fx:id="studentAttendance_tableView" layoutX="15.0" layoutY="52.0" prefHeight="465.0" prefWidth="511.0" AnchorPane.bottomAnchor="12.0" AnchorPane.leftAnchor="15.0" AnchorPane.rightAnchor="12.0" AnchorPane.topAnchor="52.0">
                                        <columns>
                                           <TableColumn fx:id="studentAttendance_col_studentNum" prefWidth="84.0" text="Student#" />
-                                          <TableColumn fx:id="studentAttendance_col_year" prefWidth="52.0" text="Year" />
+                                          <TableColumn fx:id="studentAttendance_col_semester" prefWidth="52.0" text="Semester" />
                                           <TableColumn fx:id="studentAttendance_col_course" prefWidth="84.0" text="Course" />
                                           <TableColumn fx:id="studentAttendance_col_entryTime" prefWidth="108.0" text="Entry Time" />
                                           <TableColumn fx:id="studentAttendance_col_exitTime" prefWidth="93.0" text="Exit Time" />
