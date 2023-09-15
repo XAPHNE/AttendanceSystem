@@ -12,6 +12,7 @@ import javafx.fxml.FXML;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 import javafx.scene.input.MouseEvent;
+import org.mindrot.jbcrypt.BCrypt;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -37,57 +38,75 @@ public class LoginController {
 
     @FXML
     protected void loginButtonOnAction(){
-        String sql = "SELECT * FROM admin WHERE username = ? AND password = ?";
+        String sql = "SELECT * FROM admin WHERE username = ?";
         connect = DatabaseConnection.connectDb();
         try {
             Alert alert;
             prepare = connect.prepareStatement(sql);
             prepare.setString(1, usernameMFXTextField.getText());
-            prepare.setString(2, passwordMFXPasswordField.getText());
             result = prepare.executeQuery();
-//            EMPTY FIELD CHECK
+
+            // EMPTY FIELD CHECK
             if (usernameMFXTextField.getText().isEmpty() || passwordMFXPasswordField.getText().isEmpty()){
                 alert = new Alert(Alert.AlertType.ERROR);
                 alert.setTitle("Error Message");
                 alert.setHeaderText(null);
                 alert.setContentText("Please fill all blank fields");
                 alert.showAndWait();
-            }else {
+            } else {
                 if (result.next()) {
-//                    PROCEDING TO DASHBOARD FORM
-                    GetData.username = usernameMFXTextField.getText();
-                    alert = new Alert(Alert.AlertType.INFORMATION);
-                    alert.setTitle("Information Message");
-                    alert.setHeaderText(null);
-                    alert.setContentText("Login Successful");
-                    alert.showAndWait();
-//                    HIDING LOGIN FORM
-                    loginButton.getScene().getWindow().hide();
-//                    LINKING DASHBOARD
-                    Parent root = FXMLLoader.load(getClass().getResource("fxml/dashboard-view.fxml"));
-                    Stage stage = new Stage();
-                    Scene scene = new Scene(root);
-                    stage.setTitle("Dashboard | Student Management System");
-                    // Make the window draggable
-                    root.setOnMousePressed((MouseEvent event) -> {
-                        xOffset = event.getSceneX();
-                        yOffset = event.getSceneY();
-                    });
-                    root.setOnMouseDragged((MouseEvent event) -> {
-                        stage.setX(event.getScreenX() - xOffset);
-                        stage.setY(event.getScreenY() - yOffset);
-                        stage.setOpacity(.6);
-                    });
+                    String storedHashedPassword = result.getString("password_hash"); // Retrieve hashed password from the database
+                    String enteredPassword = passwordMFXPasswordField.getText();
 
-                    // Reset opacity on mouse release
-                    root.setOnMouseReleased((MouseEvent event) -> {
-                        stage.setOpacity(1);
-                    });
-                    stage.initStyle(StageStyle.TRANSPARENT);
-                    stage.setScene(scene);
-                    stage.show();
-                }else {
-//                    ERROR MESSAGE WILL APPEAR
+                    if (BCrypt.checkpw(enteredPassword, storedHashedPassword)) { // Check if entered password matches the hashed password
+                        // PROCEDING TO DASHBOARD FORM
+                        GetData.username = usernameMFXTextField.getText();
+                        GetData.userRole = result.getString("user_role");
+                        alert = new Alert(Alert.AlertType.INFORMATION);
+                        alert.setTitle("Information Message");
+                        alert.setHeaderText(null);
+                        alert.setContentText("Login Successful");
+                        alert.showAndWait();
+
+                        // HIDING LOGIN FORM
+                        loginButton.getScene().getWindow().hide();
+
+                        // LINKING DASHBOARD
+                        Parent root = FXMLLoader.load(getClass().getResource("fxml/dashboard-view.fxml"));
+                        Stage stage = new Stage();
+                        Scene scene = new Scene(root);
+                        stage.setTitle("Dashboard | Student Management System");
+
+                        // Make the window draggable
+                        root.setOnMousePressed((MouseEvent event) -> {
+                            xOffset = event.getSceneX();
+                            yOffset = event.getSceneY();
+                        });
+
+                        root.setOnMouseDragged((MouseEvent event) -> {
+                            stage.setX(event.getScreenX() - xOffset);
+                            stage.setY(event.getScreenY() - yOffset);
+                            stage.setOpacity(.6);
+                        });
+
+                        // Reset opacity on mouse release
+                        root.setOnMouseReleased((MouseEvent event) -> {
+                            stage.setOpacity(1);
+                        });
+
+                        stage.initStyle(StageStyle.TRANSPARENT);
+                        stage.setScene(scene);
+                        stage.show();
+                    } else {
+                        // ERROR MESSAGE WILL APPEAR
+                        alert = new Alert(Alert.AlertType.ERROR);
+                        alert.setTitle("Error Message");
+                        alert.setHeaderText(null);
+                        alert.setContentText("Incorrect Username/Password");
+                        alert.showAndWait();
+                    }
+                } else {
+                    // ERROR MESSAGE WILL APPEAR
                     alert = new Alert(Alert.AlertType.ERROR);
                     alert.setTitle("Error Message");
                     alert.setHeaderText(null);
@@ -98,8 +117,11 @@ public class LoginController {
             result.close();
             prepare.close();
             connect.close();
-        }catch (Exception e){e.printStackTrace();}
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
+
     @FXML
     public void closeButtonOnAction(ActionEvent e) {
 //        Stage stage = (Stage) closeButton.getScene().getWindow();
