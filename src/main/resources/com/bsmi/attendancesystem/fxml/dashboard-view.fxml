@@ -9,6 +9,7 @@
 <?import javafx.scene.control.ComboBox?>
 <?import javafx.scene.control.DatePicker?>
 <?import javafx.scene.control.Label?>
+<?import javafx.scene.control.PasswordField?>
 <?import javafx.scene.control.TableColumn?>
 <?import javafx.scene.control.TableView?>
 <?import javafx.scene.control.TextField?>
@@ -102,6 +103,11 @@
                                     <Font size="15.0" />
                                  </font>
                               </Label>
+                              <Button fx:id="userManagement_btn" layoutX="10.0" layoutY="387.0" mnemonicParsing="false" onAction="#switchFormOnAction" prefHeight="35.0" prefWidth="180.0" styleClass="nav-btn" stylesheets="@../css/dashboard-style.css" text="Manage Users">
+                                 <graphic>
+                                    <FontIcon iconColor="WHITE" iconLiteral="fas-users-cog" />
+                                 </graphic>
+                              </Button>
                            </children>
                         </AnchorPane>
                      </children>
@@ -417,6 +423,67 @@
                                     </TableView>
                                     <TextField fx:id="studentAttendance_search" layoutX="14.0" layoutY="14.0" onAction="#studentAttendanceSearchOnKeyTyped" prefHeight="24.0" prefWidth="270.0" promptText="Search" styleClass="search" stylesheets="@../css/dashboard-style.css" />
                                     <FontIcon iconLiteral="fa-search" iconSize="20" layoutX="21.0" layoutY="33.0" />
+                                 </children>
+                              </AnchorPane>
+                           </children>
+                        </AnchorPane>
+                        <AnchorPane fx:id="userManagement_form" layoutX="14.0" layoutY="14.0" prefHeight="560.0" prefWidth="900.0" visible="false" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                           <children>
+                              <AnchorPane layoutX="14.0" layoutY="14.0" prefHeight="529.0" prefWidth="381.0" stylesheets="@../css/dashboard-style.css">
+                                 <styleClass>
+                                    <String fx:value="white-bg" />
+                                    <String fx:value="shadow" />
+                                 </styleClass>
+                                 <children>
+                                    <Label layoutX="77.0" layoutY="54.0" text="Username:">
+                                       <font>
+                                          <Font size="15.0" />
+                                       </font>
+                                    </Label>
+                                    <TextField fx:id="userManagement_username" layoutX="169.0" layoutY="50.0" prefWidth="190.0" styleClass="textfield" stylesheets="@../css/dashboard-style.css" />
+                                    <Label layoutX="82.0" layoutY="94.0" text="Password:">
+                                       <font>
+                                          <Font size="15.0" />
+                                       </font>
+                                    </Label>
+                                    <Label layoutX="18.0" layoutY="134.0" text="Confirm Password:">
+                                       <font>
+                                          <Font size="15.0" />
+                                       </font>
+                                    </Label>
+                                    <Button fx:id="userManagement_addBtn" layoutX="100.0" layoutY="292.0" mnemonicParsing="false" onAction="#userManagementAddBtn_onAction" prefHeight="35.0" prefWidth="85.0" styleClass="add-btn" stylesheets="@../css/dashboard-style.css" text="Add" />
+                                    <Button fx:id="userManagement_updateBtn" layoutX="196.0" layoutY="292.0" mnemonicParsing="false" onAction="#userManagementUpdateBtn_onAction" prefHeight="35.0" prefWidth="85.0" styleClass="update-btn" stylesheets="@../css/dashboard-style.css" text="Update" />
+                                    <Button fx:id="userManagement_deleteBtn" layoutX="196.0" layoutY="340.0" mnemonicParsing="false" onAction="#userManagementDeleteBtn_onAction" prefHeight="35.0" prefWidth="85.0" styleClass="delete-btn" stylesheets="@../css/dashboard-style.css" text="Delete" />
+                                    <Button fx:id="userManagement_clearBtn" layoutX="100.0" layoutY="340.0" mnemonicParsing="false" onAction="#userManagementClearBtn_onAction" prefHeight="35.0" prefWidth="85.0" styleClass="clear-btn" stylesheets="@../css/dashboard-style.css" text="Clear" />
+                                    <ComboBox fx:id="userManagement_userRole" layoutX="169.0" layoutY="171.0" prefHeight="24.0" prefWidth="190.0" promptText="Choose" styleClass="textfield" stylesheets="@../css/dashboard-style.css" />
+                                    <Label layoutX="81.0" layoutY="175.0" text="User Role:">
+                                       <font>
+                                          <Font size="15.0" />
+                                       </font>
+                                    </Label>
+                                    <PasswordField fx:id="userManagement_confirmPassword" layoutX="169.0" layoutY="132.0" prefHeight="24.0" prefWidth="190.0" styleClass="textfield" stylesheets="@../css/dashboard-style.css" />
+                                    <PasswordField fx:id="userManagement_password" layoutX="169.0" layoutY="91.0" prefHeight="24.0" prefWidth="190.0" styleClass="textfield" stylesheets="@../css/dashboard-style.css" />
+                                    <Label fx:id="userManagement_id_label" layoutX="101.0" layoutY="17.0" text="User Id:">
+                                       <font>
+                                          <Font size="15.0" />
+                                       </font>
+                                    </Label>
+                                    <TextField fx:id="userManagement_id" disable="true" editable="false" layoutX="169.0" layoutY="14.0" prefWidth="190.0" promptText="Hidden Field" styleClass="textfield" stylesheets="@../css/dashboard-style.css" />
+                                 </children>
+                              </AnchorPane>
+                              <AnchorPane layoutX="406.0" layoutY="18.0" prefHeight="529.0" prefWidth="480.0" stylesheets="@../css/dashboard-style.css">
+                                 <styleClass>
+                                    <String fx:value="white-bg" />
+                                    <String fx:value="shadow" />
+                                 </styleClass>
+                                 <children>
+                                    <TableView fx:id="userManagement_tableView" layoutX="8.0" layoutY="14.0" onMouseClicked="#userManagementSelect" prefHeight="501.0" prefWidth="465.0">
+                                       <columns>
+                                          <TableColumn fx:id="userManagement_col_serialNum" prefWidth="97.0" text="Serial #" />
+                                          <TableColumn fx:id="userManagement_col_username" prefWidth="235.0" text="Username" />
+                                          <TableColumn fx:id="userManagement_col_userRole" prefWidth="128.0" text="Role" />
+                                       </columns>
+                                    </TableView>
                                  </children>
                               </AnchorPane>
                            </children>
