@@ -446,6 +446,32 @@ public class DashboardController implements Initializable {
     }
 //    END CODE FOR LOGOUT BUTTON
 
+//COMBOBOX SET_PROMPT_TEXT ACTIONS ->
+
+    // Method to initialize ComboBoxes with prompt text "Choose" for specific ComboBoxes
+    @SafeVarargs
+    private void initializeComboBoxes(ComboBox<String>... comboBoxesToSetPrompt) {
+        for (ComboBox<String> comboBox : comboBoxesToSetPrompt) {
+            setComboBoxPromptText(comboBox);
+        }
+    }
+
+    // Create a method to set the prompt text for a ComboBox to "Choose"
+    private void setComboBoxPromptText(ComboBox<String> comboBox) {
+        comboBox.setPromptText("Choose");
+        comboBox.setButtonCell(new ListCell<>() {
+            @Override
+            protected void updateItem(String item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || item == null) {
+                    setText("Choose");
+                } else {
+                    setText(item);
+                }
+            }
+        });
+    }
+    
 //    START CODE FOR HOME FORM
     public void homeDisplayTotalEnrolledStudents() {
         String query = "SELECT COUNT(DISTINCT studentNum) AS enrolledCount FROM student WHERE status = 'Enrolled'";
@@ -889,6 +915,8 @@ public class DashboardController implements Initializable {
         addStudent_status.getSelectionModel().clearSelection();
         addStudent_imageView.setImage(null);
         GetData.path = "";
+
+        initializeComboBoxes(addStudent_semester, addStudent_course, addStudent_gender, addStudent_status);
     }
     @FXML
     public void addStudent_search_onKeyTyped() {
@@ -1431,15 +1459,16 @@ public class DashboardController implements Initializable {
             dbConnectionErrorAlert.showAndWait();
         }
     }
+    
     @FXML
     public void studentAttendanceClearBtnOnAction() {
         studentAttendance_semester.getSelectionModel().clearSelection();
-        studentAttendance_semester.setPromptText("Choose"); // Set the prompt text for semester ComboBox
-        studentAttendance_course.getSelectionModel().clearSelection();
-        studentAttendance_course.setPromptText("Choose"); // Set the prompt text for course ComboBox
+        studentAttendance_course.getSelectionModel().clearSelection();;
         studentAttendance_studentNum.getSelectionModel().clearSelection();
-        studentAttendance_studentNum.setPromptText("Choose"); // Set the prompt text for studentNum ComboBox
+
+        initializeComboBoxes(studentAttendance_semester, studentAttendance_course, studentAttendance_studentNum);
     }
+    
     @FXML
     public void studentAttendanceSearchOnKeyTyped() {
         // Assuming observableAttendanceData is a properly populated ObservableList<StudentAttendanceData>
@@ -1742,6 +1771,8 @@ public class DashboardController implements Initializable {
         userManagement_password.clear();
         userManagement_confirmPassword.clear();
         userManagement_userRole.getSelectionModel().clearSelection();
+
+        initializeComboBoxes(userManagement_userRole);
     }
     public void hideUserId() {
         userManagement_id_label.setVisible(false);
