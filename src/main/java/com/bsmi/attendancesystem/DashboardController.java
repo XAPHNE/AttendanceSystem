@@ -470,11 +470,10 @@ public class DashboardController implements Initializable {
         String absentToday = home_totalEnrolled.getText();
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
         String currentDate = dateFormat.format(new Date());
-
-        String query = "SELECT COUNT(DISTINCT student_id) AS presentCount " +
-                "FROM student_attendance " +
-                "WHERE status = 'Present' " +
-                "AND DATE(entry_time) = ?";
+        // Mysql query
+        // String query = "SELECT COUNT(DISTINCT student_id) AS presentCount FROM student_attendance WHERE status = 'Present' AND DATE(entry_time) = ?";
+        // H2 database query
+        String query = "SELECT COUNT(DISTINCT student_id) AS presentCount FROM student_attendance WHERE status = 'Present' AND CAST(entry_time AS DATE) = ?";
 
         connect = DatabaseConnection.connectDb();
         try {
@@ -508,7 +507,10 @@ public class DashboardController implements Initializable {
     }
     public void homeDisplayTotalEnrolledChart () {
         home_totalEnrolledChart.getData().clear();
-        String query = "SELECT added_on, COUNT(DISTINCT id) FROM student WHERE status = 'Enrolled' GROUP BY added_on ORDER BY TIMESTAMP(added_on) ASC LIMIT 5";
+        // MySQL query
+        // String query = "SELECT added_on, COUNT(DISTINCT id) FROM student WHERE status = 'Enrolled' GROUP BY added_on ORDER BY TIMESTAMP(added_on) ASC LIMIT 5";
+        // H2 database query
+        String query = "SELECT added_on, COUNT(DISTINCT id) FROM student WHERE status = 'Enrolled' GROUP BY added_on ORDER BY CAST(added_on AS TIMESTAMP) ASC LIMIT 5";
         connect = DatabaseConnection.connectDb();
         try {
             XYChart.Series chart = new XYChart.Series();
@@ -528,7 +530,10 @@ public class DashboardController implements Initializable {
         home_presentTodayChart.getData().clear();
 
         // Define the SQL query to retrieve data for the chart
-        String sql = "SELECT DATE(entry_time) AS date, COUNT(DISTINCT id) FROM student_attendance WHERE DATE(entry_time) = CURDATE() GROUP BY DATE(entry_time)";
+        // MySQL query
+        // String sql = "SELECT DATE(entry_time) AS date, COUNT(DISTINCT id) FROM student_attendance WHERE DATE(entry_time) = CURDATE() GROUP BY DATE(entry_time)";
+        // H2 database query
+        String sql = "SELECT CAST(entry_time AS DATE) AS date, COUNT(DISTINCT id) FROM student_attendance WHERE CAST(entry_time AS DATE) = CURRENT_DATE GROUP BY CAST(entry_time AS DATE)";
 
         // Establish a database connection (replace with your connection code)
         connect = DatabaseConnection.connectDb();
@@ -1094,12 +1099,20 @@ public class DashboardController implements Initializable {
 //    START CODE FOR STUDENT ATTENDANCE FORM
     public ObservableList <StudentAttendanceData> studentAttendanceListData(){
         ObservableList <StudentAttendanceData> listStudentAttendance = FXCollections.observableArrayList();
-        String query = "SELECT student.studentNum, student.semester, student.course, " +
+        // MySQL query
+        /* String query = "SELECT student.studentNum, student.semester, student.course, " +
                 "student_attendance.entry_time, student_attendance.exit_time, student_attendance.status " +
                 "FROM student_attendance " +
                 "INNER JOIN student ON student_attendance.student_id = student.id " +
                 "INNER JOIN course ON student_attendance.course_id = course.id " +
-                "WHERE DATE(student_attendance.entry_time) = CURDATE()";
+                "WHERE DATE(student_attendance.entry_time) = CURDATE()"; */
+        // H2 database query
+        String query = "SELECT student.studentNum, student.semester, student.course, " +
+                "       student_attendance.entry_time, student_attendance.exit_time, student_attendance.status " +
+                "FROM student_attendance " +
+                "INNER JOIN student ON student_attendance.student_id = student.id " +
+                "INNER JOIN course ON student_attendance.course_id = course.id " +
+                "WHERE CAST(student_attendance.entry_time AS DATE) = CURRENT_DATE()";
         connect = DatabaseConnection.connectDb();
         if (connect != null) {
             try {
