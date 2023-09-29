@@ -797,10 +797,10 @@ public class DashboardController implements Initializable {
                     // TO CLEAR THE FIELDS
                     addStudent_clearBtn_onAction();
                 }
+                prepare.close();
+                result.close();
+                statement.close();
             }
-            prepare.close();
-            result.close();
-            statement.close();
             connect.close();
         } catch (Exception e) {e.printStackTrace();}
     }
@@ -854,8 +854,8 @@ public class DashboardController implements Initializable {
                     // TO CLEAR THE FIELDS
                     addStudent_clearBtn_onAction();
                 } else return;
+                statement.close();
             }
-            statement.close();
             connect.close();
         } catch (Exception e) {e.printStackTrace();}
     }
@@ -898,8 +898,8 @@ public class DashboardController implements Initializable {
                     // TO CLEAR THE FIELDS
                     addStudent_clearBtn_onAction();
                 } else return;
+                statement.close();
             }
-            statement.close();
             connect.close();
         } catch (Exception e) {e.printStackTrace();}
     }
@@ -1033,10 +1033,10 @@ public class DashboardController implements Initializable {
                     //  TO CLEAR THE TEXT FIELDS
                     availableCourse_clearBtn_onAction();
                 }
+                prepare.close();
+                result.close();
+                statement.close();
             }
-            prepare.close();
-            result.close();
-            statement.close();
             connect.close();
         }catch (Exception e) {e.printStackTrace();}
     }
@@ -1074,8 +1074,8 @@ public class DashboardController implements Initializable {
                     //  TO CLEAR THE TEXT FIELDS
                     availableCourse_clearBtn_onAction();
                 } else return;
+                statement.close();
             }
-            statement.close();
             connect.close();
         } catch (Exception e) {e.printStackTrace();}
     }
@@ -1116,9 +1116,9 @@ public class DashboardController implements Initializable {
                     availableCourseShowListData();
                     //  TO CLEAR THE TEXT FIELDS
                     availableCourse_clearBtn_onAction();
-                } else return;;
+                } else return;
+                statement.close();
             }
-            statement.close();
             connect.close();
         } catch (Exception e) {e.printStackTrace();}
     }
@@ -1741,9 +1741,9 @@ public class DashboardController implements Initializable {
                     userManagementShowListData();
                     // Clear the fields if needed
                     userManagementClearBtn_onAction();
-                } else return;;
+                } else return;
+                statement.close();
             }
-            statement.close();
             connect.close();
         } catch (Exception e) {e.printStackTrace();}
     }
