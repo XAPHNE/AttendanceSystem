@@ -1578,6 +1578,13 @@ public class DashboardController implements Initializable {
             showAlert(Alert.AlertType.ERROR, "Error Message", "Passwords do not match!");
             return; // Exit the method if passwords don't match
         }
+
+        // Check if password is shorter than 8 characters and consists only of lowercase letters
+        if (password.length() < 8 || password.matches("^[a-z]+$")) {
+            showAlert(Alert.AlertType.ERROR, "Error Message", "Password must be at least 8 characters long and contain both uppercase and lowercase letters.");
+            return; // Exit the method if password criteria are not met
+        }
+        
         String hashedPassword = hashPassword(password);
 
         // Insert the data into the database
