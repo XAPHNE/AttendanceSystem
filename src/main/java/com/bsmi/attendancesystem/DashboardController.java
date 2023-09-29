@@ -1650,7 +1650,14 @@ public class DashboardController implements Initializable {
     }
     @FXML
     public void userManagementUpdateBtn_onAction() {
-        int userId = Integer.parseInt(userManagement_id.getText());
+        String userIdText = userManagement_id.getText();
+        if (userIdText.isEmpty()) {
+            showAlert(Alert.AlertType.ERROR, "Error Message", "Fields cannot be empty");
+            return; 
+        }
+
+        int userId = Integer.parseInt(userIdText);
+        //int userId = Integer.parseInt(userManagement_id.getText());
         String username = userManagement_username.getText();
         String password = userManagement_password.getText();
         String confirmPassword = userManagement_confirmPassword.getText();
