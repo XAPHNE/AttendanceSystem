@@ -36,11 +36,6 @@
       <version>27.0.1</version>
     </dependency>
     <dependency>
-      <groupId>com.mysql</groupId>
-      <artifactId>mysql-connector-j</artifactId>
-      <version>8.0.33</version>
-    </dependency>
-    <dependency>
       <groupId>io.github.palexdev</groupId>
       <artifactId>materialfx</artifactId>
       <version>11.17.0</version>

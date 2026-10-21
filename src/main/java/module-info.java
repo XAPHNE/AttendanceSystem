@@ -6,7 +6,6 @@ module com.bsmi.attendancesystem {
     requires java.sql;
     requires jbcrypt;
     requires MaterialFX;
-    requires mysql.connector.j;
     requires org.kordamp.ikonli.javafx;
     requires org.kordamp.ikonli.fontawesome5;
     requires org.kordamp.ikonli.fontawesome;
