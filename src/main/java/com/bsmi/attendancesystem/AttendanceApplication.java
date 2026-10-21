@@ -21,6 +21,7 @@ public class AttendanceApplication extends Application {
 
     @Override
     public void start(Stage primaryStage) throws IOException {
+        AppFonts.loadBundled();
         FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("fxml/login-view.fxml"));
         Parent root = fxmlLoader.load();
 

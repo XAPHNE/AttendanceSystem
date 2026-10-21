@@ -22,7 +22,6 @@
     -fx-border-width:.2px;
     -fx-border-radius:5px;
     -fx-font-size:13px;
-    -fx-font-family:"Tahoma";
 }
 .textfield:focused{
     -fx-background-color:#fff;
@@ -34,7 +33,6 @@
     -fx-background-radius: 4px;
     -fx-text-fill: #fff;
     -fx-font-size: 14px;
-    -fx-font-family: "Arial";
 }
 .login-btn:hover{
     -fx-background-color: linear-gradient(to bottom right, #277bd0, #1b6fa4);

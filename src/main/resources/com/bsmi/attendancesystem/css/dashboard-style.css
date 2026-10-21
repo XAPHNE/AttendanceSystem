@@ -30,7 +30,6 @@
     -fx-cursor: hand;
     -fx-text-fill: #fff;
     -fx-font-size: 15px;
-    -fx-font-family: "Arial";
     -fx-alignment: CENTER-LEFT;
 }
 .logout{
@@ -57,7 +56,6 @@
     -fx-border-color:linear-gradient(to bottom right, #2d658c, #2ca772);
     -fx-border-width: .8px;
     -fx-border-radius: 8px;
-    -fx-font-family: "Tahoma";
     -fx-font-size: 14px;
     -fx-padding: 0px 0px 0px 28px;
 }
@@ -85,14 +83,12 @@
 }
 .table-view .column-header .label{
     -fx-text-fill: #fff;
-    -fx-font-family: "Arial";
 }
 .textfield{
     -fx-background-color:linear-gradient(to bottom right, #efefef, #eee);
     -fx-border-radius: 4px;
     -fx-border-color: linear-gradient(to bottom right, #2d658c, #2ca772);
     -fx-border-width: .8px;
-    -fx-font-family: "Tahoma";
     -fx-border-radius: 4px;
 }
 .textfield:focused{
@@ -103,7 +99,6 @@
     -fx-background-color: transparent;
     -fx-text-fill: red;
     -fx-font-size: 14px;
-    -fx-font-family: "Arial";
     -fx-cursor: hand;
 }
 .add-btn{
@@ -112,7 +107,6 @@
     -fx-cursor: hand;
     -fx-text-fill: #fff;
     -fx-font-size: 14px;
-    -fx-font-family: "Arial";
 }
 .add-btn:hover{
     -fx-background-color: #2268ae;
@@ -123,7 +117,6 @@
     -fx-cursor: hand;
     -fx-text-fill: #fff;
     -fx-font-size: 14px;
-    -fx-font-family: "Arial";
 }
 .update-btn:hover{
     -fx-background-color: #22ad72;
@@ -134,7 +127,6 @@
     -fx-cursor: hand;
     -fx-text-fill: #fff;
     -fx-font-size: 14px;
-    -fx-font-family: "Arial";
 }
 .delete-btn:hover{
     -fx-background-color: #c51f32;
@@ -145,7 +137,6 @@
     -fx-cursor: hand;
     -fx-text-fill: #fff;
     -fx-font-size: 14px;
-    -fx-font-family: "Arial";
 }
 .clear-btn:hover{
     -fx-background-color: #ae21ac;
@@ -155,7 +146,6 @@
     -fx-border-radius: 4px;
     -fx-border-color: linear-gradient(to bottom right, #2d658c, #2ca772);
     -fx-border-width: .8px;
-    -fx-font-family: "Tahoma";
     -fx-border-radius: 4px;
     -fx-padding: 0px 0px 0px 5px;
 }

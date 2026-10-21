@@ -7,30 +7,21 @@
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.layout.StackPane?>
-<?import javafx.scene.text.Font?>
 <?import org.kordamp.ikonli.javafx.FontIcon?>
 
-<StackPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.bsmi.attendancesystem.LoginController">
+<StackPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" stylesheets="@../css/theme.css" xmlns="http://javafx.com/javafx/" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.bsmi.attendancesystem.LoginController">
     <children>
         <AnchorPane fx:id="main_form" prefHeight="200.0" prefWidth="200.0">
             <children>
                 <AnchorPane prefHeight="400.0" prefWidth="300.0" styleClass="left-form" stylesheets="@../css/login-style.css" AnchorPane.leftAnchor="0.0" AnchorPane.topAnchor="0.0">
                     <children>
                         <FontIcon iconColor="WHITE" iconLiteral="fas-graduation-cap" iconSize="150" layoutX="56.0" layoutY="214.0" />
-                        <Label layoutX="32.0" layoutY="243.0" text="Attendance System" textFill="WHITE">
-                            <font>
-                                <Font size="24.0" />
-                            </font>
-                        </Label>
+                        <Label layoutX="32.0" layoutY="243.0" text="Attendance System" textFill="WHITE" styleClass="text-title" />
                     </children></AnchorPane>
                 <AnchorPane layoutX="10.0" layoutY="10.0" prefHeight="400.0" prefWidth="300.0" styleClass="right-form" stylesheets="@../css/login-style.css" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
                     <children>
                         <FontIcon iconLiteral="fas-user" iconSize="100" layoutX="106.0" layoutY="117.0" />
-                        <Label layoutX="83.0" layoutY="148.0" text="Welcome Back">
-                            <font>
-                                <Font size="18.0" />
-                            </font>
-                        </Label>
+                        <Label layoutX="83.0" layoutY="148.0" text="Welcome Back" styleClass="text-heading" />
                         <MFXTextField fx:id="usernameMFXTextField" floatMode="BORDER" floatingText="Username" layoutX="22.0" layoutY="194.0" prefHeight="30.0" prefWidth="250.0" styleClass="mfx-text-field">
                             <cursor>
                                 <Cursor fx:constant="TEXT" />
@@ -46,11 +37,7 @@
                                 <Cursor fx:constant="HAND" />
                             </cursor>
                         </Button>
-                        <Label fx:id="demoAccountsHint" alignment="CENTER" layoutX="22.0" layoutY="342.0" prefWidth="250.0" text="Demo logins: admin / admin123&#10;employee / employee123" textAlignment="CENTER" textFill="#6b6b6b">
-                            <font>
-                                <Font size="11.0" />
-                            </font>
-                        </Label>
+                        <Label fx:id="demoAccountsHint" alignment="CENTER" layoutX="22.0" layoutY="342.0" prefWidth="250.0" text="Demo logins: admin / admin123&#10;employee / employee123" textAlignment="CENTER" textFill="#6b6b6b" styleClass="text-caption" />
                         <Button fx:id="closeButton" layoutX="241.0" layoutY="14.0" mnemonicParsing="false" onAction="#closeButtonOnAction" styleClass="close" stylesheets="@../css/login-style.css" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
                             <graphic>
                                 <FontIcon iconLiteral="fa-close" />
