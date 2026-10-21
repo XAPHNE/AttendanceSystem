@@ -1,55 +1,101 @@
-.top-form{
-    -fx-background-color: #2c2c2c;
-    -fx-border-color: #fff;
-    -fx-border-width: .4px .4px .2px .4px;
+.main-form{
+    -fx-background-color: -color-background;
 }
-.semi-top-form{
-    -fx-background-color: #3f3f3f;
-    -fx-border-color: #000;
-    -fx-border-width: .2px .4px .2px .4px;
+.top-form{
+    -fx-background-color: -color-sidebar;
+}
+.top-form .label,
+.top-form .ikonli-font-icon{
+    -fx-text-fill: -color-surface;
+    -fx-icon-color: -color-surface;
 }
 .close{
     -fx-background-color: transparent;
     -fx-cursor: hand;
 }
 .close:hover{
-    -fx-background-color: red;
+    -fx-background-color: -color-danger;
 }
 .minimize{
     -fx-background-color: transparent;
     -fx-cursor: hand;
 }
 .minimize:hover{
-    -fx-background-color: #ddd;
+    -fx-background-color: -color-sidebar-hover;
 }
 .nav-form{
-    -fx-background-color:linear-gradient(to bottom right, #2d658c, #2ca772);
+    -fx-background-color: -color-sidebar;
+}
+.nav-form .label,
+.nav-form .ikonli-font-icon{
+    -fx-text-fill: -color-surface;
+    -fx-icon-color: -color-surface;
 }
 .nav-btn{
     -fx-background-color: transparent;
+    -fx-background-radius: 6px;
     -fx-cursor: hand;
-    -fx-text-fill: #fff;
+    -fx-text-fill: -color-sidebar-text;
     -fx-font-size: 15px;
     -fx-alignment: CENTER-LEFT;
 }
+.nav-btn .ikonli-font-icon{
+    -fx-icon-color: -color-sidebar-text;
+}
+.nav-btn:hover{
+    -fx-background-color: -color-sidebar-hover;
+}
+/* The open screen's button; DashboardController moves this class on navigation. */
+.nav-btn-active,
+.nav-btn-active:hover{
+    -fx-background-color: -color-primary;
+    -fx-text-fill: -color-text-on-primary;
+}
+.nav-btn-active .ikonli-font-icon{
+    -fx-icon-color: -color-text-on-primary;
+}
 .logout{
-    -fx-background-color: #2c84bf;
+    -fx-background-color: -color-sidebar-hover;
     -fx-background-radius: 10px;
     -fx-cursor: hand;
 }
 .logout:hover{
-    -fx-background-color: #1593e7;
+    -fx-background-color: -color-primary;
 }
 .shadow{
-    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.4), 6,0,0,0);
+    -fx-effect: dropshadow(gaussian, rgba(15, 23, 42, 0.08), 12, 0, 0, 2);
 }
 .white-bg{
-    -fx-background-color: #fff;
-    -fx-background-radius: 8px;
+    -fx-background-color: -color-surface;
+    -fx-background-radius: 10px;
 }
 .card{
-    -fx-background-color: linear-gradient(to bottom right, #344250, #3c6382);
-    -fx-background-radius: 4px;
+    -fx-background-color: -color-surface;
+    -fx-background-radius: 10px;
+}
+.card .ikonli-font-icon{
+    -fx-icon-color: -color-primary;
+}
+.card .text-title{
+    -fx-text-fill: -color-text;
+}
+.card .text-emphasis{
+    -fx-text-fill: -color-text-muted;
+}
+.chart-bar{
+    -fx-bar-fill: -color-primary;
+}
+.default-color0.chart-series-line{
+    -fx-stroke: -color-primary;
+}
+.default-color0.chart-line-symbol{
+    -fx-background-color: -color-primary, -color-surface;
+}
+.chart-absent .default-color0.chart-series-line{
+    -fx-stroke: -color-danger;
+}
+.chart-absent .default-color0.chart-line-symbol{
+    -fx-background-color: -color-danger, -color-surface;
 }
 .search{
     -fx-background-color: transparent;
@@ -100,12 +146,4 @@
     -fx-text-fill: red;
     -fx-font-size: 14px;
     -fx-cursor: hand;
-}
-.label-info{
-    -fx-background-color: #fff;
-    -fx-border-radius: 4px;
-    -fx-border-color: linear-gradient(to bottom right, #2d658c, #2ca772);
-    -fx-border-width: .8px;
-    -fx-border-radius: 4px;
-    -fx-padding: 0px 0px 0px 5px;
 }

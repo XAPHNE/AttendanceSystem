@@ -15,6 +15,16 @@ class DashboardTest extends AppScreenTest {
     }
 
     @Test
+    void sidebarHighlightsOnlyTheOpenScreen() {
+        assertThat(isHighlighted("#home_btn")).isTrue();
+
+        clickOn("#addStudent_btn");
+
+        assertThat(isHighlighted("#addStudent_btn")).isTrue();
+        assertThat(isHighlighted("#home_btn")).isFalse();
+    }
+
+    @Test
     void emptyStudentFormAsksForTheStudentNumber() {
         clickOn("#addStudent_btn");
         clickOn("#addStudent_addBtn");
@@ -99,6 +109,10 @@ class DashboardTest extends AppScreenTest {
         clickOn("#availableCourse_clearBtn");
         clickOn("#availableCourse_course").write(name);
         clickOn("#availableCourse_deleteBtn");
+    }
+
+    private boolean isHighlighted(String navButtonId) {
+        return lookup(navButtonId).queryButton().getStyleClass().contains("nav-btn-active");
     }
 
     private List<String> courseNames() {

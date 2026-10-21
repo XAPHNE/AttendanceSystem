@@ -22,7 +22,7 @@
 
 <StackPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="600.0" prefWidth="1100.0" stylesheets="@../css/theme.css" xmlns="http://javafx.com/javafx/" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.bsmi.attendancesystem.DashboardController">
    <children>
-      <AnchorPane fx:id="main_form" prefHeight="200.0" prefWidth="200.0">
+      <AnchorPane fx:id="main_form" prefHeight="200.0" prefWidth="200.0" styleClass="main-form" stylesheets="@../css/dashboard-style.css">
          <children>
             <BorderPane prefHeight="600.0" prefWidth="1100.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
                <top>
@@ -58,22 +58,22 @@
                               <Line endX="100.0" layoutX="88.0" layoutY="204.0" startX="-75.0" stroke="WHITE" />
                               <Button fx:id="home_btn" layoutX="10.0" layoutY="247.0" mnemonicParsing="false" onAction="#switchFormOnAction" prefHeight="35.0" prefWidth="180.0" styleClass="nav-btn" stylesheets="@../css/dashboard-style.css" text="Home">
                                  <graphic>
-                                    <FontIcon iconColor="WHITE" iconLiteral="fas-home" />
+                                    <FontIcon iconLiteral="fas-home" />
                                  </graphic>
                               </Button>
                               <Button fx:id="addStudent_btn" layoutX="10.0" layoutY="282.0" mnemonicParsing="false" onAction="#switchFormOnAction" prefHeight="35.0" prefWidth="180.0" styleClass="nav-btn" stylesheets="@../css/dashboard-style.css" text="Add Student">
                                  <graphic>
-                                    <FontIcon iconColor="WHITE" iconLiteral="fas-plus-circle" />
+                                    <FontIcon iconLiteral="fas-plus-circle" />
                                  </graphic>
                               </Button>
                               <Button fx:id="availableCourses_btn" layoutX="10.0" layoutY="317.0" mnemonicParsing="false" onAction="#switchFormOnAction" prefHeight="35.0" prefWidth="180.0" styleClass="nav-btn" stylesheets="@../css/dashboard-style.css" text="Available Courses">
                                  <graphic>
-                                    <FontIcon iconColor="WHITE" iconLiteral="fas-book" />
+                                    <FontIcon iconLiteral="fas-book" />
                                  </graphic>
                               </Button>
                               <Button fx:id="studentAttendance_btn" layoutX="10.0" layoutY="352.0" mnemonicParsing="false" onAction="#switchFormOnAction" prefHeight="35.0" prefWidth="180.0" styleClass="nav-btn" stylesheets="@../css/dashboard-style.css" text="Attendance">
                                  <graphic>
-                                    <FontIcon iconColor="WHITE" iconLiteral="fas-clipboard" />
+                                    <FontIcon iconLiteral="fas-clipboard" />
                                  </graphic>
                               </Button>
                               <Button fx:id="logout_btn" layoutX="14.0" layoutY="526.0" mnemonicParsing="false" onAction="#logoutBtnOnAction" stylesheets="@../css/dashboard-style.css">
@@ -88,7 +88,7 @@
                               <Label layoutX="62.0" layoutY="531.0" text="Logout" textFill="WHITE" styleClass="text-emphasis" />
                               <Button fx:id="userManagement_btn" layoutX="10.0" layoutY="387.0" mnemonicParsing="false" onAction="#switchFormOnAction" prefHeight="35.0" prefWidth="180.0" styleClass="nav-btn" stylesheets="@../css/dashboard-style.css" text="Manage Users">
                                  <graphic>
-                                    <FontIcon iconColor="WHITE" iconLiteral="fas-users-cog" />
+                                    <FontIcon iconLiteral="fas-users-cog" />
                                  </graphic>
                               </Button>
                            </children>
@@ -101,37 +101,41 @@
                      <children>
                         <AnchorPane fx:id="home_form" layoutX="101.0" layoutY="161.0" prefHeight="560.0" prefWidth="900.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
                            <children>
-                              <AnchorPane layoutX="14.0" layoutY="14.0" prefHeight="535.0" prefWidth="873.0" stylesheets="@../css/dashboard-style.css">
-                                 <styleClass>
-                                    <String fx:value="white-bg" />
-                                    <String fx:value="shadow" />
-                                 </styleClass>
+                              <AnchorPane layoutX="14.0" layoutY="14.0" prefHeight="535.0" prefWidth="873.0">
                                  <children>
-                                    <AnchorPane prefHeight="151.0" prefWidth="873.0" stylesheets="@../css/dashboard-style.css">
-                                       <styleClass>
-                                          <String fx:value="white-bg" />
-                                          <String fx:value="shadow" />
-                                       </styleClass>
+                                    <AnchorPane prefHeight="151.0" prefWidth="873.0">
                                        <children>
-                                          <AnchorPane layoutX="14.0" layoutY="11.0" prefHeight="129.0" prefWidth="268.0" styleClass="card" stylesheets="@../css/dashboard-style.css">
+                                          <AnchorPane layoutX="14.0" layoutY="11.0" prefHeight="129.0" prefWidth="268.0" stylesheets="@../css/dashboard-style.css">
+                                             <styleClass>
+                                                <String fx:value="card" />
+                                                <String fx:value="shadow" />
+                                             </styleClass>
                                              <children>
-                                                <FontIcon iconColor="WHITE" iconLiteral="fa-users" iconSize="60" layoutX="14.0" layoutY="85.0" />
-                                                <Label layoutX="78.0" layoutY="94.0" text="Total Enrolled Students" textFill="WHITE" styleClass="text-emphasis" />
-                                                <Label fx:id="home_totalEnrolled" alignment="CENTER_RIGHT" layoutX="86.0" layoutY="19.0" prefHeight="30.0" prefWidth="168.0" text="0" textFill="WHITE" styleClass="text-title" />
+                                                <FontIcon iconLiteral="fa-users" iconSize="60" layoutX="14.0" layoutY="85.0" />
+                                                <Label layoutX="78.0" layoutY="94.0" text="Total Enrolled Students" styleClass="text-emphasis" />
+                                                <Label fx:id="home_totalEnrolled" alignment="CENTER_RIGHT" layoutX="86.0" layoutY="19.0" prefHeight="30.0" prefWidth="168.0" text="0" styleClass="text-title" />
                                              </children>
                                           </AnchorPane>
-                                          <AnchorPane layoutX="303.0" layoutY="14.0" prefHeight="129.0" prefWidth="268.0" styleClass="card" stylesheets="@../css/dashboard-style.css">
+                                          <AnchorPane layoutX="303.0" layoutY="14.0" prefHeight="129.0" prefWidth="268.0" stylesheets="@../css/dashboard-style.css">
+                                             <styleClass>
+                                                <String fx:value="card" />
+                                                <String fx:value="shadow" />
+                                             </styleClass>
                                              <children>
-                                                <Label layoutX="74.0" layoutY="94.0" text="Students Present Today" textFill="WHITE" styleClass="text-emphasis" />
-                                                <Label fx:id="home_presentToday" alignment="CENTER_RIGHT" layoutX="86.0" layoutY="18.0" prefHeight="30.0" prefWidth="168.0" text="0" textFill="WHITE" styleClass="text-title" />
-                                                <FontIcon iconColor="WHITE" iconLiteral="fas-hand-paper" iconSize="60" layoutX="14.0" layoutY="85.0" />
+                                                <Label layoutX="74.0" layoutY="94.0" text="Students Present Today" styleClass="text-emphasis" />
+                                                <Label fx:id="home_presentToday" alignment="CENTER_RIGHT" layoutX="86.0" layoutY="18.0" prefHeight="30.0" prefWidth="168.0" text="0" styleClass="text-title" />
+                                                <FontIcon iconLiteral="fas-hand-paper" iconSize="60" layoutX="14.0" layoutY="85.0" />
                                              </children>
                                           </AnchorPane>
-                                          <AnchorPane layoutX="591.0" layoutY="14.0" prefHeight="129.0" prefWidth="268.0" styleClass="card" stylesheets="@../css/dashboard-style.css">
+                                          <AnchorPane layoutX="591.0" layoutY="14.0" prefHeight="129.0" prefWidth="268.0" stylesheets="@../css/dashboard-style.css">
+                                             <styleClass>
+                                                <String fx:value="card" />
+                                                <String fx:value="shadow" />
+                                             </styleClass>
                                              <children>
-                                                <FontIcon iconColor="WHITE" iconLiteral="fas-user-alt-slash" iconSize="60" layoutX="14.0" layoutY="84.0" />
-                                                <Label layoutX="79.0" layoutY="93.0" text="Students Absent Today" textFill="WHITE" styleClass="text-emphasis" />
-                                                <Label fx:id="home_absentToday" alignment="CENTER_RIGHT" layoutX="86.0" layoutY="18.0" prefHeight="30.0" prefWidth="168.0" text="0" textFill="WHITE" styleClass="text-title" />
+                                                <FontIcon iconLiteral="fas-user-alt-slash" iconSize="60" layoutX="14.0" layoutY="84.0" />
+                                                <Label layoutX="79.0" layoutY="93.0" text="Students Absent Today" styleClass="text-emphasis" />
+                                                <Label fx:id="home_absentToday" alignment="CENTER_RIGHT" layoutX="86.0" layoutY="18.0" prefHeight="30.0" prefWidth="168.0" text="0" styleClass="text-title" />
                                              </children>
                                           </AnchorPane>
                                        </children>
@@ -142,7 +146,7 @@
                                           <String fx:value="shadow" />
                                        </styleClass>
                                        <children>
-                                          <BarChart fx:id="home_totalEnrolledChart" layoutX="-39.0" layoutY="-22.0" prefHeight="378.0" prefWidth="461.0" title="Total Enrolled Chart" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                                          <BarChart fx:id="home_totalEnrolledChart" legendVisible="false" layoutX="-39.0" layoutY="-22.0" prefHeight="378.0" prefWidth="461.0" title="Total Enrolled Chart" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
                                              <xAxis>
                                                 <CategoryAxis side="BOTTOM" />
                                              </xAxis>
@@ -158,7 +162,7 @@
                                           <String fx:value="shadow" />
                                        </styleClass>
                                        <children>
-                                          <LineChart fx:id="home_presentTodayChart" layoutX="-49.0" layoutY="-117.0" prefHeight="283.0" prefWidth="451.0" title="Students Present Chart" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                                          <LineChart fx:id="home_presentTodayChart" legendVisible="false" layoutX="-49.0" layoutY="-117.0" prefHeight="283.0" prefWidth="451.0" title="Students Present Chart" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
                                              <xAxis>
                                                 <CategoryAxis side="BOTTOM" />
                                              </xAxis>
@@ -174,7 +178,7 @@
                                           <String fx:value="shadow" />
                                        </styleClass>
                                        <children>
-                                          <LineChart fx:id="home_absentTodayChart" layoutX="-49.0" layoutY="-117.0" prefHeight="283.0" prefWidth="451.0" title="Students Absent Chart" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                                          <LineChart fx:id="home_absentTodayChart" legendVisible="false" styleClass="chart-absent" layoutX="-49.0" layoutY="-117.0" prefHeight="283.0" prefWidth="451.0" title="Students Absent Chart" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
                                              <xAxis>
                                                 <CategoryAxis side="BOTTOM" />
                                              </xAxis>

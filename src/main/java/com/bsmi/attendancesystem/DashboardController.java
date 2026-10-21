@@ -46,6 +46,8 @@ import java.util.*;
 import java.util.stream.Stream;
 
 public class DashboardController implements Initializable {
+    private static final String ACTIVE_NAV_STYLE = "nav-btn-active";
+
     @FXML
     private Button addStudent_btn;
 
@@ -319,7 +321,13 @@ public class DashboardController implements Initializable {
 
 //    START CODE FOR DEFAULT NAVIGATION
     public void defaultNav () {
-        home_btn.setStyle("-fx-background-color: linear-gradient(to bottom right, #3f82ae, #26bf7d);");
+        highlightNavButton(home_btn);
+    }
+
+    private void highlightNavButton(Button openScreenButton) {
+        List.of(home_btn, addStudent_btn, availableCourses_btn, studentAttendance_btn, userManagement_btn)
+                .forEach(navButton -> navButton.getStyleClass().remove(ACTIVE_NAV_STYLE));
+        openScreenButton.getStyleClass().add(ACTIVE_NAV_STYLE);
     }
 //    END CODE FOR DEFAULT NAVIGATION
 
@@ -332,11 +340,7 @@ public class DashboardController implements Initializable {
             studentAttendance_form.setVisible(false);
             userManagement_form.setVisible(false);
 
-            home_btn.setStyle("-fx-background-color: linear-gradient(to bottom right, #3f82ae, #26bf7d);");
-            addStudent_btn.setStyle("-fx-background-color: transparent");
-            availableCourses_btn.setStyle("-fx-background-color: transparent");
-            studentAttendance_btn.setStyle("-fx-background-color: transparent");
-            userManagement_btn.setStyle("-fx-background-color: transparent");
+            highlightNavButton(home_btn);
 
             homeDisplayTotalEnrolledStudents();
             homeDisplayPresentToday();
@@ -352,11 +356,7 @@ public class DashboardController implements Initializable {
             studentAttendance_form.setVisible(false);
             userManagement_form.setVisible(false);
 
-            home_btn.setStyle("-fx-background-color: transparent");
-            addStudent_btn.setStyle("-fx-background-color: linear-gradient(to bottom right, #3f82ae, #26bf7d);");
-            availableCourses_btn.setStyle("-fx-background-color: transparent");
-            studentAttendance_btn.setStyle("-fx-background-color: transparent");
-            userManagement_btn.setStyle("-fx-background-color: transparent");
+            highlightNavButton(addStudent_btn);
             //  TO DISPLAY DATA FROM STUDENT TABLE WHEN ADD STUDENT BUTTON IS CLICKED
             addStudentShowListData();
             addStudent_semesterList();
@@ -371,11 +371,7 @@ public class DashboardController implements Initializable {
             studentAttendance_form.setVisible(false);
             userManagement_form.setVisible(false);
 
-            home_btn.setStyle("-fx-background-color: transparent");
-            addStudent_btn.setStyle("-fx-background-color: transparent");
-            availableCourses_btn.setStyle("-fx-background-color: linear-gradient(to bottom right, #3f82ae, #26bf7d);");
-            studentAttendance_btn.setStyle("-fx-background-color: transparent");
-            userManagement_btn.setStyle("-fx-background-color: transparent");
+            highlightNavButton(availableCourses_btn);
 
             availableCourseShowListData();
         } else if (event.getSource() == studentAttendance_btn) {
@@ -385,11 +381,7 @@ public class DashboardController implements Initializable {
             studentAttendance_form.setVisible(true);
             userManagement_form.setVisible(false);
 
-            home_btn.setStyle("-fx-background-color: transparent");
-            addStudent_btn.setStyle("-fx-background-color: transparent");
-            availableCourses_btn.setStyle("-fx-background-color: transparent");
-            studentAttendance_btn.setStyle("-fx-background-color: linear-gradient(to bottom right, #3f82ae, #26bf7d);");
-            userManagement_btn.setStyle("-fx-background-color: transparent");
+            highlightNavButton(studentAttendance_btn);
 
             studentAttendanceShowListData();
             studentAttendanceSemesterList();
@@ -403,11 +395,7 @@ public class DashboardController implements Initializable {
             studentAttendance_form.setVisible(false);
             userManagement_form.setVisible(true);
 
-            home_btn.setStyle("-fx-background-color: transparent");
-            addStudent_btn.setStyle("-fx-background-color: transparent");
-            availableCourses_btn.setStyle("-fx-background-color: transparent");
-            studentAttendance_btn.setStyle("-fx-background-color: transparent");
-            userManagement_btn.setStyle("-fx-background-color: linear-gradient(to bottom right, #3f82ae, #26bf7d);");
+            highlightNavButton(userManagement_btn);
 
             userManagementShowListData();
             userManagement_userRoleList();
