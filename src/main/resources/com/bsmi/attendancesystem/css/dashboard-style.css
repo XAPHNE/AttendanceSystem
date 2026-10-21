@@ -109,26 +109,49 @@
     -fx-border-width: 1.8px;
 }
 .table-view{
-    -fx-background-color: transparent;
+    -fx-background-color: -color-surface;
     -fx-padding: 0px;
-    -fx-border-color: linear-gradient(to bottom right, #2d658c, #2ca772);
-    -fx-border-width: 2px;
-    -fx-border-radius: 8px;
+    -fx-border-color: -color-border;
+    -fx-border-width: 1px;
+    -fx-border-radius: 10px;
+    -fx-background-radius: 10px;
 }
 .table-view .table-column{
     -fx-alignment: CENTER;
 }
 .table-view .column-header-background{
-    -fx-background-color:linear-gradient(to bottom right, #2d658c, #2ca772);
-    -fx-background-radius: 8px 8px 0px 0px;
-    -fx-background-inset: 0 0 0 0;
+    -fx-background-color: -color-surface-alt;
+    -fx-background-radius: 10px 10px 0px 0px;
+    -fx-border-color: transparent transparent -color-border transparent;
 }
 .table-view .column-header, .filter{
     -fx-background-color: transparent;
-    -fx-size: 40px;
+    -fx-padding: 4px 0px;
 }
 .table-view .column-header .label{
-    -fx-text-fill: #fff;
+    -fx-text-fill: -color-text-muted;
+    -fx-font-family: "Inter SemiBold";
+}
+.table-view .table-cell{
+    -fx-padding: 3px 2px;
+    -fx-text-fill: -color-text;
+}
+/* Striped rows make a long row easier to follow across eight columns. */
+.table-row-cell{
+    -fx-background-color: -color-surface;
+    -fx-table-cell-border-color: transparent;
+}
+.table-row-cell:odd{
+    -fx-background-color: -color-surface-alt;
+}
+.table-row-cell:filled:hover{
+    -fx-background-color: -color-primary-soft;
+}
+.table-row-cell:selected{
+    -fx-background-color: -color-primary;
+}
+.table-row-cell:selected .table-cell{
+    -fx-text-fill: -color-text-on-primary;
 }
 .textfield{
     -fx-background-color:linear-gradient(to bottom right, #efefef, #eee);
