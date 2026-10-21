@@ -97,16 +97,46 @@
 .chart-absent .default-color0.chart-line-symbol{
     -fx-background-color: -color-danger, -color-surface;
 }
+/* Fields draw their border as an outer background layer, so the thicker
+   focus border doesn't change the field's size or move its text. */
+.search,
+.textfield{
+    -fx-background-color: -color-border, -color-surface;
+    -fx-background-insets: 0, 1px;
+    -fx-background-radius: 6px, 5px;
+    -fx-border-color: transparent;
+    -fx-text-fill: -color-text;
+    -fx-prompt-text-fill: -color-text-muted;
+    -fx-highlight-fill: -color-primary-soft;
+    -fx-highlight-text-fill: -color-text;
+}
 .search{
-    -fx-background-color: transparent;
-    -fx-border-color:linear-gradient(to bottom right, #2d658c, #2ca772);
-    -fx-border-width: .8px;
-    -fx-border-radius: 8px;
+    -fx-background-radius: 14px, 13px;
     -fx-font-size: 14px;
     -fx-padding: 0px 0px 0px 28px;
 }
-.search:focused{
-    -fx-border-width: 1.8px;
+.search:hover,
+.textfield:hover{
+    -fx-background-color: -color-text-muted, -color-surface;
+}
+.search:focused,
+.textfield:focused,
+.textfield:showing{
+    -fx-background-color: -color-focus, -color-surface;
+    -fx-background-insets: 0, 2px;
+}
+.textfield .arrow-button{
+    -fx-background-color: transparent;
+}
+.textfield .arrow{
+    -fx-background-color: -color-text-muted;
+}
+.textfield .list-cell{
+    -fx-text-fill: -color-text;
+}
+.textfield .text-field{
+    -fx-background-color: transparent;
+    -fx-text-fill: -color-text;
 }
 .table-view{
     -fx-background-color: -color-surface;
@@ -153,20 +183,14 @@
 .table-row-cell:selected .table-cell{
     -fx-text-fill: -color-text-on-primary;
 }
-.textfield{
-    -fx-background-color:linear-gradient(to bottom right, #efefef, #eee);
-    -fx-border-radius: 4px;
-    -fx-border-color: linear-gradient(to bottom right, #2d658c, #2ca772);
-    -fx-border-width: .8px;
-    -fx-border-radius: 4px;
-}
-.textfield:focused{
-    -fx-background-color: #fff;
-    -fx-border-width: 1px;
-}
 .insert-btn{
     -fx-background-color: transparent;
-    -fx-text-fill: red;
+    -fx-background-radius: 6px;
+    -fx-text-fill: -color-primary;
+    -fx-font-family: "Inter SemiBold";
     -fx-font-size: 14px;
     -fx-cursor: hand;
+}
+.insert-btn:hover{
+    -fx-background-color: -color-primary-soft;
 }
