@@ -49,6 +49,11 @@ Attendance System is a JavaFX application that allows users to manage and track 
 ### Running the Project
 Run `./mvnw javafx:run` (Windows: `mvnw.cmd javafx:run`) from the project folder, or press **`Shift + F10`** in IntelliJ on the `src/main/java/com/bsmi/attendancesystem/AttendanceApplication.java` file.
 
+The build stops with a clear message if your JDK is older than 25.
+
+### Checking for dependency updates
+Run `./mvnw versions:display-dependency-updates versions:display-plugin-updates` to list newer stable releases of the libraries and build plugins.
+
 Now, enjoy the benefits of our Attendance System!
 
 ## Screenshots
