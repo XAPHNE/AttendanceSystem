@@ -12,11 +12,15 @@ import javafx.fxml.FXML;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 import javafx.scene.input.MouseEvent;
-import org.mindrot.jbcrypt.BCrypt;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
+import com.bsmi.attendancesystem.dao.DataAccessException;
+import com.bsmi.attendancesystem.dao.Database;
+import com.bsmi.attendancesystem.dao.UserDao;
+import com.bsmi.attendancesystem.service.AuthService;
+import com.bsmi.attendancesystem.service.ValidationException;
+import java.io.IOException;
+import java.io.UncheckedIOException;
+import java.util.Optional;
 
 public class LoginController {
     @FXML
@@ -28,98 +32,72 @@ public class LoginController {
     @FXML
     private Button closeButton;
 
-    private Connection connect;
-    private PreparedStatement prepare;
-    private ResultSet result;
+    private static final System.Logger LOG = System.getLogger(LoginController.class.getName());
+    private final AuthService authService =
+            new AuthService(new UserDao(Database.fromCurrentSettings()));
 
     private double xOffset = 0;
     private double yOffset = 0;
-    private Button home_btn;
 
     @FXML
-    protected void loginButtonOnAction(){
-        String sql = "SELECT * FROM admin WHERE username = ?";
-        connect = DatabaseConnection.connectDb();
+    protected void loginButtonOnAction() {
+        Optional<UserData> user;
         try {
-            Alert alert;
-            prepare = connect.prepareStatement(sql);
-            prepare.setString(1, usernameMFXTextField.getText());
-            result = prepare.executeQuery();
-
-            // EMPTY FIELD CHECK
-            if (usernameMFXTextField.getText().isEmpty() || passwordMFXPasswordField.getText().isEmpty()){
-                alert = new Alert(Alert.AlertType.ERROR);
-                alert.setTitle("Error Message");
-                alert.setHeaderText(null);
-                alert.setContentText("Please fill all blank fields");
-                alert.showAndWait();
-            } else {
-                if (result.next()) {
-                    String storedHashedPassword = result.getString("password_hash"); // Retrieve hashed password from the database
-                    String enteredPassword = passwordMFXPasswordField.getText();
-
-                    if (BCrypt.checkpw(enteredPassword, storedHashedPassword)) { // Check if entered password matches the hashed password
-                        // PROCEDING TO DASHBOARD FORM
-                        GetData.username = usernameMFXTextField.getText();
-                        GetData.userRole = result.getString("user_role");
-                        alert = new Alert(Alert.AlertType.INFORMATION);
-                        alert.setTitle("Information Message");
-                        alert.setHeaderText(null);
-                        alert.setContentText("Login Successful");
-                        alert.showAndWait();
-
-                        // HIDING LOGIN FORM
-                        loginButton.getScene().getWindow().hide();
-
-                        // LINKING DASHBOARD
-                        Parent root = FXMLLoader.load(getClass().getResource("fxml/dashboard-view.fxml"));
-                        Stage stage = new Stage();
-                        Scene scene = new Scene(root);
-                        stage.setTitle("Dashboard | Student Management System");
-
-                        // Make the window draggable
-                        root.setOnMousePressed((MouseEvent event) -> {
-                            xOffset = event.getSceneX();
-                            yOffset = event.getSceneY();
-                        });
-
-                        root.setOnMouseDragged((MouseEvent event) -> {
-                            stage.setX(event.getScreenX() - xOffset);
-                            stage.setY(event.getScreenY() - yOffset);
-                            stage.setOpacity(.6);
-                        });
-
-                        // Reset opacity on mouse release
-                        root.setOnMouseReleased((MouseEvent event) -> {
-                            stage.setOpacity(1);
-                        });
-
-                        stage.initStyle(StageStyle.TRANSPARENT);
-                        stage.setScene(scene);
-                        stage.show();
-                    } else {
-                        // ERROR MESSAGE WILL APPEAR
-                        alert = new Alert(Alert.AlertType.ERROR);
-                        alert.setTitle("Error Message");
-                        alert.setHeaderText(null);
-                        alert.setContentText("Incorrect Username/Password");
-                        alert.showAndWait();
-                    }
-                } else {
-                    // ERROR MESSAGE WILL APPEAR
-                    alert = new Alert(Alert.AlertType.ERROR);
-                    alert.setTitle("Error Message");
-                    alert.setHeaderText(null);
-                    alert.setContentText("Incorrect Username/Password");
-                    alert.showAndWait();
-                }
-            }
-            result.close();
-            prepare.close();
-            connect.close();
-        } catch (Exception e) {
-            e.printStackTrace();
+            user = authService.login(usernameMFXTextField.getText(), passwordMFXPasswordField.getText());
+        } catch (ValidationException e) {
+            showAlert(Alert.AlertType.ERROR, "Error Message", e.getMessage());
+            return;
+        } catch (DataAccessException e) {
+            LOG.log(System.Logger.Level.WARNING, e.getMessage(), e);
+            showAlert(Alert.AlertType.ERROR, "Database Error",
+                    e.getMessage() + ". Please try again; if it keeps happening, restart the app.");
+            return;
         }
+        if (user.isEmpty()) {
+            showAlert(Alert.AlertType.ERROR, "Error Message", "Incorrect Username/Password");
+            return;
+        }
+        GetData.username = user.get().getUserName();
+        GetData.userRole = user.get().getUserRole();
+        showAlert(Alert.AlertType.INFORMATION, "Information Message", "Login Successful");
+        loginButton.getScene().getWindow().hide();
+        try {
+            openDashboard();
+        } catch (IOException e) {
+            // A broken FXML file is a packaging bug, not something the user can fix
+            throw new UncheckedIOException("Could not load the dashboard screen", e);
+        }
+    }
+
+    private void openDashboard() throws IOException {
+        Parent root = FXMLLoader.load(getClass().getResource("fxml/dashboard-view.fxml"));
+        Stage stage = new Stage();
+        Scene scene = new Scene(root);
+        stage.setTitle("Dashboard | Student Management System");
+
+        // The window has no title bar, so dragging anywhere on it moves it
+        root.setOnMousePressed((MouseEvent event) -> {
+            xOffset = event.getSceneX();
+            yOffset = event.getSceneY();
+        });
+        root.setOnMouseDragged((MouseEvent event) -> {
+            stage.setX(event.getScreenX() - xOffset);
+            stage.setY(event.getScreenY() - yOffset);
+            stage.setOpacity(.6);
+        });
+        root.setOnMouseReleased((MouseEvent event) -> stage.setOpacity(1));
+
+        stage.initStyle(StageStyle.TRANSPARENT);
+        stage.setScene(scene);
+        stage.show();
+    }
+
+    private static void showAlert(Alert.AlertType alertType, String title, String contentText) {
+        Alert alert = new Alert(alertType);
+        alert.setTitle(title);
+        alert.setHeaderText(null);
+        alert.setContentText(contentText);
+        alert.showAndWait();
     }
 
     @FXML

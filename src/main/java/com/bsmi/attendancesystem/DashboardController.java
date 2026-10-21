@@ -23,20 +23,21 @@ import javafx.scene.layout.AnchorPane;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
-import org.mindrot.jbcrypt.BCrypt;
 import com.bsmi.attendancesystem.dao.AttendanceDao;
 import com.bsmi.attendancesystem.dao.CourseDao;
 import com.bsmi.attendancesystem.dao.DataAccessException;
 import com.bsmi.attendancesystem.dao.Database;
 import com.bsmi.attendancesystem.dao.StudentDao;
+import com.bsmi.attendancesystem.dao.UserDao;
 import com.bsmi.attendancesystem.service.AttendanceService;
 import com.bsmi.attendancesystem.service.CourseService;
 import com.bsmi.attendancesystem.service.StudentService;
+import com.bsmi.attendancesystem.service.UserForm;
+import com.bsmi.attendancesystem.service.UserService;
 import com.bsmi.attendancesystem.service.ValidationException;
 
 import java.io.File;
 import java.net.URL;
-import java.sql.*;
 import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Stream;
@@ -281,15 +282,10 @@ public class DashboardController implements Initializable {
 
     private double xOffset = 0;
     private double yOffset = 0;
-    private Connection connect;
-    private PreparedStatement prepare;
-    private Statement statement;
-    private ResultSet result;
     private Image image;
     private final String[] semesterList = {"1st Sem", "2nd Sem", "3rd Sem", "4th Sem", "5th Sem", "6th Sem", "7th Sem", "8th Sem", "Graduated"};
     private final String[] genderList = {"Male", "Female", "Other"};
     private final String[] statusList = {"Enrolled", "Graduated", "Dropped Out"};
-    private final String[] userRoleList = {"Admin", "Employee"};
 
     public void roleChecker() {
         String userRole = GetData.userRole;
@@ -956,30 +952,17 @@ public class DashboardController implements Initializable {
 //    END CODE FOR STUDENT ATTENDANCE FORM
 
 //    START MANAGE USERS FORM
-    public ObservableList<UserData> userManagementListData () {
-    ObservableList<UserData> listUsers = FXCollections.observableArrayList();
-    String sql = "SELECT * FROM admin";
-    connect = DatabaseConnection.connectDb();
-    if (connect != null) {
+    private final UserService userService =
+            new UserService(new UserDao(Database.fromCurrentSettings()));
+
+    public ObservableList<UserData> userManagementListData() {
         try {
-            UserData record;
-            prepare = connect.prepareStatement(sql);
-            result = prepare.executeQuery();
-            while (result.next()) {
-                record = new UserData(result.getInt("id"),
-                        result.getString("username"),
-                        result.getString("user_role"));
-                listUsers.add(record);
-            }
-            result.close();
-            prepare.close();
-            connect.close();
-        } catch (Exception e) {
-            e.printStackTrace();
+            return FXCollections.observableArrayList(userService.listAll());
+        } catch (DataAccessException e) {
+            showDatabaseError(e);
+            return FXCollections.observableArrayList();
         }
     }
-    return listUsers;
-}
     private ObservableList <UserData> observableUserManagementData;
     public void userManagementShowListData () {
         observableUserManagementData = userManagementListData();
@@ -995,11 +978,9 @@ public class DashboardController implements Initializable {
     }
     @FXML
     public void userManagementSelect() {
-        // Get the selected item from the TableView
         UserData selectedUser = userManagement_tableView.getSelectionModel().getSelectedItem();
 
         if (selectedUser != null) {
-            // Set the selected data to the input fields
             userManagement_id.setText(String.valueOf(selectedUser.getUserId()));
             userManagement_username.setText(selectedUser.getUserName());
             userManagement_userRole.getSelectionModel().select(selectedUser.getUserRole());
@@ -1008,210 +989,66 @@ public class DashboardController implements Initializable {
 
     @FXML
     public void userManagement_userRoleList() {
-        List<String> userRoleL = new ArrayList<>();
-        Collections.addAll(userRoleL, userRoleList);
-        ObservableList<String> ObList = FXCollections.observableArrayList(userRoleL);
-        userManagement_userRole.setItems(ObList);
+        userManagement_userRole.setItems(FXCollections.observableArrayList(UserService.ROLES));
+    }
+    private UserForm userManagementForm() {
+        String chosenId = userManagement_id.getText();
+        return new UserForm(
+                chosenId == null || chosenId.isBlank() ? null : Integer.valueOf(chosenId),
+                userManagement_username.getText(),
+                userManagement_password.getText(),
+                userManagement_confirmPassword.getText(),
+                userManagement_userRole.getValue());
     }
     @FXML
     public void userManagementAddBtn_onAction() {
-        String username = userManagement_username.getText();
-        String password = userManagement_password.getText();
-        String confirmPassword = userManagement_confirmPassword.getText();
-        String userRole = userManagement_userRole.getValue();
-
-        if (Objects.equals(username, "") || Objects.equals(password, "") || Objects.equals(confirmPassword, "") || userRole == null) {
-            showAlert(Alert.AlertType.ERROR, "Error Message", "Fields cannot be empty");
-            return; // Exit the method if empty
-        }
-
-        // Check if passwords match
-        if (!password.equals(confirmPassword)) {
-            showAlert(Alert.AlertType.ERROR, "Error Message", "Passwords do not match!");
-            return; // Exit the method if passwords don't match
-        }
-
-        // Check if password is shorter than 8 characters and consists only of lowercase letters
-        if (password.length() < 8 || password.matches("^[a-z]+$")) {
-            showAlert(Alert.AlertType.ERROR, "Error Message", "Password must be at least 8 characters long and contain both uppercase and lowercase letters.");
-            return; // Exit the method if password criteria are not met
-        }
-        
-        String hashedPassword = hashPassword(password);
-
-        // Insert the data into the database
-        String query = "INSERT INTO admin (username, password_hash, user_role) VALUES (?, ?, ?)";
-        connect = DatabaseConnection.connectDb();
-
+        UserForm form = userManagementForm();
         try {
-            // Check if the user already exists
-            String checkData = "SELECT username FROM admin WHERE username = ?";
-            assert connect != null;
-            PreparedStatement checkStatement = connect.prepareStatement(checkData);
-            checkStatement.setString(1, username);
-            ResultSet result = checkStatement.executeQuery();
-            if (result.next()) {
-                showAlert(Alert.AlertType.ERROR, "Error Message", "User '" + username + "' already exists!");
-                return; // Exit if user already exists
-            }
-            checkStatement.close();
-
-            // Insert the new user
-            prepare = connect.prepareStatement(query);
-            prepare.setString(1, username);
-            prepare.setString(2, hashedPassword);
-            prepare.setString(3, userRole);
-            prepare.executeUpdate();
-
-            showAlert(Alert.AlertType.INFORMATION, "Information Message", "User added successfully!");
-
-            userManagementShowListData();
-            // Clear the fields if needed
-            userManagementClearBtn_onAction();
-
-            prepare.close();
-            connect.close();
-        } catch (SQLException e) {
-            e.printStackTrace();
-            // Handle database-related exceptions
+            userService.add(form);
+            userManagementChanged("User added successfully!");
+        } catch (ValidationException e) {
+            showAlert(Alert.AlertType.ERROR, "Error Message", e.getMessage());
+        } catch (DataAccessException e) {
+            showDatabaseError(e);
         }
-    }
-    private int fetchUserId(String username) {
-        int userId = -1;
-        connect = DatabaseConnection.connectDb();
-        if (connect != null) {
-            try {
-                String query = "SELECT id FROM admin WHERE username = ?";
-                PreparedStatement preparedStatement = connect.prepareStatement(query);
-                preparedStatement.setString(1, username);
-                ResultSet resultSet = preparedStatement.executeQuery();
-                if (resultSet.next()) {
-                    userId = resultSet.getInt("id");
-                }
-            } catch (SQLException e) {e.printStackTrace();}
-        }
-        return userId;
-    }
-    private boolean usernameExists(String username) {
-        String query = "SELECT COUNT(*) FROM admin WHERE username = ?";
-        try {
-            PreparedStatement preparedStatement = connect.prepareStatement(query);
-            preparedStatement.setString(1, username);
-            ResultSet resultSet = preparedStatement.executeQuery();
-            if (resultSet.next()) {
-                int count = resultSet.getInt(1);
-                return count > 0;
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        return false;
     }
     @FXML
     public void userManagementUpdateBtn_onAction() {
-        String userIdText = userManagement_id.getText();
-        if (userIdText.isEmpty()) {
-            showAlert(Alert.AlertType.ERROR, "Error Message", "Fields cannot be empty");
-            return; 
-        }
-
-        int userId = Integer.parseInt(userIdText);
-        //int userId = Integer.parseInt(userManagement_id.getText());
-        String username = userManagement_username.getText();
-        String password = userManagement_password.getText();
-        String confirmPassword = userManagement_confirmPassword.getText();
-        String userRole = userManagement_userRole.getValue();
-        String hashedPassword = hashPassword(password);
-
-        // Check if fields are empty
-        if (password.isEmpty() || confirmPassword.isEmpty() || userRole == null) {
-            showAlert(Alert.AlertType.ERROR, "Error Message", "Fields cannot be empty");
-            return;
-        }
-
-        // Check if passwords match
-        if (!password.equals(confirmPassword)) {
-            showAlert(Alert.AlertType.ERROR, "Error Message", "Passwords do not match!");
-            return; // Exit the method if passwords don't match
-        }
-
-        connect = DatabaseConnection.connectDb();
-        if (connect != null) {
-            try {
-                if (userId != fetchUserId(username) && usernameExists(username)) {
-                    showAlert(Alert.AlertType.ERROR, "Error Message", "User " + username + " already exists");
-                    return;
-                }
-                String query = "UPDATE admin SET " +
-                        "username = ?, password_hash = ?, user_role = ? " +
-                        "WHERE id = ?";
-                prepare = connect.prepareStatement(query);
-                prepare.setString(1, username);
-                prepare.setString(2, hashedPassword);
-                prepare.setString(3, userRole);
-                prepare.setInt(4, userId);
-
-                Alert alert;
-                alert = new Alert(Alert.AlertType.CONFIRMATION);
-                alert.setTitle("Confirmation Message");
-                alert.setHeaderText(null);
-                alert.setContentText("Are you sure you want to update?");
-                Optional<ButtonType> option = alert.showAndWait();
-                if (option.get().equals(ButtonType.OK)) {
-                    int updatedRows = prepare.executeUpdate();
-                    if (updatedRows > 0) {
-                        showAlert(Alert.AlertType.INFORMATION, "Information Message", "Updated Successfully");
-
-                        userManagementShowListData();
-                        // Clear the fields if needed
-                        userManagementClearBtn_onAction();
-                    } else {
-                        showAlert(Alert.AlertType.ERROR, "Error Message", "No rows were updated.");
-                    }
-                }
-            } catch (SQLException e) {
-                e.printStackTrace();
-            } finally {
-                try {
-                    if (prepare != null) {
-                        prepare.close();
-                    }
-                    if (connect != null) {
-                        connect.close();
-                    }
-                } catch (SQLException e) {
-                    e.printStackTrace();
-                }
+        UserForm form = userManagementForm();
+        try {
+            userService.requireChosen(form.userId());
+            userService.requireValid(form);
+            if (!confirmed("Are you sure you want to update?")) {
+                return;
             }
+            userService.update(form);
+            userManagementChanged("Updated Successfully");
+        } catch (ValidationException e) {
+            showAlert(Alert.AlertType.ERROR, "Error Message", e.getMessage());
+        } catch (DataAccessException e) {
+            showDatabaseError(e);
         }
     }
     @FXML
     public void userManagementDeleteBtn_onAction() {
-        String deleteData = "DELETE FROM admin WHERE id = " + userManagement_id.getText();
-        connect = DatabaseConnection.connectDb();
+        UserForm form = userManagementForm();
         try {
-            Alert alert;
-            if (userManagement_id.getText().isEmpty() || userManagement_username.getText().isEmpty() || userManagement_userRole.getSelectionModel().getSelectedItem().isEmpty()) {
-                showAlert(Alert.AlertType.ERROR, "Error Message", "Fields cannot be empty");
-            } else if (Integer.parseInt(userManagement_id.getText()) == fetchUserId(userManagement_username.getText())){
-                alert = new Alert(Alert.AlertType.CONFIRMATION);
-                alert.setTitle("Confirmation Message");
-                alert.setHeaderText(null);
-                alert.setContentText("Are you sure you want to delete User: " + userManagement_username.getText() + "?");
-                Optional<ButtonType> option = alert.showAndWait();
-                if (option.get().equals(ButtonType.OK)) {
-                    statement = connect.createStatement();
-                    statement.executeUpdate(deleteData);
-                    showAlert(Alert.AlertType.INFORMATION, "Information Message", "Successfully Deleted!");
-                    //  TO LOAD THE UPDATED TABLE AFTER OPERATION
-                    userManagementShowListData();
-                    // Clear the fields if needed
-                    userManagementClearBtn_onAction();
-                } else return;
-                statement.close();
+            UserData chosen = userService.requireChosen(form.userId());
+            if (!confirmed("Are you sure you want to delete User: " + chosen.getUserName() + "?")) {
+                return;
             }
-            connect.close();
-        } catch (Exception e) {e.printStackTrace();}
+            userService.delete(chosen.getUserId(), GetData.username);
+            userManagementChanged("Successfully Deleted!");
+        } catch (ValidationException e) {
+            showAlert(Alert.AlertType.ERROR, "Error Message", e.getMessage());
+        } catch (DataAccessException e) {
+            showDatabaseError(e);
+        }
+    }
+    private void userManagementChanged(String successMessage) {
+        showAlert(Alert.AlertType.INFORMATION, "Information Message", successMessage);
+        userManagementShowListData();
+        userManagementClearBtn_onAction();
     }
     private boolean confirmed(String question) {
         Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
@@ -1231,14 +1068,6 @@ public class DashboardController implements Initializable {
         alert.setHeaderText(null);
         alert.setContentText(contentText);
         alert.showAndWait();
-    }
-
-    // Implementing a password hashing method here
-    private String hashPassword(String password) {
-        // Generate a salt for hashing (you can configure the strength as needed)
-        String salt = BCrypt.gensalt(12);
-        // Hash the password with the salt
-        return BCrypt.hashpw(password, salt);
     }
 
     @FXML
