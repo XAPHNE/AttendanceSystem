@@ -8,6 +8,8 @@ module com.bsmi.attendancesystem {
     requires MaterialFX;
     requires mysql.connector.j;
     requires org.kordamp.ikonli.javafx;
+    requires org.kordamp.ikonli.fontawesome5;
+    requires org.kordamp.ikonli.fontawesome;
 
     opens com.bsmi.attendancesystem to javafx.fxml;
     exports com.bsmi.attendancesystem;

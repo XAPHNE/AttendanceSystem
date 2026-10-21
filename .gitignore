@@ -36,3 +36,11 @@ build/
 
 ### Mac OS ###
 .DS_Store
+
+# Syncthing
+.stfolder/
+.stignore
+.stversions/
+.syncthing.*.tmp
+~syncthing~*.tmp
+
