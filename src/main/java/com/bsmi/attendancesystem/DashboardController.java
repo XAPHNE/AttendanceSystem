@@ -31,6 +31,7 @@ import com.bsmi.attendancesystem.dao.StudentDao;
 import com.bsmi.attendancesystem.dao.UserDao;
 import com.bsmi.attendancesystem.service.AttendanceService;
 import com.bsmi.attendancesystem.service.CourseService;
+import com.bsmi.attendancesystem.service.ImageStore;
 import com.bsmi.attendancesystem.service.StudentService;
 import com.bsmi.attendancesystem.service.UserForm;
 import com.bsmi.attendancesystem.service.UserService;
@@ -285,8 +286,8 @@ public class DashboardController implements Initializable {
     private double xOffset = 0;
     private double yOffset = 0;
     private Image image;
-    /** The photo file of the student in the Add Student form, empty when none is chosen. */
-    private String chosenImagePath = "";
+    /** The stored photo name of the student in the Add Student form, empty when none is chosen. */
+    private String chosenPhotoName = "";
     private final String[] semesterList = {"1st Sem", "2nd Sem", "3rd Sem", "4th Sem", "5th Sem", "6th Sem", "7th Sem", "8th Sem", "Graduated"};
     private final String[] genderList = {"Male", "Female", "Other"};
     private final String[] statusList = {"Enrolled", "Graduated", "Dropped Out"};
@@ -535,6 +536,7 @@ public class DashboardController implements Initializable {
 //    START CODE FOR ADD STUDENT FORM
     private final StudentService studentService =
             new StudentService(new StudentDao(Database.fromCurrentSettings()));
+    private final ImageStore imageStore = new ImageStore(AppPaths.dataDirectory().resolve("images"));
 
     public ObservableList<StudentData> addStudentListData () {
         try {
@@ -577,10 +579,7 @@ public class DashboardController implements Initializable {
         addStudent_status.getSelectionModel().select(studentD.getStatus());
 
 
-        boolean hasPhoto = !studentD.getImage().isEmpty();
-        image = hasPhoto ? new Image("file:" + studentD.getImage(), 120, 170, false, true) : null;
-        addStudent_imageView.setImage(image);
-        chosenImagePath = studentD.getImage();
+        showPhoto(studentD.getImage());
     }
     @FXML
     public void addStudent_semesterList() {
@@ -622,13 +621,23 @@ public class DashboardController implements Initializable {
     public void addStudent_insertBtn_onAction(){
         FileChooser open = new FileChooser();
         open.setTitle("Select Image File");
-        open.getExtensionFilters().add(new FileChooser.ExtensionFilter("Image File", "*jpg", "*png"));
+        open.getExtensionFilters().add(new FileChooser.ExtensionFilter("Image File", "*.png", "*.jpg", "*.jpeg"));
         File file = open.showOpenDialog(main_form.getScene().getWindow());
-        if (file != null) {
-            image = new Image(file.toURI().toString(), 120, 170, false, true);
-            addStudent_imageView.setImage(image);
-            chosenImagePath = file.getAbsolutePath();
+        if (file == null) {
+            return;
         }
+        try {
+            showPhoto(imageStore.save(file.toPath()));
+        } catch (ValidationException | UncheckedIOException e) {
+            showAlert(Alert.AlertType.ERROR, "Error Message", e.getMessage());
+        }
+    }
+    private void showPhoto(String storedName) {
+        image = imageStore.find(storedName)
+                .map(photo -> new Image(photo.toUri().toString(), 120, 170, false, true))
+                .orElse(null);
+        addStudent_imageView.setImage(image);
+        chosenPhotoName = storedName;
     }
     private StudentData addStudentForm() {
         LocalDate birthDate = addStudent_birthDate.getValue();
@@ -640,7 +649,7 @@ public class DashboardController implements Initializable {
                 addStudent_gender.getSelectionModel().getSelectedItem(),
                 birthDate == null ? null : java.sql.Date.valueOf(birthDate),
                 addStudent_status.getSelectionModel().getSelectedItem(),
-                chosenImagePath);
+                chosenPhotoName);
     }
     @FXML
     public void addStudent_addBtn_onAction(){
@@ -700,8 +709,7 @@ public class DashboardController implements Initializable {
         addStudent_gender.getSelectionModel().clearSelection();
         addStudent_birthDate.setValue(null);
         addStudent_status.getSelectionModel().clearSelection();
-        addStudent_imageView.setImage(null);
-        chosenImagePath = "";
+        showPhoto("");
 
         initializeComboBoxes(addStudent_semester, addStudent_course, addStudent_gender, addStudent_status);
     }
