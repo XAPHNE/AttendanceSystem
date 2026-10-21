@@ -76,7 +76,9 @@ Run `./mvnw verify` (Windows: `mvnw.cmd verify`).
 - GitHub Actions runs the same build with the UI tests on Linux, Windows and macOS for every push and pull request (`.github/workflows/ci.yml`). A separate job tries the newest Java (27) as an early warning; it is allowed to fail.
 
 ### Checking for dependency updates
-Run `./mvnw versions:display-dependency-updates versions:display-plugin-updates` to list newer stable releases of the libraries and build plugins.
+Dependabot (`.github/dependabot.yml`) checks every week for newer libraries, build plugins, the Maven version and GitHub Actions. It opens a pull request for them, and CI tests the update before it is merged.
+
+To check by hand, run `./mvnw versions:display-dependency-updates versions:display-plugin-updates`. It lists newer stable releases of the libraries and build plugins.
 
 Now, enjoy the benefits of our Attendance System!
 
