@@ -401,7 +401,7 @@
                                     <Button fx:id="studentAttendance_clearBtn" layoutX="59.0" layoutY="366.0" mnemonicParsing="false" onAction="#studentAttendanceClearBtnOnAction" prefHeight="35.0" prefWidth="95.0" styleClass="clear-btn" stylesheets="@../css/dashboard-style.css" text="Clear" />
                                     <ComboBox fx:id="studentAttendance_semester" layoutX="113.0" layoutY="50.0" onAction="#studentAttendanceSemesterList" prefHeight="24.0" prefWidth="190.0" promptText="Choose" styleClass="textfield" stylesheets="@../css/dashboard-style.css" />
                                     <ComboBox fx:id="studentAttendance_course" layoutX="112.0" layoutY="87.0" onAction="#studentAttendanceCourseList" prefHeight="24.0" prefWidth="190.0" promptText="Choose" styleClass="textfield" stylesheets="@../css/dashboard-style.css" />
-                                    <ComboBox fx:id="studentAttendance_studentNum" layoutX="113.0" layoutY="125.0" onAction="#studentAttendanceStudentNumList" prefHeight="24.0" prefWidth="190.0" promptText="Choose" styleClass="textfield" stylesheets="@../css/dashboard-style.css" />
+                                    <ComboBox fx:id="studentAttendance_studentNum" layoutX="113.0" layoutY="125.0" prefHeight="24.0" prefWidth="190.0" promptText="Choose" styleClass="textfield" stylesheets="@../css/dashboard-style.css" />
                                     <Button fx:id="studentAttendance_markEntryBtn" layoutX="164.0" layoutY="321.0" mnemonicParsing="false" onAction="#studentAttendanceMarkEntryBtnOnAction" prefHeight="35.0" prefWidth="95.0" styleClass="add-btn" stylesheets="@../css/dashboard-style.css" text="Mark Entry" />
                                  </children>
                               </AnchorPane>

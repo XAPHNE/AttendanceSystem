@@ -5,8 +5,11 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 /** Reads and writes the {@code student} table. Students are identified by their student number. */
 public final class StudentDao {
@@ -110,6 +113,80 @@ public final class StudentDao {
             return statement.executeUpdate() > 0;
         } catch (SQLException e) {
             throw new DataAccessException("delete student #" + studentNum, e);
+        }
+    }
+
+    public int countEnrolled() {
+        String sql = "SELECT COUNT(*) FROM student WHERE status = 'Enrolled'";
+        try (Connection connection = database.open();
+                PreparedStatement statement = connection.prepareStatement(sql);
+                ResultSet rows = statement.executeQuery()) {
+            rows.next();
+            return rows.getInt(1);
+        } catch (SQLException e) {
+            throw new DataAccessException("count the enrolled students", e);
+        }
+    }
+
+    /**
+     * @return how many of today's enrolled students were added on each of the latest {@code
+     *     days} days that had any, oldest first
+     */
+    public Map<LocalDate, Integer> countEnrolledAddedPerDay(int days) {
+        String sql =
+                "SELECT added_on, COUNT(*) FROM student WHERE status = 'Enrolled'"
+                        + " GROUP BY added_on ORDER BY added_on DESC LIMIT ?";
+        try (Connection connection = database.open();
+                PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setInt(1, days);
+            try (ResultSet rows = statement.executeQuery()) {
+                LinkedHashMap<LocalDate, Integer> newestFirst = new LinkedHashMap<>();
+                while (rows.next()) {
+                    newestFirst.put(rows.getObject(1, LocalDate.class), rows.getInt(2));
+                }
+                return newestFirst.reversed();
+            }
+        } catch (SQLException e) {
+            throw new DataAccessException("count the students added per day", e);
+        }
+    }
+
+    /** @return the courses that students of this semester take, alphabetically */
+    public List<String> findCoursesInSemester(String semester) {
+        String sql = "SELECT DISTINCT course FROM student WHERE semester = ? ORDER BY course";
+        try (Connection connection = database.open();
+                PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setString(1, semester);
+            try (ResultSet rows = statement.executeQuery()) {
+                List<String> courses = new ArrayList<>();
+                while (rows.next()) {
+                    courses.add(rows.getString(1));
+                }
+                return courses;
+            }
+        } catch (SQLException e) {
+            throw new DataAccessException("load the courses of " + semester, e);
+        }
+    }
+
+    /** @return the numbers of the students in this semester and course, lowest first */
+    public List<Integer> findNumbersIn(String semester, String course) {
+        String sql =
+                "SELECT studentNum FROM student WHERE semester = ? AND course = ?"
+                        + " ORDER BY studentNum";
+        try (Connection connection = database.open();
+                PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setString(1, semester);
+            statement.setString(2, course);
+            try (ResultSet rows = statement.executeQuery()) {
+                List<Integer> numbers = new ArrayList<>();
+                while (rows.next()) {
+                    numbers.add(rows.getInt(1));
+                }
+                return numbers;
+            }
+        } catch (SQLException e) {
+            throw new DataAccessException("load the students of " + semester + " " + course, e);
         }
     }
 

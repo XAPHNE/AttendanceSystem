@@ -2,6 +2,7 @@ package com.bsmi.attendancesystem.dao;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.entry;
 
 import com.bsmi.attendancesystem.StudentData;
 import java.sql.Connection;
@@ -169,6 +170,58 @@ class StudentDaoTest {
     }
 
     @Test
+    void countEnrolledLeavesOutOtherStatuses() {
+        assertThat(students.countEnrolled()).isEqualTo(5);
+    }
+
+    @Test
+    void countEnrolledOfEmptyTableIsZero() throws SQLException {
+        TestDatabases.execute(database, "DELETE FROM student");
+
+        assertThat(students.countEnrolled()).isZero();
+    }
+
+    @Test
+    void countEnrolledAddedPerDayGivesTheLatestDaysOldestFirst() {
+        LocalDate today = LocalDate.now();
+
+        assertThat(students.countEnrolledAddedPerDay(5))
+                .containsExactly(
+                        entry(today.minusDays(60), 1),
+                        entry(today.minusDays(30), 2),
+                        entry(today.minusDays(10), 1),
+                        entry(today.minusDays(5), 1));
+        assertThat(students.countEnrolledAddedPerDay(2))
+                .containsExactly(entry(today.minusDays(10), 1), entry(today.minusDays(5), 1));
+    }
+
+    @Test
+    void findCoursesInSemesterListsEachCourseOnceAlphabetically() {
+        students.add(new StudentData(2001, "3rd Sem", "BCA", "Zoya", "Ali", "Female",
+                birthDate(), "Enrolled", ""));
+        students.add(new StudentData(2002, "3rd Sem", "BBA", "Ravi", "Ali", "Male",
+                birthDate(), "Enrolled", ""));
+
+        assertThat(students.findCoursesInSemester("3rd Sem")).containsExactly("BBA", "BCA");
+    }
+
+    @Test
+    void findCoursesInUnknownOrInjectedSemesterIsEmpty() {
+        assertThat(students.findCoursesInSemester("9th Sem")).isEmpty();
+        assertThat(students.findCoursesInSemester(INJECTION)).isEmpty();
+    }
+
+    @Test
+    void findNumbersInListsThatSemesterAndCourseLowestFirst() {
+        students.add(new StudentData(999, "3rd Sem", "BCA", "Zoya", "Ali", "Female",
+                birthDate(), "Enrolled", ""));
+
+        assertThat(students.findNumbersIn("3rd Sem", "BCA")).containsExactly(999, 1001, 1002);
+        assertThat(students.findNumbersIn("3rd Sem", "BSc")).isEmpty();
+        assertThat(students.findNumbersIn(INJECTION, INJECTION)).isEmpty();
+    }
+
+    @Test
     void everyOperationOnUnreachableDatabaseFailsWithDataAccessException() {
         StudentDao offline = new StudentDao(TestDatabases.unreachable());
         StudentData student = student(2001, "Zoya");
@@ -178,6 +231,13 @@ class StudentDaoTest {
         assertThatThrownBy(() -> offline.add(student)).isInstanceOf(DataAccessException.class);
         assertThatThrownBy(() -> offline.update(student)).isInstanceOf(DataAccessException.class);
         assertThatThrownBy(() -> offline.delete(2001)).isInstanceOf(DataAccessException.class);
+        assertThatThrownBy(offline::countEnrolled).isInstanceOf(DataAccessException.class);
+        assertThatThrownBy(() -> offline.countEnrolledAddedPerDay(5))
+                .isInstanceOf(DataAccessException.class);
+        assertThatThrownBy(() -> offline.findCoursesInSemester("3rd Sem"))
+                .isInstanceOf(DataAccessException.class);
+        assertThatThrownBy(() -> offline.findNumbersIn("3rd Sem", "BCA"))
+                .isInstanceOf(DataAccessException.class);
     }
 
     private static StudentData student(int studentNum, String firstName) {

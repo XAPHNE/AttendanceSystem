@@ -24,10 +24,12 @@ import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 import org.mindrot.jbcrypt.BCrypt;
+import com.bsmi.attendancesystem.dao.AttendanceDao;
 import com.bsmi.attendancesystem.dao.CourseDao;
 import com.bsmi.attendancesystem.dao.DataAccessException;
 import com.bsmi.attendancesystem.dao.Database;
 import com.bsmi.attendancesystem.dao.StudentDao;
+import com.bsmi.attendancesystem.service.AttendanceService;
 import com.bsmi.attendancesystem.service.CourseService;
 import com.bsmi.attendancesystem.service.StudentService;
 import com.bsmi.attendancesystem.service.ValidationException;
@@ -35,10 +37,8 @@ import com.bsmi.attendancesystem.service.ValidationException;
 import java.io.File;
 import java.net.URL;
 import java.sql.*;
-import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.util.*;
-import java.util.Date;
 import java.util.stream.Stream;
 
 public class DashboardController implements Initializable {
@@ -481,146 +481,48 @@ public class DashboardController implements Initializable {
     }
     
 //    START CODE FOR HOME FORM
+    private static final int CHART_DAYS = 5;
+
+    private final AttendanceService attendanceService =
+            new AttendanceService(
+                    new AttendanceDao(Database.fromCurrentSettings()),
+                    new StudentDao(Database.fromCurrentSettings()));
+
     public void homeDisplayTotalEnrolledStudents() {
-        String query = "SELECT COUNT(DISTINCT studentNum) AS enrolledCount FROM student WHERE status = 'Enrolled'";
-        connect = DatabaseConnection.connectDb();
-        try {
-            int countEnrolled = 0;
-            prepare = connect.prepareStatement(query);
-            result = prepare.executeQuery();
-            if (result.next()){
-                countEnrolled = result.getInt("enrolledCount");
-            }
-            home_totalEnrolled.setText(String.valueOf(countEnrolled));
-            result.close();
-            prepare.close();
-            connect.close();
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
+        showTodaySummary(summary -> home_totalEnrolled.setText(String.valueOf(summary.enrolled())));
     }
     public void homeDisplayPresentToday() {
-        // Get the current date as a string in the format "yyyy-MM-dd"
-        String absentToday = home_totalEnrolled.getText();
-        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
-        String currentDate = dateFormat.format(new Date());
-        // Mysql query
-        // String query = "SELECT COUNT(DISTINCT student_id) AS presentCount FROM student_attendance WHERE status = 'Present' AND DATE(entry_time) = ?";
-        // H2 database query
-        String query = "SELECT COUNT(DISTINCT student_id) AS presentCount FROM student_attendance WHERE status = 'Present' AND CAST(entry_time AS DATE) = ?";
-
-        connect = DatabaseConnection.connectDb();
-        try {
-            int countPresentToday = 0;
-            prepare = connect.prepareStatement(query);
-            prepare.setString(1, currentDate); // Bind the current date to the query parameter
-            result = prepare.executeQuery();
-            if (result.next()) {
-                countPresentToday = result.getInt("presentCount");
-            }
-            home_presentToday.setText(String.valueOf(countPresentToday));
-            result.close();
-            prepare.close();
-            connect.close();
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
+        showTodaySummary(summary -> home_presentToday.setText(String.valueOf(summary.present())));
     }
     public void homeDisplayAbsentToday() {
-        // Get the total enrolled students from the home_totalEnrolled label
-        int totalEnrolled = Integer.parseInt(home_totalEnrolled.getText());
-
-        // Get the students present today from the home_presentToday label
-        int studentsPresentToday = Integer.parseInt(home_presentToday.getText());
-
-        // Calculate the number of absent students today
-        int studentsAbsentToday = totalEnrolled - studentsPresentToday;
-
-        // Set the text of the home_absentToday label to display the number of absent students
-        home_absentToday.setText(String.valueOf(studentsAbsentToday));
+        showTodaySummary(summary -> home_absentToday.setText(String.valueOf(summary.absent())));
+    }
+    private void showTodaySummary(java.util.function.Consumer<AttendanceService.DaySummary> show) {
+        try {
+            show.accept(attendanceService.summarizeToday());
+        } catch (DataAccessException e) {
+            showDatabaseError(e);
+        }
     }
     public void homeDisplayTotalEnrolledChart () {
-        home_totalEnrolledChart.getData().clear();
-        // MySQL query
-        // String query = "SELECT added_on, COUNT(DISTINCT id) FROM student WHERE status = 'Enrolled' GROUP BY added_on ORDER BY TIMESTAMP(added_on) ASC LIMIT 5";
-        // H2 database query
-        String query = "SELECT added_on, COUNT(DISTINCT id) FROM student WHERE status = 'Enrolled' GROUP BY added_on ORDER BY CAST(added_on AS TIMESTAMP) ASC LIMIT 5";
-        connect = DatabaseConnection.connectDb();
-        try {
-            XYChart.Series chart = new XYChart.Series();
-            prepare = connect.prepareStatement(query);
-            result = prepare.executeQuery();
-            while (result.next()){
-                chart.getData().add(new XYChart.Data(result.getString(1), result.getInt(2)));
-            }
-            home_totalEnrolledChart.getData().add(chart);
-            result.close();
-            prepare.close();
-            connect.close();
-        } catch (Exception e) {e.printStackTrace();}
+        showChart(home_totalEnrolledChart, () -> attendanceService.countEnrolledAddedPerDay(CHART_DAYS));
     }
     public void homeDisplayPresentTodayChart() {
-        // Clear any existing data from the chart
-        home_presentTodayChart.getData().clear();
-
-        // Define the SQL query to retrieve data for the chart
-        // MySQL query
-        // String sql = "SELECT DATE(entry_time) AS date, COUNT(DISTINCT id) FROM student_attendance WHERE DATE(entry_time) = CURDATE() GROUP BY DATE(entry_time)";
-        // H2 database query
-        String sql = "SELECT CAST(entry_time AS DATE) AS date, COUNT(DISTINCT id) FROM student_attendance WHERE CAST(entry_time AS DATE) = CURRENT_DATE GROUP BY CAST(entry_time AS DATE)";
-
-        // Establish a database connection (replace with your connection code)
-        connect = DatabaseConnection.connectDb();
-
-        try {
-            // Create a new XYChart.Series for the line chart
-            XYChart.Series<String, Integer> series = new XYChart.Series<>();
-
-            // Prepare the SQL statement
-            prepare = connect.prepareStatement(sql);
-
-            // Execute the query and retrieve the result set
-            result = prepare.executeQuery();
-
-            // Iterate through the result set and add data to the series
-            while (result.next()) {
-                String date = result.getString("date");
-                int count = result.getInt(2);
-                series.getData().add(new XYChart.Data<>(date, count));
-            }
-
-            // Add the series to the line chart
-            home_presentTodayChart.getData().add(series);
-            result.close();
-            prepare.close();
-            connect.close();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        showChart(home_presentTodayChart, () -> attendanceService.countPresentPerDay(CHART_DAYS));
     }
     public void homeDisplayAbsentTodayChart() {
-        // Clear any existing data from the chart
-        home_absentTodayChart.getData().clear();
-
-        // Get the total enrolled students from the home_totalEnrolled label
-        int totalEnrolled = Integer.parseInt(home_totalEnrolled.getText());
-
-        // Get the students present today from the home_presentTodayChart line chart
-        LineChart.Series<String, Integer> presentSeries = (LineChart.Series<String, Integer>) home_presentTodayChart.getData().get(0);
-
-        // Create a new XYChart.Series for the absent students
-        XYChart.Series<String, Integer> absentSeries = new XYChart.Series<>();
-
-        // Iterate through the data in the presentSeries and calculate absent students
-        for (XYChart.Data<String, Integer> data : presentSeries.getData()) {
-            String date = data.getXValue();
-            int presentCount = data.getYValue();
-            int absentCount = totalEnrolled - presentCount;
-            absentSeries.getData().add(new XYChart.Data<>(date, absentCount));
+        showChart(home_absentTodayChart, () -> attendanceService.countAbsentPerDay(CHART_DAYS));
+    }
+    @SuppressWarnings({"rawtypes", "unchecked"}) // the FXML gives the bar chart wildcard types
+    private void showChart(XYChart chart, java.util.function.Supplier<Map<LocalDate, Integer>> countPerDay) {
+        chart.getData().clear();
+        try {
+            XYChart.Series<String, Integer> series = new XYChart.Series<>();
+            countPerDay.get().forEach((day, count) -> series.getData().add(new XYChart.Data<>(day.toString(), count)));
+            chart.getData().add(series);
+        } catch (DataAccessException e) {
+            showDatabaseError(e);
         }
-
-        // Add the absentSeries to the home_absentTodayChart line chart
-        home_absentTodayChart.getData().add(absentSeries);
     }
 //    END CODE FOR HOME FORM
 
@@ -928,44 +830,12 @@ public class DashboardController implements Initializable {
 
 //    START CODE FOR STUDENT ATTENDANCE FORM
     public ObservableList <StudentAttendanceData> studentAttendanceListData(){
-        ObservableList <StudentAttendanceData> listStudentAttendance = FXCollections.observableArrayList();
-        // MySQL query
-        /* String query = "SELECT student.studentNum, student.semester, student.course, " +
-                "student_attendance.entry_time, student_attendance.exit_time, student_attendance.status " +
-                "FROM student_attendance " +
-                "INNER JOIN student ON student_attendance.student_id = student.id " +
-                "INNER JOIN course ON student_attendance.course_id = course.id " +
-                "WHERE DATE(student_attendance.entry_time) = CURDATE()"; */
-        // H2 database query
-        String query = "SELECT student.studentNum, student.semester, student.course, " +
-                "       student_attendance.entry_time, student_attendance.exit_time, student_attendance.status " +
-                "FROM student_attendance " +
-                "INNER JOIN student ON student_attendance.student_id = student.id " +
-                "INNER JOIN course ON student_attendance.course_id = course.id " +
-                "WHERE CAST(student_attendance.entry_time AS DATE) = CURRENT_DATE()";
-        connect = DatabaseConnection.connectDb();
-        if (connect != null) {
-            try {
-                StudentAttendanceData record;
-                prepare = connect.prepareStatement(query);
-                result = prepare.executeQuery();
-                while (result.next()) {
-                    record = new StudentAttendanceData(result.getString("studentNum"),
-                            result.getString("semester"),
-                            result.getString("course"),
-                            result.getString("entry_time"),
-                            result.getString("exit_time"),
-                            result.getString("status"));
-                    listStudentAttendance.add(record);
-                }
-                result.close();
-                prepare.close();
-                connect.close();
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
+        try {
+            return FXCollections.observableArrayList(attendanceService.listToday());
+        } catch (DataAccessException e) {
+            showDatabaseError(e);
+            return FXCollections.observableArrayList();
         }
-        return listStudentAttendance;
     }
     private ObservableList<StudentAttendanceData> observableAttendanceData;
     @FXML
@@ -982,293 +852,73 @@ public class DashboardController implements Initializable {
     }
     @FXML
     public void studentAttendanceSemesterList(){
-        //  studentAttendance_semester.getItems().clear();
-        List <String> semesterL = new ArrayList<>();
-        for (String data: semesterList){
-            semesterL.add(data);
-        }
-        ObservableList <String> ObList = FXCollections.observableArrayList(semesterL);
-        studentAttendance_semester.setItems(ObList);
-
+        studentAttendance_semester.setItems(FXCollections.observableArrayList(semesterList));
         studentAttendance_semester.setOnAction(e -> studentAttendanceCourseList());
     }
     @FXML
     public void studentAttendanceCourseList(){
-        //  studentAttendance_course.getItems().clear();
         String selectedSemester = studentAttendance_semester.getSelectionModel().getSelectedItem();
-        connect = DatabaseConnection.connectDb();
-        if (connect != null){
-            try {
-                String query = "SELECT DISTINCT course FROM student WHERE semester = ?";
-                prepare = connect.prepareStatement(query);
-                prepare.setString(1, selectedSemester);
-                result = prepare.executeQuery();
-                ObservableList <String> courseList = FXCollections.observableArrayList();
-                while (result.next()){
-                    String course = result.getString("course");
-                    courseList.add(course);
-                }
-                studentAttendance_course.setItems(courseList);
-                result.close();
-                prepare.close();
-                connect.close();
-            } catch (SQLException e) {e.printStackTrace();}
+        try {
+            studentAttendance_course.setItems(
+                    FXCollections.observableArrayList(attendanceService.listCoursesIn(selectedSemester)));
+            // A course of the previous semester would otherwise stay chosen
+            studentAttendance_course.setValue(null);
+        } catch (DataAccessException e) {
+            showDatabaseError(e);
         }
-        
         studentAttendance_course.setOnAction(e -> studentAttendanceStudentNumList());
     }
     @FXML
     public void studentAttendanceStudentNumList(){
         String selectedSemester = studentAttendance_semester.getSelectionModel().getSelectedItem();
         String selectedCourse = studentAttendance_course.getSelectionModel().getSelectedItem();
-        /*
-          studentAttendance_studentNum.getItems().clear();
-        */
-        connect = DatabaseConnection.connectDb();
-        if (connect != null) {
-            try {
-
-                String query = "SELECT DISTINCT studentNum FROM student WHERE semester = ? AND course = ?";
-                prepare = connect.prepareStatement(query);
-                prepare.setString(1, selectedSemester);
-                prepare.setString(2, selectedCourse);
-                
-                result = prepare.executeQuery();
-                ObservableList <String> studentNumList = FXCollections.observableArrayList();
-                while (result.next()) {
-                    String studentNum = result.getString("studentNum");
-                    studentNumList.add(studentNum);
-                }
-                studentAttendance_studentNum.setItems(studentNumList);
-                result.close();
-                prepare.close();
-                connect.close();
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
+        try {
+            List<String> studentNums =
+                    attendanceService.listStudentNumbersIn(selectedSemester, selectedCourse).stream()
+                            .map(String::valueOf)
+                            .toList();
+            studentAttendance_studentNum.setItems(FXCollections.observableArrayList(studentNums));
+            studentAttendance_studentNum.setValue(null);
+        } catch (DataAccessException e) {
+            showDatabaseError(e);
         }
     }
-    // Method to fetch student_id based on studentNum, semester, and course
-    private int fetchStudentId(String studentNum, String semester, String course) {
-        int studentId = -1; // Initialize to a default value (e.g., -1) to indicate no matching student found
-
-        connect = DatabaseConnection.connectDb();
-
-        if (connect != null) {
-            try {
-                String query = "SELECT id FROM student WHERE studentNum = ? AND semester = ? AND course = ?";
-                PreparedStatement preparedStatement = connect.prepareStatement(query);
-                preparedStatement.setString(1, studentNum);
-                preparedStatement.setString(2, semester);
-                preparedStatement.setString(3, course);
-
-                ResultSet resultSet = preparedStatement.executeQuery();
-
-                if (resultSet.next()) {
-                    studentId = resultSet.getInt("id");
-                }
-
-                // Close resources
-                resultSet.close();
-                preparedStatement.close();
-                connect.close();
-            } catch (SQLException e) {
-                e.printStackTrace();
-                // Handle any database-related exceptions here
-            }
-        }
-
-        return studentId;
-    }
-    // Method to fetch course_id based on course
-    private int fetchCourseId(String course) {
-        int courseId = -1; // Initialize to a default value (e.g., -1) to indicate no matching course found
-
-        connect = DatabaseConnection.connectDb();
-
-        if (connect != null) {
-            try {
-                String query = "SELECT id FROM course WHERE course = ?";
-                PreparedStatement preparedStatement = connect.prepareStatement(query);
-                preparedStatement.setString(1, course);
-
-                ResultSet resultSet = preparedStatement.executeQuery();
-
-                if (resultSet.next()) {
-                    courseId = resultSet.getInt("id");
-                }
-
-                // Close resources
-                resultSet.close();
-                preparedStatement.close();
-                connect.close();
-            } catch (SQLException e) {
-                e.printStackTrace();
-                // Handle any database-related exceptions here
-            }
-        }
-
-        return courseId;
+    private Integer selectedAttendanceStudentNum() {
+        String selected = studentAttendance_studentNum.getSelectionModel().getSelectedItem();
+        return selected == null ? null : Integer.valueOf(selected);
     }
     @FXML
     public void studentAttendanceMarkEntryBtnOnAction() {
-        String selectedStudentNum = studentAttendance_studentNum.getValue();
-        String selectedSemester = studentAttendance_semester.getValue();
-        String selectedCourse = studentAttendance_course.getValue();
-
-        // Check if all required fields are selected
-        if (selectedStudentNum != null && selectedSemester != null && selectedCourse != null) {
-            // Get the current timestamp
-            Timestamp entryTime = new Timestamp(new Date().getTime());
-
-            // Database connection and SQL query to insert data
-            connect = DatabaseConnection.connectDb(); // Replace with your actual database connection code
-
-            if (connect != null) {
-                try {
-                    String query = "INSERT INTO student_attendance (student_id, course_id, entry_time, exit_time, status) VALUES (?, ?, ?, NULL, 'Present')";
-                    prepare = connect.prepareStatement(query);
-
-                    // You need to fetch the student_id and course_id based on the selected studentNum, semester, and course
-                    int studentId = fetchStudentId(selectedStudentNum, selectedSemester, selectedCourse);
-                    int courseId = fetchCourseId(selectedCourse);
-
-                    prepare.setInt(1, studentId);
-                    prepare.setInt(2, courseId);
-                    prepare.setTimestamp(3, entryTime);
-
-                    // Execute the insert query
-                    prepare.executeUpdate();
-
-                    // Close the database connection and resources
-                    prepare.close();
-                    connect.close();
-
-                    // Show a success message
-                    Alert successAlert = new Alert(Alert.AlertType.INFORMATION);
-                    successAlert.setTitle("Information Message");
-                    successAlert.setHeaderText(null);
-                    successAlert.setContentText("Attendance marked successfully!");
-                    successAlert.showAndWait();
-
-                    // Optionally, you can perform any other actions here
-                    studentAttendanceShowListData();
-                    studentAttendanceClearBtnOnAction();
-                } catch (SQLException e) {
-                    e.printStackTrace();
-                    // Handle any database-related exceptions here
-
-                    // Display a database error message
-                    Alert errorAlert = new Alert(Alert.AlertType.ERROR);
-                    errorAlert.setTitle("Error Message");
-                    errorAlert.setHeaderText(null);
-                    errorAlert.setContentText("An error occurred while marking attendance. Please try again later.");
-                    errorAlert.showAndWait();
-                }
-            }
-        } else {
-            // Handle the case where not all required fields are selected
-            // Display an error message or take appropriate action
-            Alert missingFieldsAlert = new Alert(Alert.AlertType.ERROR);
-            missingFieldsAlert.setTitle("Error Message");
-            missingFieldsAlert.setHeaderText(null);
-            missingFieldsAlert.setContentText("Please select all required fields.");
-            missingFieldsAlert.showAndWait();
+        try {
+            attendanceService.markEntry(selectedAttendanceStudentNum());
+            attendanceChanged("Entry marked for Student #: " + selectedAttendanceStudentNum());
+        } catch (ValidationException e) {
+            showAlert(Alert.AlertType.ERROR, "Error Message", e.getMessage());
+        } catch (DataAccessException e) {
+            showDatabaseError(e);
         }
     }
     @FXML
     public void studentAttendanceMarkExitOnAction() {
-        String selectedSemester = studentAttendance_semester.getSelectionModel().getSelectedItem();
-        String selectedCourse = studentAttendance_course.getSelectionModel().getSelectedItem();
-        String selectedStudentNum = studentAttendance_studentNum.getSelectionModel().getSelectedItem();
-        connect = DatabaseConnection.connectDb(); // Replace with your actual database connection code
-
-        if (connect != null) {
-            try {
-                // Get the current date and time as a Timestamp
-                Timestamp currentTimestamp = new Timestamp(new Date().getTime());
-
-                // Define a SQL query to update the exit_time
-                String query = "UPDATE student_attendance SET exit_time = ? " +
-                        "WHERE entry_time >= ? AND entry_time < ? " +
-                        "AND exit_time IS NULL " +
-                        "AND student_id IN (SELECT id FROM student WHERE semester = ? AND course = ? AND studentNum = ?)";
-
-                // Set a time range for checking entry_time (e.g., for the current day)
-                // You may need to adjust this time range based on your specific requirements
-                Timestamp startOfDay = new Timestamp(new Date().getTime());
-                startOfDay.setHours(0);
-                startOfDay.setMinutes(0);
-                startOfDay.setSeconds(0);
-
-                Timestamp endOfDay = new Timestamp(new Date().getTime());
-                endOfDay.setHours(23);
-                endOfDay.setMinutes(59);
-                endOfDay.setSeconds(59);
-
-                // Create a PreparedStatement for the query
-                prepare = connect.prepareStatement(query);
-                prepare.setTimestamp(1, currentTimestamp);
-                prepare.setTimestamp(2, startOfDay);
-                prepare.setTimestamp(3, endOfDay);
-                prepare.setString(4, selectedSemester);
-                prepare.setString(5, selectedCourse);
-                prepare.setString(6, selectedStudentNum);
-
-                // Execute the update query
-                int updatedRows = prepare.executeUpdate();
-
-                // Close the PreparedStatement and database connection
-                prepare.close();
-                connect.close();
-
-                if (updatedRows > 0) {
-                    // Show a success message
-                    Alert successAlert = new Alert(Alert.AlertType.INFORMATION);
-                    successAlert.setTitle("Information Message");
-                    successAlert.setHeaderText(null);
-                    successAlert.setContentText("Exit times updated for " + updatedRows + " records.");
-                    successAlert.showAndWait();
-
-                    // Optionally, you can perform any other actions here
-                    studentAttendanceShowListData();
-                    studentAttendanceClearBtnOnAction();
-                } else {
-                    // Show a message when no records were updated
-                    Alert noRecordsAlert = new Alert(Alert.AlertType.INFORMATION);
-                    noRecordsAlert.setTitle("Information Message");
-                    noRecordsAlert.setHeaderText(null);
-                    noRecordsAlert.setContentText("No records found for update.");
-                    noRecordsAlert.showAndWait();
-                }
-            } catch (SQLException e) {
-                e.printStackTrace();
-                // Handle any database-related exceptions here
-
-                // Display a database error message
-                Alert errorAlert = new Alert(Alert.AlertType.ERROR);
-                errorAlert.setTitle("Error Message");
-                errorAlert.setHeaderText(null);
-                errorAlert.setContentText("An error occurred while updating exit times. Please try again later.");
-                errorAlert.showAndWait();
-            }
-        } else {
-            // Handle the case where the database connection is null
-            Alert dbConnectionErrorAlert = new Alert(Alert.AlertType.ERROR);
-            dbConnectionErrorAlert.setTitle("Error Message");
-            dbConnectionErrorAlert.setHeaderText(null);
-            dbConnectionErrorAlert.setContentText("Unable to connect to the database. Please check your database connection.");
-            dbConnectionErrorAlert.showAndWait();
+        try {
+            int closed = attendanceService.markExit(selectedAttendanceStudentNum());
+            attendanceChanged("Exit marked for Student #: " + selectedAttendanceStudentNum()
+                    + (closed > 1 ? " (" + closed + " entries)" : ""));
+        } catch (ValidationException e) {
+            showAlert(Alert.AlertType.ERROR, "Error Message", e.getMessage());
+        } catch (DataAccessException e) {
+            showDatabaseError(e);
         }
+    }
+    private void attendanceChanged(String successMessage) {
+        showAlert(Alert.AlertType.INFORMATION, "Information Message", successMessage);
+        studentAttendanceShowListData();
+        studentAttendanceClearBtnOnAction();
     }
     
     @FXML
     public void studentAttendanceClearBtnOnAction() {
-        studentAttendance_semester.getSelectionModel().clearSelection();
-        studentAttendance_course.getSelectionModel().clearSelection();;
-        studentAttendance_studentNum.getSelectionModel().clearSelection();
-
-        initializeComboBoxes(studentAttendance_semester, studentAttendance_course, studentAttendance_studentNum);
+        studentAttendance_semester.setValue(null);
     }
     
     @FXML
@@ -1631,6 +1281,7 @@ public class DashboardController implements Initializable {
         availableCourseShowListData();
 
         //  Initialize the ComboBox when the controller is loaded
+        initializeComboBoxes(studentAttendance_semester, studentAttendance_course, studentAttendance_studentNum);
         studentAttendanceSemesterList();
         studentAttendanceCourseList();
         studentAttendanceStudentNumList();
