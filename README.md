@@ -51,6 +51,26 @@ Run `./mvnw javafx:run` (Windows: `mvnw.cmd javafx:run`) from the project folder
 
 The build stops with a clear message if your JDK is older than 25.
 
+On the first start the app creates its database and fills it with demo data (fictional students, courses and a few days of attendance). Log in with **admin / admin123** (Admin) or **employee / employee123** (Employee).
+
+### Where the data is stored
+The database lives in a per-user folder, so the app works from any install location:
+
+| OS      | Folder                                                          |
+|---------|-----------------------------------------------------------------|
+| Windows | `%APPDATA%\AttendanceSystem`                                    |
+| macOS   | `~/Library/Application Support/AttendanceSystem`                |
+| Linux   | `$XDG_DATA_HOME/AttendanceSystem` (default `~/.local/share/AttendanceSystem`) |
+
+Delete that folder to start over with fresh demo data. To use another folder, start the app with `-Dattendance.home=<folder>`. To use another database, set `ATTENDANCE_DB_URL`, `ATTENDANCE_DB_USER` and `ATTENDANCE_DB_PASSWORD`.
+
+The schema is created and upgraded by [Flyway](https://documentation.red-gate.com/flyway) from the SQL files in `src/main/resources/db/migration`. To change the schema, add a new `V<next number>__<description>.sql` file there; never edit a file that has already been released.
+
+Earlier versions kept the database in the project's `data/` folder. That folder is no longer used.
+
+### Running the tests
+Run `./mvnw verify` (Windows: `mvnw.cmd verify`).
+
 ### Checking for dependency updates
 Run `./mvnw versions:display-dependency-updates versions:display-plugin-updates` to list newer stable releases of the libraries and build plugins.
 

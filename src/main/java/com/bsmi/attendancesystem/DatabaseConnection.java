@@ -6,14 +6,10 @@ import java.sql.SQLException;
 
 public class DatabaseConnection {
      public static Connection databaseLink;
-    // Method to connect to H2 embedded database
     public static Connection connectDb (){
-        String databaseName = "attendance_system";
-        String url ="jdbc:h2:./data/" + databaseName;
-        String databaseUser = "admin";
-        String databasePassword = "admin";
+        DatabaseSettings settings = DatabaseSettings.current();
         try {
-            databaseLink = DriverManager.getConnection(url, databaseUser, databasePassword);
+            databaseLink = DriverManager.getConnection(settings.url(), settings.user(), settings.password());
             return databaseLink;
         } catch (SQLException e) {e.printStackTrace();}
         return null;

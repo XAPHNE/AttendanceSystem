@@ -13,6 +13,12 @@ import java.io.IOException;
 public class AttendanceApplication extends Application {
     private double xOffset = 0;
     private double yOffset = 0;
+
+    @Override
+    public void init() {
+        DatabaseMigrations.applyPending(DatabaseSettings.current());
+    }
+
     @Override
     public void start(Stage primaryStage) throws IOException {
         FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("fxml/login-view.fxml"));
