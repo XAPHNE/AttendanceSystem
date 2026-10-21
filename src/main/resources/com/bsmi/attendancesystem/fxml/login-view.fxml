@@ -32,7 +32,7 @@
                                 <Cursor fx:constant="TEXT" />
                             </cursor>
                         </MFXPasswordField>
-                        <Button fx:id="loginButton" defaultButton="true" layoutX="22.0" layoutY="294.0" mnemonicParsing="false" onAction="#loginButtonOnAction" prefHeight="40.0" prefWidth="250.0" styleClass="login-btn" stylesheets="@../css/login-style.css" text="Login">
+                        <Button fx:id="loginButton" defaultButton="true" layoutX="22.0" layoutY="294.0" mnemonicParsing="false" onAction="#loginButtonOnAction" prefHeight="40.0" prefWidth="250.0" styleClass="btn-primary" stylesheets="@../css/login-style.css" text="Login">
                             <cursor>
                                 <Cursor fx:constant="HAND" />
                             </cursor>

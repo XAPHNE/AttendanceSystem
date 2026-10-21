@@ -28,13 +28,3 @@
     -fx-border-color:linear-gradient(to bottom right, #2d658c, #2ca772);
     -fx-border-width:.8px;
 }
-.login-btn{
-    -fx-background-color: linear-gradient(to bottom right, #2968a7, #14405d);
-    -fx-background-radius: 4px;
-    -fx-text-fill: #fff;
-    -fx-font-size: 14px;
-}
-.login-btn:hover{
-    -fx-background-color: linear-gradient(to bottom right, #277bd0, #1b6fa4);
-    -fx-cursor: hand;
-}
