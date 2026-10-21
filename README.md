@@ -73,6 +73,7 @@ Run `./mvnw verify` (Windows: `mvnw.cmd verify`).
 
 - The UI tests open the real app and click through it, so they need a display. On a Linux machine without one (a server or CI runner) they are skipped; run `xvfb-run ./mvnw verify` to include them. `./mvnw verify -DexcludedGroups=ui` skips them anywhere.
 - The build fails if the tests cover less than 90% of the lines in the `dao` and `service` packages. The coverage report is at `target/site/jacoco/index.html`.
+- GitHub Actions runs the same build with the UI tests on Linux, Windows and macOS for every push and pull request (`.github/workflows/ci.yml`). A separate job tries the newest Java (27) as an early warning; it is allowed to fail.
 
 ### Checking for dependency updates
 Run `./mvnw versions:display-dependency-updates versions:display-plugin-updates` to list newer stable releases of the libraries and build plugins.
