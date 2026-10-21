@@ -270,13 +270,13 @@
                                           <Font size="15.0" />
                                        </font>
                                     </Label>
-                                    <ComboBox fx:id="addStudent_semester" layoutX="107.0" layoutY="321.0" onAction="#addStudent_semesterList" prefWidth="166.0" promptText="Choose" styleClass="textfield" stylesheets="@../css/dashboard-style.css" />
+                                    <ComboBox fx:id="addStudent_semester" layoutX="107.0" layoutY="321.0" prefWidth="166.0" promptText="Choose" styleClass="textfield" stylesheets="@../css/dashboard-style.css" />
                                     <Label layoutX="38.0" layoutY="361.0" text="Course:">
                                        <font>
                                           <Font size="15.0" />
                                        </font>
                                     </Label>
-                                    <ComboBox fx:id="addStudent_course" layoutX="107.0" layoutY="358.0" onAction="#setAddStudent_courseList" prefWidth="166.0" promptText="Choose" styleClass="textfield" stylesheets="@../css/dashboard-style.css" />
+                                    <ComboBox fx:id="addStudent_course" layoutX="107.0" layoutY="358.0" prefWidth="166.0" promptText="Choose" styleClass="textfield" stylesheets="@../css/dashboard-style.css" />
                                     <Label layoutX="315.0" layoutY="289.0" text="First Name:">
                                        <font>
                                           <Font size="15.0" />
@@ -294,7 +294,7 @@
                                           <Font size="15.0" />
                                        </font>
                                     </Label>
-                                    <ComboBox fx:id="addStudent_gender" layoutX="410.0" layoutY="359.0" onAction="#addStudent_genderList" prefWidth="166.0" promptText="Choose" styleClass="textfield" stylesheets="@../css/dashboard-style.css" />
+                                    <ComboBox fx:id="addStudent_gender" layoutX="410.0" layoutY="359.0" prefWidth="166.0" promptText="Choose" styleClass="textfield" stylesheets="@../css/dashboard-style.css" />
                                     <Label layoutX="320.0" layoutY="394.0" text="Birth Date:">
                                        <font>
                                           <Font size="15.0" />
@@ -306,7 +306,7 @@
                                           <Font size="15.0" />
                                        </font>
                                     </Label>
-                                    <ComboBox fx:id="addStudent_status" layoutX="410.0" layoutY="431.0" onAction="#addStudent_statusList" prefWidth="166.0" promptText="Choose" styleClass="textfield" stylesheets="@../css/dashboard-style.css" />
+                                    <ComboBox fx:id="addStudent_status" layoutX="410.0" layoutY="431.0" prefWidth="166.0" promptText="Choose" styleClass="textfield" stylesheets="@../css/dashboard-style.css" />
                                     <AnchorPane layoutX="668.0" layoutY="286.0" prefHeight="170.0" prefWidth="120.0" stylesheets="@../css/dashboard-style.css">
                                        <styleClass>
                                           <String fx:value="white-bg" />
