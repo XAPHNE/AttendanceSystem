@@ -10,6 +10,8 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 
 class AttendanceDaoTest {
     // The demo data is dated relative to the database's CURRENT_DATE, i.e. the real today
@@ -168,9 +170,10 @@ class AttendanceDaoTest {
         assertThat(attendance.findOn(TODAY).getLast().getCourse()).isEqualTo(injection);
     }
 
-    @Test
-    void everyOperationOnUnreachableDatabaseFailsWithDataAccessException() {
-        AttendanceDao offline = new AttendanceDao(TestDatabases.unreachable());
+    @ParameterizedTest
+    @MethodSource("com.bsmi.attendancesystem.dao.TestDatabases#broken")
+    void everyOperationOnBrokenDatabaseFailsWithDataAccessException(Database database) {
+        AttendanceDao offline = new AttendanceDao(database);
         LocalDateTime now = TODAY.atTime(10, 0);
 
         assertThatThrownBy(() -> offline.findOn(TODAY)).isInstanceOf(DataAccessException.class);

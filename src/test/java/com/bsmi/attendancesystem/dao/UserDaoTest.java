@@ -8,6 +8,8 @@ import com.bsmi.attendancesystem.UserData;
 import java.sql.SQLException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 
 class UserDaoTest {
     private static final String INJECTION = "x' OR '1'='1";
@@ -144,9 +146,10 @@ class UserDaoTest {
         assertThat(users.delete(9999)).isFalse();
     }
 
-    @Test
-    void everyMethodReportsAnUnreachableDatabase() {
-        UserDao broken = new UserDao(TestDatabases.unreachable());
+    @ParameterizedTest
+    @MethodSource("com.bsmi.attendancesystem.dao.TestDatabases#broken")
+    void everyMethodReportsABrokenDatabase(Database database) {
+        UserDao broken = new UserDao(database);
         UserData user = new UserData(1, "x", "Admin");
 
         assertThatThrownBy(broken::findAll).isInstanceOf(DataAccessException.class);

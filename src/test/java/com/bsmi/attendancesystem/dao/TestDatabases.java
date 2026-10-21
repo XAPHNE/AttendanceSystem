@@ -6,6 +6,8 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.UUID;
+import java.util.stream.Stream;
+import org.junit.jupiter.api.Named;
 
 /** Throwaway databases for tests. Each call gets its own, so tests can't affect each other. */
 public final class TestDatabases {
@@ -27,6 +29,19 @@ public final class TestDatabases {
         return new Database(
                 new DatabaseSettings(
                         "jdbc:h2:mem:" + UUID.randomUUID() + ";IFEXISTS=TRUE", "admin", "admin"));
+    }
+
+    /** @return a database that opens but has no tables, so every query fails */
+    public static Database withoutTables() {
+        return new Database(
+                new DatabaseSettings(
+                        "jdbc:h2:mem:" + UUID.randomUUID() + ";DB_CLOSE_DELAY=-1", "admin", "admin"));
+    }
+
+    /** The two ways a DAO call can fail: no connection at all, or a query that fails. */
+    public static Stream<Named<Database>> broken() {
+        return Stream.of(
+                Named.of("unreachable", unreachable()), Named.of("without tables", withoutTables()));
     }
 
     public static void execute(Database database, String sql) throws SQLException {

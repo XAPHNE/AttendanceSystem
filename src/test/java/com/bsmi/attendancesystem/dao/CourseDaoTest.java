@@ -8,6 +8,8 @@ import java.sql.SQLException;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 
 class CourseDaoTest {
     private static final String INJECTION = "x' OR '1'='1";
@@ -157,9 +159,10 @@ class CourseDaoTest {
         assertThat(courses.isInUse("PhD")).isFalse();
     }
 
-    @Test
-    void everyOperationOnUnreachableDatabaseFailsWithDataAccessException() {
-        CourseDao offline = new CourseDao(TestDatabases.unreachable());
+    @ParameterizedTest
+    @MethodSource("com.bsmi.attendancesystem.dao.TestDatabases#broken")
+    void everyOperationOnBrokenDatabaseFailsWithDataAccessException(Database database) {
+        CourseDao offline = new CourseDao(database);
         CourseData course = new CourseData("BCA", "x", "y");
 
         assertThatThrownBy(offline::findAll).isInstanceOf(DataAccessException.class);

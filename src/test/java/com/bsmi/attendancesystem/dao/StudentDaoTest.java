@@ -13,6 +13,8 @@ import java.sql.SQLException;
 import java.time.LocalDate;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 
 class StudentDaoTest {
     private static final String INJECTION = "x' OR '1'='1";
@@ -221,9 +223,10 @@ class StudentDaoTest {
         assertThat(students.findNumbersIn(INJECTION, INJECTION)).isEmpty();
     }
 
-    @Test
-    void everyOperationOnUnreachableDatabaseFailsWithDataAccessException() {
-        StudentDao offline = new StudentDao(TestDatabases.unreachable());
+    @ParameterizedTest
+    @MethodSource("com.bsmi.attendancesystem.dao.TestDatabases#broken")
+    void everyOperationOnBrokenDatabaseFailsWithDataAccessException(Database database) {
+        StudentDao offline = new StudentDao(database);
         StudentData student = student(2001, "Zoya");
 
         assertThatThrownBy(offline::findAll).isInstanceOf(DataAccessException.class);
