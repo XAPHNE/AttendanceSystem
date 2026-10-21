@@ -14,6 +14,15 @@
     <ikonli.version>12.4.0</ikonli.version>
     <!-- Filled in by JaCoCo; empty when the tests run without it, e.g. from an IDE -->
     <argLine></argLine>
+    <!-- Installers need a plain number version; the release workflow sets it from the tag -->
+    <dist.version>1.0.0</dist.version>
+    <!-- APP_IMAGE (a folder with the app and its own Java), DEB, RPM, MSI, EXE, DMG or PKG -->
+    <dist.type>APP_IMAGE</dist.type>
+    <!-- Menu entry and desktop shortcut; only installers (not APP_IMAGE) can add them -->
+    <dist.shortcuts>false</dist.shortcuts>
+    <!-- Extra packages a .deb installs with the app; JavaFX draws its windows with GTK -->
+    <dist.linux-deps></dist.linux-deps>
+    <jlink.executable>${java.home}/bin/jlink</jlink.executable>
   </properties>
 
   <dependencies>
@@ -190,12 +199,6 @@
             <id>default-cli</id>
             <configuration>
               <mainClass>com.bsmi.attendancesystem/com.bsmi.attendancesystem.AttendanceApplication</mainClass>
-              <launcher>app</launcher>
-              <jlinkZipName>app</jlinkZipName>
-              <jlinkImageName>app</jlinkImageName>
-              <noManPages>true</noManPages>
-              <stripDebug>true</stripDebug>
-              <noHeaderFiles>true</noHeaderFiles>
             </configuration>
           </execution>
         </executions>
@@ -218,4 +221,137 @@
       </plugin>
     </plugins>
   </build>
+
+  <profiles>
+    <profile>
+      <!-- ./mvnw -Pdist package: the app with its own Java runtime in target/dist -->
+      <id>dist</id>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-jar-plugin</artifactId>
+            <configuration>
+              <outputDirectory>${project.build.directory}/libs</outputDirectory>
+            </configuration>
+          </plugin>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-dependency-plugin</artifactId>
+            <version>3.11.0</version>
+            <executions>
+              <execution>
+                <id>copy-libraries</id>
+                <phase>package</phase>
+                <goals>
+                  <goal>copy-dependencies</goal>
+                </goals>
+                <configuration>
+                  <includeScope>runtime</includeScope>
+                  <outputDirectory>${project.build.directory}/libs</outputDirectory>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-clean-plugin</artifactId>
+            <executions>
+              <execution>
+                <!-- jlink refuses to write into an existing folder -->
+                <id>remove-old-runtime</id>
+                <phase>package</phase>
+                <goals>
+                  <goal>clean</goal>
+                </goals>
+                <configuration>
+                  <excludeDefaultDirectories>true</excludeDefaultDirectories>
+                  <filesets>
+                    <fileset>
+                      <directory>${project.build.directory}/runtime</directory>
+                    </fileset>
+                  </filesets>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+          <plugin>
+            <groupId>org.codehaus.mojo</groupId>
+            <artifactId>exec-maven-plugin</artifactId>
+            <version>3.6.4</version>
+            <executions>
+              <execution>
+                <!-- H2, Flyway and jbcrypt aren't real modules, and jlink refuses those, so the
+                     runtime holds only the JDK modules; everything else goes next to it -->
+                <id>java-runtime</id>
+                <phase>package</phase>
+                <goals>
+                  <goal>exec</goal>
+                </goals>
+                <configuration>
+                  <executable>${jlink.executable}</executable>
+                  <arguments>
+                    <argument>--add-modules</argument>
+                    <!-- The modules jdeps reports the libraries in target/libs need -->
+                    <argument>java.base,java.compiler,java.desktop,java.instrument,java.management,java.naming,java.prefs,java.scripting,java.sql,jdk.jfr,jdk.net,jdk.unsupported</argument>
+                    <argument>--strip-debug</argument>
+                    <argument>--no-man-pages</argument>
+                    <argument>--no-header-files</argument>
+                    <argument>--output</argument>
+                    <argument>${project.build.directory}/runtime</argument>
+                  </arguments>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+          <plugin>
+            <groupId>org.panteleyev</groupId>
+            <artifactId>jpackage-maven-plugin</artifactId>
+            <version>1.8.0</version>
+            <executions>
+              <execution>
+                <id>package-app</id>
+                <phase>package</phase>
+                <goals>
+                  <goal>jpackage</goal>
+                </goals>
+                <configuration>
+                  <name>AttendanceSystem</name>
+                  <appVersion>${dist.version}</appVersion>
+                  <vendor>BSMI</vendor>
+                  <type>${dist.type}</type>
+                  <runtimeImage>${project.build.directory}/runtime</runtimeImage>
+                  <modulePaths>
+                    <modulePath>${project.build.directory}/libs</modulePath>
+                  </modulePaths>
+                  <module>com.bsmi.attendancesystem/com.bsmi.attendancesystem.AttendanceApplication</module>
+                  <javaOptions>
+                    <option>--enable-native-access=javafx.graphics</option>
+                  </javaOptions>
+                  <destination>${project.build.directory}/dist</destination>
+                  <removeDestination>true</removeDestination>
+                  <linuxShortcut>${dist.shortcuts}</linuxShortcut>
+                  <linuxPackageDeps>${dist.linux-deps}</linuxPackageDeps>
+                  <winMenu>${dist.shortcuts}</winMenu>
+                  <winShortcut>${dist.shortcuts}</winShortcut>
+                  <winDirChooser>${dist.shortcuts}</winDirChooser>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+    <profile>
+      <id>windows-jlink</id>
+      <activation>
+        <os>
+          <family>windows</family>
+        </os>
+      </activation>
+      <properties>
+        <jlink.executable>${java.home}/bin/jlink.exe</jlink.executable>
+      </properties>
+    </profile>
+  </profiles>
 </project>

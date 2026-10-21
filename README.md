@@ -68,6 +68,19 @@ The schema is created and upgraded by [Flyway](https://documentation.red-gate.co
 
 Earlier versions kept the database in the project's `data/` folder. That folder is no longer used.
 
+### Building a version that runs without Java
+Run `./mvnw -Pdist clean package` (Windows: `mvnw.cmd -Pdist clean package`). `target/dist/AttendanceSystem` is then a folder with the app and its own small Java runtime. Copy it to any computer with the same operating system and start `bin/AttendanceSystem` (Windows: `AttendanceSystem.exe`, macOS: `AttendanceSystem.app`). That computer doesn't need Java installed.
+
+To build an installer instead, add `-Ddist.type=` followed by the type:
+
+| OS      | Type  | Note                                                                                              |
+|---------|-------|---------------------------------------------------------------------------------------------------|
+| Linux   | `DEB` | Needs `fakeroot`. Add `-Ddist.shortcuts=true -Ddist.linux-deps=libgtk-3-0` for a menu entry and the GTK dependency |
+| Windows | `MSI` | Needs the [WiX Toolset](https://wixtoolset.org/)                                                  |
+| macOS   | `DMG` |                                                                                                   |
+
+How it works: jlink builds a Java runtime that holds only the JDK modules the app needs. jpackage puts that runtime, the app and its libraries in one folder or installer. H2, Flyway and jbcrypt aren't Java modules, and jlink can't put those into a runtime, so they sit next to it in `lib/app/mods`.
+
 ### Running the tests
 Run `./mvnw verify` (Windows: `mvnw.cmd verify`).
 
