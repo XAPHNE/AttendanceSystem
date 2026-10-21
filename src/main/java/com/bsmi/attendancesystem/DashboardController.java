@@ -37,6 +37,8 @@ import com.bsmi.attendancesystem.service.UserService;
 import com.bsmi.attendancesystem.service.ValidationException;
 
 import java.io.File;
+import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.net.URL;
 import java.time.LocalDate;
 import java.util.*;
@@ -283,13 +285,14 @@ public class DashboardController implements Initializable {
     private double xOffset = 0;
     private double yOffset = 0;
     private Image image;
+    /** The photo file of the student in the Add Student form, empty when none is chosen. */
+    private String chosenImagePath = "";
     private final String[] semesterList = {"1st Sem", "2nd Sem", "3rd Sem", "4th Sem", "5th Sem", "6th Sem", "7th Sem", "8th Sem", "Graduated"};
     private final String[] genderList = {"Male", "Female", "Other"};
     private final String[] statusList = {"Enrolled", "Graduated", "Dropped Out"};
 
     public void roleChecker() {
-        String userRole = GetData.userRole;
-        userManagement_btn.setVisible(Objects.equals(userRole, "Admin"));
+        userManagement_btn.setVisible(UserSession.isAdmin());
     }
 
 //    START CODE FOR MINIMIZE BUTTON
@@ -309,7 +312,7 @@ public class DashboardController implements Initializable {
 
 //    START CODE FOR USERNAME DISPLAY
     public void displayUsername () {
-        username.setText(GetData.username);
+        username.setText(UserSession.current().getUserName());
     }
 //    END CODE FOR USERNAME DISPLAY
 
@@ -414,39 +417,46 @@ public class DashboardController implements Initializable {
 //    START CODE FOR LOGOUT BUTTON
     @FXML
     public void logoutBtnOnAction () {
+        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+        alert.setTitle("Confirmation Message");
+        alert.setHeaderText(null);
+        alert.setContentText("Are you sure you want to logout?");
+        if (alert.showAndWait().filter(ButtonType.OK::equals).isEmpty()) {
+            return;
+        }
+        UserSession.end();
+        logout_btn.getScene().getWindow().hide();
         try {
-            Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
-            alert.setTitle("Confirmation Message");
-            alert.setHeaderText(null);
-            alert.setContentText("Are you sure you want to logout?");
-            Optional<javafx.scene.control.ButtonType> option = alert.showAndWait();
-            if (option.get().equals(ButtonType.OK)) {
-                logout_btn.getScene().getWindow().hide();
-                Parent root = FXMLLoader.load(getClass().getResource("fxml/login-view.fxml"));
-                Stage stage = new Stage();
-                Scene scene = new Scene(root);
-                stage.setTitle("Login | Student Management System");
-                // Make the window draggable
-                root.setOnMousePressed((MouseEvent event) -> {
-                    xOffset = event.getSceneX();
-                    yOffset = event.getSceneY();
-                });
-                root.setOnMouseDragged((MouseEvent event) -> {
-                    stage.setX(event.getScreenX() - xOffset);
-                    stage.setY(event.getScreenY() - yOffset);
-                    stage.setOpacity(.6);
-                });
+            openLoginScreen();
+        } catch (IOException e) {
+            // A broken FXML file is a packaging bug, not something the user can fix
+            throw new UncheckedIOException("Could not load the login screen", e);
+        }
+    }
 
-                // Reset opacity on mouse release
-                root.setOnMouseReleased((MouseEvent event) -> {
-                    stage.setOpacity(1);
-                });
-                stage.initStyle(StageStyle.TRANSPARENT);
-                stage.setScene(scene);
-                stage.show();
-            }else return;
+    private void openLoginScreen() throws IOException {
+        Parent root = FXMLLoader.load(getClass().getResource("fxml/login-view.fxml"));
+        Stage stage = new Stage();
+        Scene scene = new Scene(root);
+        stage.setTitle("Login | Student Management System");
+        // Make the window draggable
+        root.setOnMousePressed((MouseEvent event) -> {
+            xOffset = event.getSceneX();
+            yOffset = event.getSceneY();
+        });
+        root.setOnMouseDragged((MouseEvent event) -> {
+            stage.setX(event.getScreenX() - xOffset);
+            stage.setY(event.getScreenY() - yOffset);
+            stage.setOpacity(.6);
+        });
 
-        }catch (Exception e) {e.printStackTrace();}
+        // Reset opacity on mouse release
+        root.setOnMouseReleased((MouseEvent event) -> {
+            stage.setOpacity(1);
+        });
+        stage.initStyle(StageStyle.TRANSPARENT);
+        stage.setScene(scene);
+        stage.show();
     }
 //    END CODE FOR LOGOUT BUTTON
 
@@ -570,7 +580,7 @@ public class DashboardController implements Initializable {
         boolean hasPhoto = !studentD.getImage().isEmpty();
         image = hasPhoto ? new Image("file:" + studentD.getImage(), 120, 170, false, true) : null;
         addStudent_imageView.setImage(image);
-        GetData.path = studentD.getImage();
+        chosenImagePath = studentD.getImage();
     }
     @FXML
     public void addStudent_semesterList() {
@@ -617,7 +627,7 @@ public class DashboardController implements Initializable {
         if (file != null) {
             image = new Image(file.toURI().toString(), 120, 170, false, true);
             addStudent_imageView.setImage(image);
-            GetData.path = file.getAbsolutePath();
+            chosenImagePath = file.getAbsolutePath();
         }
     }
     private StudentData addStudentForm() {
@@ -630,7 +640,7 @@ public class DashboardController implements Initializable {
                 addStudent_gender.getSelectionModel().getSelectedItem(),
                 birthDate == null ? null : java.sql.Date.valueOf(birthDate),
                 addStudent_status.getSelectionModel().getSelectedItem(),
-                GetData.path);
+                chosenImagePath);
     }
     @FXML
     public void addStudent_addBtn_onAction(){
@@ -691,7 +701,7 @@ public class DashboardController implements Initializable {
         addStudent_birthDate.setValue(null);
         addStudent_status.getSelectionModel().clearSelection();
         addStudent_imageView.setImage(null);
-        GetData.path = "";
+        chosenImagePath = "";
 
         initializeComboBoxes(addStudent_semester, addStudent_course, addStudent_gender, addStudent_status);
     }
@@ -1037,7 +1047,7 @@ public class DashboardController implements Initializable {
             if (!confirmed("Are you sure you want to delete User: " + chosen.getUserName() + "?")) {
                 return;
             }
-            userService.delete(chosen.getUserId(), GetData.username);
+            userService.delete(chosen.getUserId(), UserSession.current().getUserName());
             userManagementChanged("Successfully Deleted!");
         } catch (ValidationException e) {
             showAlert(Alert.AlertType.ERROR, "Error Message", e.getMessage());

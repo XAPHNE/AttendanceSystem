@@ -57,8 +57,7 @@ public class LoginController {
             showAlert(Alert.AlertType.ERROR, "Error Message", "Incorrect Username/Password");
             return;
         }
-        GetData.username = user.get().getUserName();
-        GetData.userRole = user.get().getUserRole();
+        UserSession.start(user.get());
         showAlert(Alert.AlertType.INFORMATION, "Information Message", "Login Successful");
         loginButton.getScene().getWindow().hide();
         try {
