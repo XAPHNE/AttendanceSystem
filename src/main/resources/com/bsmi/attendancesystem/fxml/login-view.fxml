@@ -31,21 +31,26 @@
                                 <Font size="18.0" />
                             </font>
                         </Label>
-                        <MFXTextField fx:id="usernameMFXTextField" floatMode="BORDER" floatingText="Username" layoutX="22.0" layoutY="194.0" prefHeight="30.0" prefWidth="250.0" styleClass="mfx-text-field" text="admin">
+                        <MFXTextField fx:id="usernameMFXTextField" floatMode="BORDER" floatingText="Username" layoutX="22.0" layoutY="194.0" prefHeight="30.0" prefWidth="250.0" styleClass="mfx-text-field">
                             <cursor>
                                 <Cursor fx:constant="TEXT" />
                             </cursor>
                         </MFXTextField>
-                        <MFXPasswordField fx:id="passwordMFXPasswordField" floatMode="BORDER" floatingText="Password" layoutX="22.0" layoutY="243.0" prefHeight="30.0" prefWidth="250.0" styleClass="mfx-password-field" text="admin123">
+                        <MFXPasswordField fx:id="passwordMFXPasswordField" floatMode="BORDER" floatingText="Password" layoutX="22.0" layoutY="243.0" prefHeight="30.0" prefWidth="250.0" styleClass="mfx-password-field">
                             <cursor>
                                 <Cursor fx:constant="TEXT" />
                             </cursor>
                         </MFXPasswordField>
-                        <Button fx:id="loginButton" layoutX="22.0" layoutY="294.0" mnemonicParsing="false" onAction="#loginButtonOnAction" prefHeight="40.0" prefWidth="250.0" styleClass="login-btn" stylesheets="@../css/login-style.css" text="Login">
+                        <Button fx:id="loginButton" defaultButton="true" layoutX="22.0" layoutY="294.0" mnemonicParsing="false" onAction="#loginButtonOnAction" prefHeight="40.0" prefWidth="250.0" styleClass="login-btn" stylesheets="@../css/login-style.css" text="Login">
                             <cursor>
                                 <Cursor fx:constant="HAND" />
                             </cursor>
                         </Button>
+                        <Label fx:id="demoAccountsHint" alignment="CENTER" layoutX="22.0" layoutY="342.0" prefWidth="250.0" text="Demo logins: admin / admin123&#10;employee / employee123" textAlignment="CENTER" textFill="#6b6b6b">
+                            <font>
+                                <Font size="11.0" />
+                            </font>
+                        </Label>
                         <Button fx:id="closeButton" layoutX="241.0" layoutY="14.0" mnemonicParsing="false" onAction="#closeButtonOnAction" styleClass="close" stylesheets="@../css/login-style.css" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
                             <graphic>
                                 <FontIcon iconLiteral="fa-close" />
