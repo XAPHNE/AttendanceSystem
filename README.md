@@ -81,6 +81,18 @@ To build an installer instead, add `-Ddist.type=` followed by the type:
 
 How it works: jlink builds a Java runtime that holds only the JDK modules the app needs. jpackage puts that runtime, the app and its libraries in one folder or installer. H2, Flyway and jbcrypt aren't Java modules, and jlink can't put those into a runtime, so they sit next to it in `lib/app/mods`.
 
+### Publishing a release
+Push a version tag, for example `git tag v1.2.0 && git push origin v1.2.0`. The release workflow (`.github/workflows/release.yml`) then builds the app on Linux, Windows and macOS and attaches the results to a new GitHub Release:
+
+| File                                     | What it is                                         |
+|------------------------------------------|----------------------------------------------------|
+| `AttendanceSystem-<version>-linux-amd64.deb` | Installer for Ubuntu and Debian, with a menu entry |
+| `AttendanceSystem-<version>-linux-x64.tar.gz` | The app folder for any Linux; start `bin/AttendanceSystem` |
+| `AttendanceSystem-<version>-windows-x64.zip` | The app folder for Windows; start `AttendanceSystem.exe` |
+| `AttendanceSystem-<version>-macos-arm64.dmg` | The app for Macs with Apple silicon |
+
+The Windows and macOS builds aren't signed, so the first start shows a warning. On Windows, click **More info** and then **Run anyway**. On macOS, right-click the app, choose **Open** and confirm.
+
 ### Running the tests
 Run `./mvnw verify` (Windows: `mvnw.cmd verify`).
 
