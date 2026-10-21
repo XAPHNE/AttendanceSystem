@@ -27,13 +27,16 @@ import org.mindrot.jbcrypt.BCrypt;
 import com.bsmi.attendancesystem.dao.CourseDao;
 import com.bsmi.attendancesystem.dao.DataAccessException;
 import com.bsmi.attendancesystem.dao.Database;
+import com.bsmi.attendancesystem.dao.StudentDao;
 import com.bsmi.attendancesystem.service.CourseService;
+import com.bsmi.attendancesystem.service.StudentService;
 import com.bsmi.attendancesystem.service.ValidationException;
 
 import java.io.File;
 import java.net.URL;
 import java.sql.*;
 import java.text.SimpleDateFormat;
+import java.time.LocalDate;
 import java.util.*;
 import java.util.Date;
 import java.util.stream.Stream;
@@ -622,31 +625,16 @@ public class DashboardController implements Initializable {
 //    END CODE FOR HOME FORM
 
 //    START CODE FOR ADD STUDENT FORM
+    private final StudentService studentService =
+            new StudentService(new StudentDao(Database.fromCurrentSettings()));
+
     public ObservableList<StudentData> addStudentListData () {
-        ObservableList<StudentData> listStudents = FXCollections.observableArrayList();
-        String sql = "SELECT * FROM student";
-        connect = DatabaseConnection.connectDb();
         try {
-            StudentData studentD;
-            prepare = connect.prepareStatement(sql);
-            result = prepare.executeQuery();
-            while (result.next()) {
-                studentD = new StudentData(result.getInt("studentNum"),
-                        result.getString("semester"),
-                        result.getString("course"),
-                        result.getString("firstName"),
-                        result.getString("lastName"),
-                        result.getString("gender"),
-                        result.getDate("birthDate"),
-                        result.getString("status"),
-                        result.getString("image"));
-                listStudents.add(studentD);
-            }
-            result.close();
-            prepare.close();
-            connect.close();
-        }catch (Exception e) {e.printStackTrace();}
-        return listStudents;
+            return FXCollections.observableArrayList(studentService.listAll());
+        } catch (DataAccessException e) {
+            showDatabaseError(e);
+            return FXCollections.observableArrayList();
+        }
     }
     private ObservableList <StudentData> addStudentListD;
     public void addStudentShowListData () {
@@ -681,8 +669,8 @@ public class DashboardController implements Initializable {
         addStudent_status.getSelectionModel().select(studentD.getStatus());
 
 
-        String uri = "file:" + studentD.getImage();
-        image = new Image(uri, 120, 170, false, true);
+        boolean hasPhoto = !studentD.getImage().isEmpty();
+        image = hasPhoto ? new Image("file:" + studentD.getImage(), 120, 170, false, true) : null;
         addStudent_imageView.setImage(image);
         GetData.path = studentD.getImage();
     }
@@ -715,20 +703,12 @@ public class DashboardController implements Initializable {
     }
     @FXML
     public void setAddStudent_courseList () {
-        String listCourse = "SELECT * FROM course";
-        connect = DatabaseConnection.connectDb();
         try {
-            ObservableList listC = FXCollections.observableArrayList();
-            prepare = connect.prepareStatement(listCourse);
-            result = prepare.executeQuery();
-            while (result.next()){
-                listC.add(result.getString("course"));
-            }
-            addStudent_course.setItems(listC);
-            result.close();
-            prepare.close();
-            connect.close();
-        } catch (Exception e) {e.printStackTrace();}
+            addStudent_course.setItems(FXCollections.observableArrayList(
+                    courseService.listAll().stream().map(CourseData::getCourse).toList()));
+        } catch (DataAccessException e) {
+            showDatabaseError(e);
+        }
     }
     @FXML
     public void addStudent_insertBtn_onAction(){
@@ -742,171 +722,65 @@ public class DashboardController implements Initializable {
             GetData.path = file.getAbsolutePath();
         }
     }
+    private StudentData addStudentForm() {
+        LocalDate birthDate = addStudent_birthDate.getValue();
+        return new StudentData(studentService.parseStudentNumber(addStudent_studentNum.getText()),
+                addStudent_semester.getSelectionModel().getSelectedItem(),
+                addStudent_course.getSelectionModel().getSelectedItem(),
+                addStudent_firstName.getText(),
+                addStudent_lastName.getText(),
+                addStudent_gender.getSelectionModel().getSelectedItem(),
+                birthDate == null ? null : java.sql.Date.valueOf(birthDate),
+                addStudent_status.getSelectionModel().getSelectedItem(),
+                GetData.path);
+    }
     @FXML
     public void addStudent_addBtn_onAction(){
-        String insertData = "INSERT INTO student "
-                + "(studentNum, semester, course, firstName, lastName, gender, birthDate, status, image, added_on) "
-                + "VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-        connect = DatabaseConnection.connectDb();
         try {
-            Alert alert;
-            if (addStudent_studentNum.getText().isEmpty()
-                    || addStudent_semester.getSelectionModel().getSelectedItem() == null
-                    || addStudent_course.getSelectionModel().getSelectedItem() == null
-                    || addStudent_firstName.getText().isEmpty()
-                    || addStudent_lastName.getText().isEmpty()
-                    || addStudent_gender.getSelectionModel().getSelectedItem() == null
-                    || addStudent_birthDate.getValue() == null
-                    || addStudent_status.getSelectionModel().getSelectedItem() == null
-                    || GetData.path == null || GetData.path == "") {
-                alert = new Alert(Alert.AlertType.ERROR);
-                alert.setTitle("Error Message");
-                alert.setHeaderText(null);
-                alert.setContentText("Fields cannot be empty");
-                alert.showAndWait();
-            } else {
-                // CHECK IF THE STUDENT NUMBER ALREADY EXISTS
-                String checkData = "SELECT studentNum FROM student WHERE studentNum = '" + addStudent_studentNum.getText() + "'";
-                statement = connect.createStatement();
-                result = statement.executeQuery(checkData);
-                if (result.next()) {
-                    alert = new Alert(Alert.AlertType.ERROR);
-                    alert.setTitle("Error Message");
-                    alert.setHeaderText(null);
-                    alert.setContentText("Student #" + addStudent_studentNum.getText() + " already exist!");
-                    alert.showAndWait();
-                } else {
-                    prepare = connect.prepareStatement(insertData);
-                    prepare.setString(1, addStudent_studentNum.getText());
-                    prepare.setString(2, (String) addStudent_semester.getSelectionModel().getSelectedItem());
-                    prepare.setString(3, (String) addStudent_course.getSelectionModel().getSelectedItem());
-                    prepare.setString(4, addStudent_firstName.getText());
-                    prepare.setString(5, addStudent_lastName.getText());
-                    prepare.setString(6, (String) addStudent_gender.getSelectionModel().getSelectedItem());
-                    prepare.setString(7, String.valueOf(addStudent_birthDate.getValue()));
-                    prepare.setString(8, (String) addStudent_status.getSelectionModel().getSelectedItem());
-                    String uri = GetData.path;
-                    uri = uri.replace("\\", "\\\\");
-                    prepare.setString(9, uri);
-                    Date date = new Date();
-                    java.sql.Date sqlDate = new java.sql.Date(date.getTime());
-                    prepare.setString(10, String.valueOf(sqlDate));
-                    prepare.executeUpdate();
-                    alert = new Alert(Alert.AlertType.INFORMATION);
-                    alert.setTitle("Information Message");
-                    alert.setHeaderText(null);
-                    alert.setContentText("Successfully Added!");
-                    alert.showAndWait();
-                    //  TO LOAD THE UPDATED TABLE AFTER OPERATION
-                    addStudentShowListData();
-                    // TO CLEAR THE FIELDS
-                    addStudent_clearBtn_onAction();
-                }
-                prepare.close();
-                result.close();
-                statement.close();
-            }
-            connect.close();
-        } catch (Exception e) {e.printStackTrace();}
+            studentService.add(addStudentForm());
+            addStudentChanged("Successfully Added!");
+        } catch (ValidationException e) {
+            showAlert(Alert.AlertType.ERROR, "Error Message", e.getMessage());
+        } catch (DataAccessException e) {
+            showDatabaseError(e);
+        }
     }
     @FXML
     public void addStudent_updateBtn_onAction () {
-        String uri = GetData.path;
-        uri = uri.replace("\\", "\\\\");
-        String updateData = "UPDATE student SET "
-                + "semester = '" + addStudent_semester.getSelectionModel().getSelectedItem()
-                + "', course = '" + addStudent_course.getSelectionModel().getSelectedItem()
-                + "', firstName = '" + addStudent_firstName.getText()
-                + "', lastName = '" + addStudent_lastName.getText()
-                + "', gender = '" + addStudent_gender.getSelectionModel().getSelectedItem()
-                + "', birthDate = '" + addStudent_birthDate.getValue()
-                + "', status = '" + addStudent_status.getSelectionModel().getSelectedItem()
-                + "', image = '" + uri + "' WHERE studentNum = '"
-                + addStudent_studentNum.getText() + "'";
-        connect = DatabaseConnection.connectDb();
         try {
-            Alert alert;
-            if (addStudent_studentNum.getText().isEmpty()
-                    || addStudent_semester.getSelectionModel().getSelectedItem() == null
-                    || addStudent_course.getSelectionModel().getSelectedItem() == null
-                    || addStudent_firstName.getText().isEmpty()
-                    || addStudent_lastName.getText().isEmpty()
-                    || addStudent_gender.getSelectionModel().getSelectedItem() == null
-                    || addStudent_birthDate.getValue() == null
-                    || addStudent_status.getSelectionModel().getSelectedItem() == null
-                    || GetData.path == null || GetData.path == "") {
-                alert = new Alert(Alert.AlertType.ERROR);
-                alert.setTitle("Error Message");
-                alert.setHeaderText(null);
-                alert.setContentText("Fields cannot be empty");
-                alert.showAndWait();
-            } else {
-                alert = new Alert(Alert.AlertType.CONFIRMATION);
-                alert.setTitle("Confirmation Message");
-                alert.setHeaderText(null);
-                alert.setContentText("Are you sure you want to update Student #: " + addStudent_studentNum.getText() + "?");
-                Optional<ButtonType> option = alert.showAndWait();
-                if (option.get().equals(ButtonType.OK)){
-                    statement = connect.createStatement();
-                    statement.executeUpdate(updateData);
-                    alert = new Alert(Alert.AlertType.INFORMATION);
-                    alert.setTitle("Information Message");
-                    alert.setHeaderText(null);
-                    alert.setContentText("Successfully Updated!");
-                    alert.showAndWait();
-                    //  TO LOAD THE UPDATED TABLE AFTER OPERATION
-                    addStudentShowListData();
-                    // TO CLEAR THE FIELDS
-                    addStudent_clearBtn_onAction();
-                } else return;
-                statement.close();
+            StudentData student = addStudentForm();
+            studentService.requireValid(student);
+            if (!confirmed("Are you sure you want to update Student #: " + student.getStudentNum() + "?")) {
+                return;
             }
-            connect.close();
-        } catch (Exception e) {e.printStackTrace();}
+            studentService.update(student);
+            addStudentChanged("Successfully Updated!");
+        } catch (ValidationException e) {
+            showAlert(Alert.AlertType.ERROR, "Error Message", e.getMessage());
+        } catch (DataAccessException e) {
+            showDatabaseError(e);
+        }
     }
     @FXML
     public void addStudent_deleteBtn_onAction () {
-        String deleteData = "DELETE FROM student WHERE studentNum = '" + addStudent_studentNum.getText() + "'";
-        connect = DatabaseConnection.connectDb();
         try {
-            Alert alert;
-            if (addStudent_studentNum.getText().isEmpty()
-                    || addStudent_semester.getSelectionModel().getSelectedItem() == null
-                    || addStudent_course.getSelectionModel().getSelectedItem() == null
-                    || addStudent_firstName.getText().isEmpty()
-                    || addStudent_lastName.getText().isEmpty()
-                    || addStudent_gender.getSelectionModel().getSelectedItem() == null
-                    || addStudent_birthDate.getValue() == null
-                    || addStudent_status.getSelectionModel().getSelectedItem() == null
-                    || GetData.path == null || GetData.path == "") {
-                alert = new Alert(Alert.AlertType.ERROR);
-                alert.setTitle("Error Message");
-                alert.setHeaderText(null);
-                alert.setContentText("Fields cannot be empty");
-                alert.showAndWait();
-            } else {
-                alert = new Alert(Alert.AlertType.CONFIRMATION);
-                alert.setTitle("Confirmation Message");
-                alert.setHeaderText(null);
-                alert.setContentText("Are you sure you want to delete Student #: " + addStudent_studentNum.getText() + "?");
-                Optional<ButtonType> option = alert.showAndWait();
-                if (option.get().equals(ButtonType.OK)){
-                    statement = connect.createStatement();
-                    statement.executeUpdate(deleteData);
-                    alert = new Alert(Alert.AlertType.INFORMATION);
-                    alert.setTitle("Information Message");
-                    alert.setHeaderText(null);
-                    alert.setContentText("Successfully Deleted!");
-                    alert.showAndWait();
-                    //  TO LOAD THE UPDATED TABLE AFTER OPERATION
-                    addStudentShowListData();
-                    // TO CLEAR THE FIELDS
-                    addStudent_clearBtn_onAction();
-                } else return;
-                statement.close();
+            int studentNum = studentService.parseStudentNumber(addStudent_studentNum.getText());
+            if (!confirmed("Are you sure you want to delete Student #: " + studentNum
+                    + " and their attendance records?")) {
+                return;
             }
-            connect.close();
-        } catch (Exception e) {e.printStackTrace();}
+            studentService.delete(studentNum);
+            addStudentChanged("Successfully Deleted!");
+        } catch (ValidationException e) {
+            showAlert(Alert.AlertType.ERROR, "Error Message", e.getMessage());
+        } catch (DataAccessException e) {
+            showDatabaseError(e);
+        }
+    }
+    private void addStudentChanged(String successMessage) {
+        showAlert(Alert.AlertType.INFORMATION, "Information Message", successMessage);
+        addStudentShowListData();
+        addStudent_clearBtn_onAction();
     }
     @FXML
     public void addStudent_clearBtn_onAction () {

@@ -1,5 +1,8 @@
 package com.bsmi.attendancesystem.service;
 
+import static com.bsmi.attendancesystem.service.Fields.requireFilled;
+import static com.bsmi.attendancesystem.service.Fields.trimmedOrEmpty;
+
 import com.bsmi.attendancesystem.CourseData;
 import com.bsmi.attendancesystem.dao.CourseDao;
 import java.util.List;
@@ -69,21 +72,11 @@ public final class CourseService {
         }
     }
 
-    private static void requireFilled(String value, String fieldName) {
-        if (value == null || value.isBlank()) {
-            throw new MissingFieldException(fieldName);
-        }
-    }
-
     private static CourseData trimmed(CourseData course) {
         return new CourseData(
                 trimmedOrEmpty(course.getCourse()),
                 trimmedOrEmpty(course.getDescription()),
                 trimmedOrEmpty(course.getDegree()));
-    }
-
-    private static String trimmedOrEmpty(String value) {
-        return value == null ? "" : value.strip();
     }
 
     private static String describe(String courseName) {
