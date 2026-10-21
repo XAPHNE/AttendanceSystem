@@ -1,30 +1,73 @@
-.left-form{
-    -fx-background-color:linear-gradient(to bottom right, #2d658c, #2ca772);
-    -fx-border-color:#000;
-    -fx-border-width:.4px 0px .4px .4px;
+.left-form {
+    -fx-background-color: -color-sidebar;
 }
-.right-form{
-    -fx-background-color:#fff;
-    -fx-border-color:#000;
-    -fx-border-width:.4px .4px .4px 0px;
+.left-form .label,
+.left-form .ikonli-font-icon {
+    -fx-text-fill: -color-text-on-primary;
+    -fx-icon-color: -color-text-on-primary;
 }
-.close{
-    -fx-background-color:transparent;
-    -fx-cursor:hand;
+.right-form {
+    -fx-background-color: -color-surface;
 }
-.close:hover{
-    -fx-background-color:red;
+.right-form > .ikonli-font-icon {
+    -fx-icon-color: -color-primary;
 }
-.textfield{
-    -fx-background-color:linear-gradient(to bottom, #efefef, #eee);
-    -fx-background-radius:5px;
-    -fx-border-color:#000;
-    -fx-border-width:.2px;
-    -fx-border-radius:5px;
-    -fx-font-size:13px;
+.close {
+    -fx-background-color: transparent;
+    -fx-cursor: hand;
 }
-.textfield:focused{
-    -fx-background-color:#fff;
-    -fx-border-color:linear-gradient(to bottom right, #2d658c, #2ca772);
-    -fx-border-width:.8px;
+.close .ikonli-font-icon {
+    -fx-icon-color: -color-text-muted;
+}
+.close:hover {
+    -fx-background-color: -color-danger;
+}
+.close:hover .ikonli-font-icon {
+    -fx-icon-color: -color-text-on-primary;
+}
+
+/*
+ * The app doesn't register MaterialFX's own stylesheet (that would restyle every screen),
+ * so these rules give its fields the look they need. Without a transparent inner
+ * .text-field, its default white background covers the resting floating label.
+ */
+.mfx-text-field {
+    -mfx-main: -color-focus;
+    -fx-background-color: -color-surface;
+    -fx-border-color: -color-border;
+    -fx-border-radius: 6;
+    -fx-background-radius: 6;
+    -fx-padding: 5 8 5 8;
+    -fx-font-family: "Inter";
+}
+.mfx-text-field .text-field {
+    -fx-background-color: transparent;
+    -fx-background-insets: 0;
+    -fx-padding: 0;
+}
+.mfx-text-field:hover {
+    -fx-border-color: -color-text-muted;
+}
+.mfx-text-field:focus-within {
+    -fx-border-color: -color-focus;
+}
+.mfx-text-field .text-field {
+    -fx-text-fill: -color-text;
+    -fx-highlight-fill: -color-primary-soft;
+    -fx-highlight-text-fill: -color-text;
+}
+.mfx-text-field .floating-text {
+    -fx-font-family: "Inter";
+    -fx-text-fill: -color-text-muted;
+}
+/* While floating, the label sits on the border line, so it needs the field's background behind it. */
+.mfx-text-field:floating .floating-text {
+    -fx-background-color: -color-surface;
+    -fx-padding: 0 3 0 3;
+}
+.mfx-text-field:focus-within .floating-text {
+    -fx-text-fill: -color-focus;
+}
+.mfx-password-field .eye-icon {
+    -mfx-color: -color-text-muted;
 }
