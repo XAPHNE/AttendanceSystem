@@ -12,6 +12,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.UUID;
+import org.flywaydb.core.Flyway;
 import org.flywaydb.core.api.FlywayException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -19,7 +20,7 @@ import org.junit.jupiter.api.io.TempDir;
 import org.mindrot.jbcrypt.BCrypt;
 
 class DatabaseMigrationsTest {
-    private static final int MIGRATION_COUNT = 2;
+    private static final int MIGRATION_COUNT = 3;
 
     private DatabaseSettings settings;
 
@@ -176,6 +177,43 @@ class DatabaseMigrationsTest {
                                                 + " VALUES (1001, '1st Sem', 'BCA', 'A', 'B', 'Male',"
                                                 + " DATE '2005-01-01', 'Enrolled', '', CURRENT_DATE)"))
                 .isInstanceOf(SQLException.class);
+    }
+
+    @Test
+    void cardIdsAreAddedToADatabaseThatIsAtV2() throws SQLException {
+        Flyway.configure()
+                .dataSource(settings.url(), settings.user(), settings.password())
+                .locations(DatabaseMigrations.MIGRATIONS_LOCATION)
+                .target("2")
+                .load()
+                .migrate();
+        execute("UPDATE student SET firstName = 'Kept' WHERE studentNum = 1001");
+
+        assertThat(DatabaseMigrations.applyPending(settings)).isEqualTo(1);
+        assertThat(count("SELECT COUNT(*) FROM student WHERE firstName = 'Kept'")).isEqualTo(1);
+        assertThat(count("SELECT COUNT(*) FROM student WHERE card_id = 'DEMO-' || studentNum"))
+                .isEqualTo(6);
+    }
+
+    @Test
+    void schemaRejectsDuplicateCardId() {
+        DatabaseMigrations.applyPending(settings);
+
+        assertThatThrownBy(
+                        () ->
+                                execute(
+                                        "UPDATE student SET card_id = 'DEMO-1001'"
+                                                + " WHERE studentNum = 1002"))
+                .isInstanceOf(SQLException.class);
+    }
+
+    @Test
+    void schemaAllowsManyStudentsWithoutCard() throws SQLException {
+        DatabaseMigrations.applyPending(settings);
+
+        execute("UPDATE student SET card_id = NULL");
+
+        assertThat(count("SELECT COUNT(*) FROM student WHERE card_id IS NULL")).isEqualTo(6);
     }
 
     @Test

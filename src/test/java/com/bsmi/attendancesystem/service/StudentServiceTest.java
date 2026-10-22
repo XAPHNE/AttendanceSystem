@@ -135,6 +135,78 @@ class StudentServiceTest {
     }
 
     @Test
+    void addWithoutCardIsAllowed() {
+        service.add(valid(2001).build());
+
+        assertThat(service.listAll().getLast().getCardId()).isNull();
+    }
+
+    @ParameterizedTest
+    @NullAndEmptySource
+    @ValueSource(strings = {"   ", "\t"})
+    void addWithBlankCardStoresNoCard(String blank) {
+        service.add(valid(2001).withCardId(blank).build());
+
+        assertThat(service.listAll().getLast().getCardId()).isNull();
+    }
+
+    @Test
+    void addStoresTheCardIdTrimmed() {
+        service.add(valid(2001).withCardId("  STU-7F3A \n").build());
+
+        assertThat(service.listAll().getLast().getCardId()).isEqualTo("STU-7F3A");
+    }
+
+    @Test
+    void addWithCardTakenByAnotherStudentFailsWithAlreadyExists() {
+        assertThatThrownBy(() -> service.add(valid(2001).withCardId(" DEMO-1001 ").build()))
+                .isInstanceOf(AlreadyExistsException.class)
+                .hasMessage("Card ID DEMO-1001 already exists");
+        assertThat(service.listAll()).hasSize(6);
+    }
+
+    @Test
+    void addWithCardIdOfMaximumLengthIsAllowed() {
+        String longest = "C".repeat(StudentService.CARD_ID_MAX_LENGTH);
+
+        service.add(valid(2001).withCardId(longest).build());
+
+        assertThat(service.listAll().getLast().getCardId()).isEqualTo(longest);
+    }
+
+    @Test
+    void addWithTooLongCardIdFailsWithInvalidValue() {
+        String tooLong = "C".repeat(StudentService.CARD_ID_MAX_LENGTH + 1);
+
+        assertThatThrownBy(() -> service.add(valid(2001).withCardId(tooLong).build()))
+                .isInstanceOf(InvalidValueException.class)
+                .hasMessage("Card ID must be at most 64 characters long");
+    }
+
+    @Test
+    void updateKeepingOwnCardIsAllowed() {
+        service.update(valid(1001).withCardId("DEMO-1001").withStatus("Graduated").build());
+
+        assertThat(service.listAll().getFirst().getCardId()).isEqualTo("DEMO-1001");
+        assertThat(service.listAll().getFirst().getStatus()).isEqualTo("Graduated");
+    }
+
+    @Test
+    void updateToCardOfAnotherStudentFailsWithAlreadyExists() {
+        assertThatThrownBy(() -> service.update(valid(1002).withCardId("DEMO-1001").build()))
+                .isInstanceOf(AlreadyExistsException.class)
+                .hasMessage("Card ID DEMO-1001 already exists");
+        assertThat(service.listAll().get(1).getCardId()).isEqualTo("DEMO-1002");
+    }
+
+    @Test
+    void updateWithBlankCardRemovesTheCard() {
+        service.update(valid(1001).withCardId(" ").build());
+
+        assertThat(service.listAll().getFirst().getCardId()).isNull();
+    }
+
+    @Test
     void updateChangesTheStudent() {
         service.update(valid(1001).withFirstName(" Asha ").withStatus("Dropped Out").build());
 
@@ -188,7 +260,8 @@ class StudentServiceTest {
 
     private static Form valid(Integer studentNum) {
         return new Form(
-                studentNum, "1st Sem", "BSc", "Zoya", "Ali", "Female", BIRTH_DATE, "Enrolled", "");
+                studentNum, "1st Sem", "BSc", "Zoya", "Ali", "Female", BIRTH_DATE, "Enrolled", "",
+                null);
     }
 
     /** A filled-in Add Student form; each {@code with} call empties or changes one field. */
@@ -201,46 +274,62 @@ class StudentServiceTest {
             String gender,
             Date birthDate,
             String status,
-            String image) {
+            String image,
+            String cardId) {
         Form withStudentNum(Integer value) {
-            return new Form(value, semester, course, firstName, lastName, gender, birthDate, status, image);
+            return new Form(
+                    value, semester, course, firstName, lastName, gender, birthDate, status, image, cardId);
         }
 
         Form withSemester(String value) {
-            return new Form(studentNum, value, course, firstName, lastName, gender, birthDate, status, image);
+            return new Form(
+                    studentNum, value, course, firstName, lastName, gender, birthDate, status, image, cardId);
         }
 
         Form withCourse(String value) {
-            return new Form(studentNum, semester, value, firstName, lastName, gender, birthDate, status, image);
+            return new Form(
+                    studentNum, semester, value, firstName, lastName, gender, birthDate, status, image, cardId);
         }
 
         Form withFirstName(String value) {
-            return new Form(studentNum, semester, course, value, lastName, gender, birthDate, status, image);
+            return new Form(
+                    studentNum, semester, course, value, lastName, gender, birthDate, status, image, cardId);
         }
 
         Form withLastName(String value) {
-            return new Form(studentNum, semester, course, firstName, value, gender, birthDate, status, image);
+            return new Form(
+                    studentNum, semester, course, firstName, value, gender, birthDate, status, image, cardId);
         }
 
         Form withGender(String value) {
-            return new Form(studentNum, semester, course, firstName, lastName, value, birthDate, status, image);
+            return new Form(
+                    studentNum, semester, course, firstName, lastName, value, birthDate, status, image, cardId);
         }
 
         Form withBirthDate(Date value) {
-            return new Form(studentNum, semester, course, firstName, lastName, gender, value, status, image);
+            return new Form(
+                    studentNum, semester, course, firstName, lastName, gender, value, status, image, cardId);
         }
 
         Form withStatus(String value) {
-            return new Form(studentNum, semester, course, firstName, lastName, gender, birthDate, value, image);
+            return new Form(
+                    studentNum, semester, course, firstName, lastName, gender, birthDate, value, image, cardId);
         }
 
         Form withImage(String value) {
-            return new Form(studentNum, semester, course, firstName, lastName, gender, birthDate, status, value);
+            return new Form(
+                    studentNum, semester, course, firstName, lastName, gender, birthDate, status, value, cardId);
+        }
+
+        Form withCardId(String value) {
+            return new Form(
+                    studentNum, semester, course, firstName, lastName, gender, birthDate, status, image, value);
         }
 
         StudentData build() {
             return new StudentData(
-                    studentNum, semester, course, firstName, lastName, gender, birthDate, status, image);
+                    studentNum, semester, course, firstName, lastName, gender, birthDate, status, image,
+                    cardId);
         }
     }
 }

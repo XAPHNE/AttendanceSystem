@@ -109,6 +109,9 @@ public class DashboardController implements Initializable {
     private TextField addStudent_studentNum;
 
     @FXML
+    private TextField addStudent_cardId;
+
+    @FXML
     private TableView<StudentData> addStudent_tableView;
 
     @FXML
@@ -565,6 +568,7 @@ public class DashboardController implements Initializable {
         addStudent_gender.getSelectionModel().select(studentD.getGender());
         addStudent_birthDate.setValue(studentD.getBirthDate().toLocalDate());
         addStudent_status.getSelectionModel().select(studentD.getStatus());
+        addStudent_cardId.setText(studentD.getCardId() == null ? "" : studentD.getCardId());
 
 
         showPhoto(studentD.getImage());
@@ -637,7 +641,8 @@ public class DashboardController implements Initializable {
                 addStudent_gender.getSelectionModel().getSelectedItem(),
                 birthDate == null ? null : java.sql.Date.valueOf(birthDate),
                 addStudent_status.getSelectionModel().getSelectedItem(),
-                chosenPhotoName);
+                chosenPhotoName,
+                addStudent_cardId.getText());
     }
     @FXML
     public void addStudent_addBtn_onAction(){
@@ -697,6 +702,7 @@ public class DashboardController implements Initializable {
         addStudent_gender.getSelectionModel().clearSelection();
         addStudent_birthDate.setValue(null);
         addStudent_status.getSelectionModel().clearSelection();
+        addStudent_cardId.setText("");
         showPhoto("");
 
         initializeComboBoxes(addStudent_semester, addStudent_course, addStudent_gender, addStudent_status);

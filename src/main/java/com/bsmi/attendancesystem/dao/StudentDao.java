@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 /** Reads and writes the {@code student} table. Students are identified by their student number. */
 public final class StudentDao {
@@ -19,31 +20,37 @@ public final class StudentDao {
         this.database = database;
     }
 
+    private static final String STUDENT_COLUMNS =
+            "studentNum, semester, course, firstName, lastName, gender, birthDate, status, image,"
+                    + " card_id";
+
     /** @return every student, in the order they were added */
     public List<StudentData> findAll() {
-        String sql =
-                "SELECT studentNum, semester, course, firstName, lastName, gender, birthDate,"
-                        + " status, image FROM student ORDER BY id";
+        String sql = "SELECT " + STUDENT_COLUMNS + " FROM student ORDER BY id";
         try (Connection connection = database.open();
                 PreparedStatement statement = connection.prepareStatement(sql);
                 ResultSet rows = statement.executeQuery()) {
             List<StudentData> students = new ArrayList<>();
             while (rows.next()) {
-                students.add(
-                        new StudentData(
-                                rows.getInt("studentNum"),
-                                rows.getString("semester"),
-                                rows.getString("course"),
-                                rows.getString("firstName"),
-                                rows.getString("lastName"),
-                                rows.getString("gender"),
-                                rows.getDate("birthDate"),
-                                rows.getString("status"),
-                                rows.getString("image")));
+                students.add(readStudent(rows));
             }
             return students;
         } catch (SQLException e) {
             throw new DataAccessException("load the students", e);
+        }
+    }
+
+    /** @return the student whose card gives this ID when scanned, or empty if nobody has it */
+    public Optional<StudentData> findByCardId(String cardId) {
+        String sql = "SELECT " + STUDENT_COLUMNS + " FROM student WHERE card_id = ?";
+        try (Connection connection = database.open();
+                PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setString(1, cardId);
+            try (ResultSet rows = statement.executeQuery()) {
+                return rows.next() ? Optional.of(readStudent(rows)) : Optional.empty();
+            }
+        } catch (SQLException e) {
+            throw new DataAccessException("find the student with card " + cardId, e);
         }
     }
 
@@ -63,14 +70,14 @@ public final class StudentDao {
     /**
      * Stores the student with today as the date they were added.
      *
-     * @throws DataAccessException also when the student number is taken or a value breaks a
-     *     column rule, e.g. an unknown gender
+     * @throws DataAccessException also when the student number or card ID is taken or a value
+     *     breaks a column rule, e.g. an unknown gender
      */
     public void add(StudentData student) {
         String sql =
                 "INSERT INTO student (studentNum, semester, course, firstName, lastName, gender,"
-                        + " birthDate, status, image, added_on)"
-                        + " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_DATE)";
+                        + " birthDate, status, image, card_id, added_on)"
+                        + " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_DATE)";
         try (Connection connection = database.open();
                 PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setInt(1, student.getStudentNum());
@@ -89,7 +96,8 @@ public final class StudentDao {
     public boolean update(StudentData student) {
         String sql =
                 "UPDATE student SET semester = ?, course = ?, firstName = ?, lastName = ?,"
-                        + " gender = ?, birthDate = ?, status = ?, image = ? WHERE studentNum = ?";
+                        + " gender = ?, birthDate = ?, status = ?, image = ?, card_id = ?"
+                        + " WHERE studentNum = ?";
         try (Connection connection = database.open();
                 PreparedStatement statement = connection.prepareStatement(sql)) {
             int next = setDetails(statement, student, 1);
@@ -191,7 +199,7 @@ public final class StudentDao {
     }
 
     /**
-     * Fills the eight columns after the student number, in table order, starting at {@code first}.
+     * Fills the nine columns after the student number, in table order, starting at {@code first}.
      *
      * @return the index of the next placeholder
      */
@@ -206,6 +214,22 @@ public final class StudentDao {
         statement.setDate(index++, student.getBirthDate());
         statement.setString(index++, student.getStatus());
         statement.setString(index++, student.getImage());
+        statement.setString(index++, student.getCardId());
         return index;
+    }
+
+    /** Reads the {@link #STUDENT_COLUMNS} of the current row. */
+    private static StudentData readStudent(ResultSet rows) throws SQLException {
+        return new StudentData(
+                rows.getInt("studentNum"),
+                rows.getString("semester"),
+                rows.getString("course"),
+                rows.getString("firstName"),
+                rows.getString("lastName"),
+                rows.getString("gender"),
+                rows.getDate("birthDate"),
+                rows.getString("status"),
+                rows.getString("image"),
+                rows.getString("card_id"));
     }
 }

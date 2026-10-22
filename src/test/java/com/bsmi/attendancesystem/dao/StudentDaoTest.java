@@ -47,6 +47,7 @@ class StudentDaoTest {
         assertThat(asha.getBirthDate()).isEqualTo(Date.valueOf("2005-04-12"));
         assertThat(asha.getStatus()).isEqualTo("Enrolled");
         assertThat(asha.getImage()).isEmpty();
+        assertThat(asha.getCardId()).isEqualTo("DEMO-1001");
     }
 
     @Test
@@ -65,6 +66,67 @@ class StudentDaoTest {
         StudentData stored = students.findAll().getLast();
         assertThat(stored).usingRecursiveComparison().isEqualTo(zoya);
         assertThat(students.exists(2001)).isTrue();
+    }
+
+    @Test
+    void addedStudentWithCardIsFoundByThatCard() {
+        StudentData zoya = withCard(2001, "STU-7F3A");
+
+        students.add(zoya);
+
+        assertThat(students.findByCardId("STU-7F3A"))
+                .get()
+                .usingRecursiveComparison()
+                .isEqualTo(zoya);
+    }
+
+    @Test
+    void findByCardIdOfUnknownOrInjectedCardIsEmpty() {
+        assertThat(students.findByCardId("NO-SUCH-CARD")).isEmpty();
+        assertThat(students.findByCardId(INJECTION)).isEmpty();
+    }
+
+    @Test
+    void findByCardIdIsCaseSensitive() {
+        assertThat(students.findByCardId("demo-1001")).isEmpty();
+    }
+
+    @Test
+    void addingTakenCardFailsWithDataAccessException() {
+        assertThatThrownBy(() -> students.add(withCard(2001, "DEMO-1001")))
+                .isInstanceOf(DataAccessException.class)
+                .hasMessageContaining("add student #2001");
+        assertThat(students.exists(2001)).isFalse();
+    }
+
+    @Test
+    void manyStudentsCanHaveNoCard() {
+        students.add(student(2001, "Zoya"));
+        students.add(student(2002, "Ravi"));
+
+        assertThat(students.findAll())
+                .filteredOn(student -> student.getCardId() == null)
+                .extracting(StudentData::getStudentNum)
+                .containsExactly(2001, 2002);
+    }
+
+    @Test
+    void updateCanGiveACardAndTakeItAway() {
+        students.add(student(2001, "Zoya"));
+
+        students.update(withCard(2001, "STU-NEW"));
+        assertThat(students.findByCardId("STU-NEW")).get()
+                .extracting(StudentData::getStudentNum).isEqualTo(2001);
+
+        students.update(student(2001, "Zoya"));
+        assertThat(students.findByCardId("STU-NEW")).isEmpty();
+    }
+
+    @Test
+    void updateToTakenCardFailsWithDataAccessException() {
+        assertThatThrownBy(() -> students.update(withCard(1002, "DEMO-1001")))
+                .isInstanceOf(DataAccessException.class)
+                .hasMessageContaining("update student #1002");
     }
 
     @Test
@@ -231,6 +293,8 @@ class StudentDaoTest {
 
         assertThatThrownBy(offline::findAll).isInstanceOf(DataAccessException.class);
         assertThatThrownBy(() -> offline.exists(2001)).isInstanceOf(DataAccessException.class);
+        assertThatThrownBy(() -> offline.findByCardId("DEMO-1001"))
+                .isInstanceOf(DataAccessException.class);
         assertThatThrownBy(() -> offline.add(student)).isInstanceOf(DataAccessException.class);
         assertThatThrownBy(() -> offline.update(student)).isInstanceOf(DataAccessException.class);
         assertThatThrownBy(() -> offline.delete(2001)).isInstanceOf(DataAccessException.class);
@@ -247,6 +311,12 @@ class StudentDaoTest {
         return new StudentData(
                 studentNum, "1st Sem", "BSc", firstName, "Ali", "Female", birthDate(), "Enrolled",
                 "");
+    }
+
+    private static StudentData withCard(int studentNum, String cardId) {
+        return new StudentData(
+                studentNum, "1st Sem", "BSc", "Zoya", "Ali", "Female", birthDate(), "Enrolled", "",
+                cardId);
     }
 
     private static Date birthDate() {

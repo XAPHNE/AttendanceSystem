@@ -9,11 +9,15 @@ import java.time.LocalDate;
 import java.util.List;
 
 /**
- * The rules for students: every field except the photo is required, student numbers are positive
- * and unique, and the birth date is in the past. Text is trimmed before it is checked or stored.
+ * The rules for students: every field except the photo and the card ID is required, student
+ * numbers and card IDs are unique, student numbers are positive, and the birth date is in the
+ * past. Text is trimmed before it is checked or stored, and a blank card ID means "no card".
  */
 public final class StudentService {
     private static final String STUDENT_NUMBER = "Student #";
+    private static final String CARD_ID = "Card ID";
+    /** The size of the {@code card_id} column. */
+    static final int CARD_ID_MAX_LENGTH = 64;
 
     private final StudentDao students;
 
@@ -48,7 +52,8 @@ public final class StudentService {
      * Lets the UI check the form before asking the user to confirm.
      *
      * @throws MissingFieldException naming the first empty field, in form order
-     * @throws InvalidValueException if the birth date is today or later
+     * @throws InvalidValueException if the birth date is today or later, or the card ID is longer
+     *     than {@value #CARD_ID_MAX_LENGTH} characters
      */
     public void requireValid(StudentData student) {
         if (student.getStudentNum() == null) {
@@ -66,22 +71,31 @@ public final class StudentService {
             throw new InvalidValueException("Birth Date", "in the past");
         }
         requireFilled(student.getStatus(), "Status");
+        if (student.getCardId() != null && student.getCardId().length() > CARD_ID_MAX_LENGTH) {
+            throw new InvalidValueException(
+                    CARD_ID, "at most " + CARD_ID_MAX_LENGTH + " characters long");
+        }
     }
 
-    /** @throws AlreadyExistsException if the student number is taken */
+    /** @throws AlreadyExistsException if the student number or the card ID is taken */
     public void add(StudentData student) {
         StudentData trimmed = trimmed(student);
         requireValid(trimmed);
         if (students.exists(trimmed.getStudentNum())) {
             throw new AlreadyExistsException(describe(trimmed.getStudentNum()));
         }
+        requireCardFree(trimmed);
         students.add(trimmed);
     }
 
-    /** @throws NotFoundException if no student has this number */
+    /**
+     * @throws AlreadyExistsException if another student has the card ID
+     * @throws NotFoundException if no student has this number
+     */
     public void update(StudentData student) {
         StudentData trimmed = trimmed(student);
         requireValid(trimmed);
+        requireCardFree(trimmed);
         if (!students.update(trimmed)) {
             throw new NotFoundException(describe(trimmed.getStudentNum()));
         }
@@ -98,6 +112,20 @@ public final class StudentService {
         }
     }
 
+    /** A student may keep their own card, but not take someone else's. */
+    private void requireCardFree(StudentData student) {
+        if (student.getCardId() == null) {
+            return;
+        }
+        boolean takenByAnother =
+                students.findByCardId(student.getCardId())
+                        .filter(owner -> !owner.getStudentNum().equals(student.getStudentNum()))
+                        .isPresent();
+        if (takenByAnother) {
+            throw new AlreadyExistsException(CARD_ID + " " + student.getCardId());
+        }
+    }
+
     private static StudentData trimmed(StudentData student) {
         return new StudentData(
                 student.getStudentNum(),
@@ -108,7 +136,13 @@ public final class StudentService {
                 trimmedOrEmpty(student.getGender()),
                 student.getBirthDate(),
                 trimmedOrEmpty(student.getStatus()),
-                trimmedOrEmpty(student.getImage()));
+                trimmedOrEmpty(student.getImage()),
+                trimmedOrNoCard(student.getCardId()));
+    }
+
+    private static String trimmedOrNoCard(String cardId) {
+        String trimmed = trimmedOrEmpty(cardId);
+        return trimmed.isEmpty() ? null : trimmed;
     }
 
     private static String describe(int studentNum) {
