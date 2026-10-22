@@ -55,6 +55,33 @@ class StudentCardsTest {
     }
 
     @Test
+    void qrCodeHasTheAskedSizeAndDecodesBackToTheText() {
+        String pageAddress = "http://192.168.1.20:52114/" + "f".repeat(32) + "/";
+
+        BufferedImage qr = StudentCards.qrCode(pageAddress, 110);
+
+        assertThat(qr.getWidth()).isEqualTo(110);
+        assertThat(qr.getHeight()).isEqualTo(110);
+        assertThat(StudentCards.decode(withQuietZone(qr))).contains(pageAddress);
+    }
+
+    @Test
+    void qrCodeTooSmallForItsTextIsStillDrawnAtTheSmallestSizeThatFits() {
+        BufferedImage qr = StudentCards.qrCode("DEMO-1001", 1);
+
+        // The smallest QR code is 21 by 21 squares, here one pixel each
+        assertThat(qr.getWidth()).isEqualTo(21);
+        assertThat(StudentCards.decode(withQuietZone(enlarged(qr, 10)))).contains("DEMO-1001");
+    }
+
+    @Test
+    void textLongerThanAnyQrCodeHoldsFails() {
+        assertThatThrownBy(() -> StudentCards.qrCode("x".repeat(5000), 110))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageStartingWith("Could not make a QR code of xxx");
+    }
+
+    @Test
     void savedPngDecodesBackToTheCardId() throws IOException {
         Path file = tempDir.resolve("card-1001.png");
 
@@ -124,6 +151,28 @@ class StudentCardsTest {
     void fileNameEndingInPngIsKept(String name) {
         assertThat(StudentCards.withPngExtension(tempDir.resolve(name)))
                 .isEqualTo(tempDir.resolve(name));
+    }
+
+    private static BufferedImage enlarged(BufferedImage image, int times) {
+        BufferedImage big = new BufferedImage(
+                image.getWidth() * times, image.getHeight() * times, BufferedImage.TYPE_INT_RGB);
+        Graphics2D g = big.createGraphics();
+        g.drawImage(image, 0, 0, big.getWidth(), big.getHeight(), null);
+        g.dispose();
+        return big;
+    }
+
+    // A screen shows the code on a white panel; readers need that white border around it
+    private static BufferedImage withQuietZone(BufferedImage qr) {
+        int border = 20;
+        BufferedImage framed = new BufferedImage(
+                qr.getWidth() + 2 * border, qr.getHeight() + 2 * border, BufferedImage.TYPE_INT_RGB);
+        Graphics2D g = framed.createGraphics();
+        g.setColor(Color.WHITE);
+        g.fillRect(0, 0, framed.getWidth(), framed.getHeight());
+        g.drawImage(qr, border, border, null);
+        g.dispose();
+        return framed;
     }
 
     private static StudentData asha(String cardId) {

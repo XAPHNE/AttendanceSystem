@@ -7,6 +7,7 @@ import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 import javafx.collections.transformation.SortedList;
 import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
@@ -18,18 +19,26 @@ import javafx.scene.Parent;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.image.PixelFormat;
+import javafx.scene.image.WritableImage;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.Scene;
 import javafx.scene.layout.AnchorPane;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
+import javafx.stage.Window;
+import javafx.stage.WindowEvent;
+import javafx.util.StringConverter;
 import com.bsmi.attendancesystem.dao.AttendanceDao;
 import com.bsmi.attendancesystem.dao.CourseDao;
 import com.bsmi.attendancesystem.dao.DataAccessException;
 import com.bsmi.attendancesystem.dao.Database;
 import com.bsmi.attendancesystem.dao.StudentDao;
 import com.bsmi.attendancesystem.dao.UserDao;
+import com.bsmi.attendancesystem.scanner.NetworkAddresses;
+import com.bsmi.attendancesystem.scanner.PhoneScanServer;
+import com.bsmi.attendancesystem.scanner.ScanReply;
 import com.bsmi.attendancesystem.service.AttendanceService;
 import com.bsmi.attendancesystem.service.CourseService;
 import com.bsmi.attendancesystem.service.ImageStore;
@@ -42,11 +51,18 @@ import com.bsmi.attendancesystem.service.ValidationException;
 
 import java.io.File;
 import java.io.IOException;
+import java.awt.image.BufferedImage;
 import java.io.UncheckedIOException;
+import java.net.Inet4Address;
+import java.net.InetSocketAddress;
 import java.net.URL;
 import java.nio.file.Path;
 import java.time.LocalDate;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.stream.Stream;
 
 public class DashboardController implements Initializable {
@@ -239,6 +255,21 @@ public class DashboardController implements Initializable {
     private Label studentAttendance_scanResult;
 
     @FXML
+    private CheckBox studentAttendance_phoneScanner;
+
+    @FXML
+    private ImageView studentAttendance_phoneQr;
+
+    @FXML
+    private Label studentAttendance_phoneHint;
+
+    @FXML
+    private ComboBox<Inet4Address> studentAttendance_phoneNetwork;
+
+    @FXML
+    private TextField studentAttendance_phoneAddress;
+
+    @FXML
     private ComboBox<String> studentAttendance_semester;
 
     @FXML
@@ -314,6 +345,7 @@ public class DashboardController implements Initializable {
 //    START CODE FOR MINIMIZE BUTTON
     @FXML
     public void closeBtnOnAction() {
+        stopPhoneScanner();
         System.exit(0);
     }
 //    END CODE FOR MINIMIZE BUTTON
@@ -974,14 +1006,18 @@ public class DashboardController implements Initializable {
     }
 
     /** Checks the card's student in or out and shows what happened under the scan field. */
-    public void scanCard(String cardId) {
+    private ScanReply scanCard(String cardId) {
         try {
-            showScanResult(attendanceService.scan(cardId).message(), SCAN_OK_STYLE);
+            String message = attendanceService.scan(cardId).message();
+            showScanResult(message, SCAN_OK_STYLE);
             studentAttendanceShowListData();
+            return ScanReply.ok(message);
         } catch (ValidationException e) {
             showScanResult(e.getMessage(), SCAN_ERROR_STYLE);
+            return ScanReply.failed(e.getMessage());
         } catch (DataAccessException e) {
             showDatabaseError(e);
+            return ScanReply.failed("The app could not reach its database. Try again");
         }
     }
     private void showScanResult(String message, String style) {
@@ -989,6 +1025,113 @@ public class DashboardController implements Initializable {
         studentAttendance_scanResult.getStyleClass().add(style);
         studentAttendance_scanResult.setText(message);
     }
+
+    private static final String PHONE_SCANNER_OFF_HINT = "Turn on to check students in with a phone camera.";
+    private static final int PAIRING_QR_SIZE = 110;
+    private static final long PHONE_SCAN_TIMEOUT_SECONDS = 10;
+    private PhoneScanServer phoneScanner;
+    // Logout and the window closing hide it; the phone page must not outlive the screen
+    private final EventHandler<WindowEvent> stopPhoneScannerOnHide = event -> stopPhoneScanner();
+
+    @FXML
+    public void studentAttendancePhoneScannerOnAction() {
+        if (studentAttendance_phoneScanner.isSelected()) {
+            startPhoneScanner();
+        } else {
+            stopPhoneScanner();
+        }
+    }
+    @FXML
+    public void studentAttendancePhoneNetworkOnAction() {
+        Inet4Address chosen = studentAttendance_phoneNetwork.getValue();
+        if (phoneScanner != null && chosen != null) {
+            showPairingCode(chosen);
+        }
+    }
+    private void startPhoneScanner() {
+        if (phoneScanner != null) {
+            return;
+        }
+        // A fixed port is only needed when a firewall or container must let one port through
+        int port = Integer.getInteger("attendance.scanner.port", 0);
+        try {
+            phoneScanner = PhoneScanServer.start(new InetSocketAddress(port), this::scanFromPhone);
+        } catch (IOException e) {
+            studentAttendance_phoneScanner.setSelected(false);
+            showAlert(Alert.AlertType.ERROR, "Error Message",
+                    "Could not start the phone scanner: " + e.getMessage());
+            return;
+        }
+        studentAttendance_phoneScanner.getScene().getWindow()
+                .addEventHandler(WindowEvent.WINDOW_HIDDEN, stopPhoneScannerOnHide);
+
+        List<Inet4Address> networks = NetworkAddresses.forPhones();
+        boolean onANetwork = !networks.isEmpty();
+        studentAttendance_phoneHint.setText(onANetwork
+                ? "Scan this with a phone on the same Wi-Fi, then photograph student cards."
+                : "No Wi-Fi network found. Only a browser on this computer can open the page below.");
+        studentAttendance_phoneNetwork.setItems(FXCollections.observableArrayList(networks));
+        studentAttendance_phoneNetwork.setVisible(networks.size() > 1);
+        Inet4Address address = onANetwork ? networks.getFirst() : NetworkAddresses.thisComputerOnly();
+        studentAttendance_phoneNetwork.setValue(onANetwork ? address : null);
+        showPairingCode(address);
+        studentAttendance_phoneQr.setVisible(true);
+        studentAttendance_phoneAddress.setVisible(true);
+    }
+    private void showPairingCode(Inet4Address address) {
+        String pageAddress = phoneScanner.pageAddress(address).toString();
+        studentAttendance_phoneQr.setImage(toFxImage(StudentCards.qrCode(pageAddress, PAIRING_QR_SIZE)));
+        studentAttendance_phoneAddress.setText(pageAddress);
+    }
+    private void stopPhoneScanner() {
+        if (phoneScanner == null) {
+            return;
+        }
+        phoneScanner.close();
+        phoneScanner = null;
+        Window window = studentAttendance_phoneScanner.getScene().getWindow();
+        if (window != null) {
+            window.removeEventHandler(WindowEvent.WINDOW_HIDDEN, stopPhoneScannerOnHide);
+        }
+        studentAttendance_phoneScanner.setSelected(false);
+        studentAttendance_phoneQr.setImage(null);
+        studentAttendance_phoneQr.setVisible(false);
+        studentAttendance_phoneNetwork.setVisible(false);
+        studentAttendance_phoneAddress.clear();
+        studentAttendance_phoneAddress.setVisible(false);
+        studentAttendance_phoneHint.setText(PHONE_SCANNER_OFF_HINT);
+    }
+
+    // Runs on the phone server's thread; the screen may only be changed on the JavaFX thread
+    private ScanReply scanFromPhone(String cardId) {
+        CompletableFuture<ScanReply> reply = new CompletableFuture<>();
+        Platform.runLater(() -> {
+            try {
+                reply.complete(scanCard(cardId));
+            } catch (RuntimeException e) {
+                reply.completeExceptionally(e);
+            }
+        });
+        try {
+            return reply.get(PHONE_SCAN_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new IllegalStateException("Stopped while waiting for the scan", e);
+        } catch (ExecutionException | TimeoutException e) {
+            throw new IllegalStateException("The app did not finish the scan", e);
+        }
+    }
+
+    // javafx.swing, which has SwingFXUtils for this, isn't one of the app's modules
+    private static WritableImage toFxImage(BufferedImage image) {
+        int width = image.getWidth();
+        int height = image.getHeight();
+        WritableImage fxImage = new WritableImage(width, height);
+        int[] argb = image.getRGB(0, 0, width, height, null, 0, width);
+        fxImage.getPixelWriter().setPixels(0, 0, width, height, PixelFormat.getIntArgbInstance(), argb, 0, width);
+        return fxImage;
+    }
+
     private void attendanceChanged(String successMessage) {
         showAlert(Alert.AlertType.INFORMATION, "Information Message", successMessage);
         studentAttendanceShowListData();
@@ -1199,6 +1342,17 @@ public class DashboardController implements Initializable {
         studentAttendanceStudentNumList();
         studentAttendanceShowListData();
         studentAttendanceSearchOnKeyTyped();
+        studentAttendance_phoneNetwork.setConverter(new StringConverter<>() {
+            @Override
+            public String toString(Inet4Address address) {
+                return address == null ? "" : address.getHostAddress();
+            }
+
+            @Override
+            public Inet4Address fromString(String text) {
+                throw new UnsupportedOperationException("The list is not editable");
+            }
+        });
 
         hideUserId();
         userManagementShowListData();

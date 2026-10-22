@@ -7,6 +7,8 @@ module com.bsmi.attendancesystem {
     // BufferedImage and ImageIO, for drawing and reading QR cards
     requires java.desktop;
     requires com.google.zxing;
+    // The small web server behind "Use phone as scanner"
+    requires jdk.httpserver;
     requires flyway.core;
     requires jbcrypt;
     requires MaterialFX;

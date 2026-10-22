@@ -29,6 +29,7 @@ import javax.imageio.ImageIO;
 /**
  * Printable student cards: a QR code of the card ID with the student's name and number under it.
  * Any QR scanner in keyboard mode, or the phone scanner, reads the card ID back from it.
+ * {@link #qrCode} also draws the code a phone scans to pair with the app.
  */
 public final class StudentCards {
     static final int WIDTH = 360;
@@ -40,6 +41,8 @@ public final class StudentCards {
     private static final String NEW_CARD_LETTERS = "ABCDEFGHJKMNPQRSTUVWXYZ23456789";
     private static final int NEW_CARD_LENGTH = 8;
     private static final SecureRandom RANDOM = new SecureRandom();
+    private static final int BLACK = 0x000000;
+    private static final int WHITE = 0xFFFFFF;
 
     private StudentCards() {}
 
@@ -63,8 +66,8 @@ public final class StudentCards {
         try {
             g.setColor(Color.WHITE);
             g.fillRect(0, 0, WIDTH, HEIGHT);
+            g.drawImage(qrCode(cardId, QR_SIZE), MARGIN, MARGIN, null);
             g.setColor(Color.BLACK);
-            drawQrCode(g, cardId);
             g.setRenderingHint(
                     RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
             drawCentered(g, student.getFirstName() + " " + student.getLastName(),
@@ -117,23 +120,24 @@ public final class StudentCards {
         }
     }
 
-    private static void drawQrCode(Graphics2D g, String cardId) {
+    /** A black-on-white QR code of the text, {@code size} pixels square, with no border. */
+    public static BufferedImage qrCode(String text, int size) {
         BitMatrix code;
         try {
             code = new QRCodeWriter()
-                    .encode(cardId, BarcodeFormat.QR_CODE, QR_SIZE, QR_SIZE,
-                            Map.of(EncodeHintType.MARGIN, 0));
+                    .encode(text, BarcodeFormat.QR_CODE, size, size, Map.of(EncodeHintType.MARGIN, 0));
         } catch (WriterException e) {
-            // Only happens for text far longer than a card ID can be
-            throw new IllegalStateException("Could not make a QR code of " + cardId, e);
+            // Only happens for text far longer than a card ID or a scanner address
+            throw new IllegalStateException("Could not make a QR code of " + text, e);
         }
+        BufferedImage image =
+                new BufferedImage(code.getWidth(), code.getHeight(), BufferedImage.TYPE_INT_RGB);
         for (int y = 0; y < code.getHeight(); y++) {
             for (int x = 0; x < code.getWidth(); x++) {
-                if (code.get(x, y)) {
-                    g.fillRect(MARGIN + x, MARGIN + y, 1, 1);
-                }
+                image.setRGB(x, y, code.get(x, y) ? BLACK : WHITE);
             }
         }
+        return image;
     }
 
     private static void drawCentered(Graphics2D g, String text, Font font, int baseline) {

@@ -135,6 +135,20 @@
         <configuration>
           <release>25</release>
         </configuration>
+        <executions>
+          <execution>
+            <id>default-testCompile</id>
+            <configuration>
+              <!-- Tests talk to the phone scanner with the JDK's HTTP client; the app itself doesn't need it -->
+              <compilerArgs>
+                <arg>--add-modules</arg>
+                <arg>java.net.http</arg>
+                <arg>--add-reads</arg>
+                <arg>com.bsmi.attendancesystem=java.net.http</arg>
+              </compilerArgs>
+            </configuration>
+          </execution>
+        </executions>
       </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
@@ -145,7 +159,9 @@
           <argLine>@{argLine}
             --add-exports javafx.graphics/com.sun.javafx.application=ALL-UNNAMED
             --add-opens javafx.graphics/com.sun.javafx.application=ALL-UNNAMED
-            --enable-native-access=javafx.graphics</argLine>
+            --enable-native-access=javafx.graphics
+            --add-modules java.net.http
+            --add-reads com.bsmi.attendancesystem=java.net.http</argLine>
         </configuration>
       </plugin>
       <plugin>
@@ -180,6 +196,7 @@
                   <includes>
                     <include>com.bsmi.attendancesystem.dao</include>
                     <include>com.bsmi.attendancesystem.service</include>
+                    <include>com.bsmi.attendancesystem.scanner</include>
                   </includes>
                   <limits>
                     <limit>
@@ -298,7 +315,7 @@
                   <arguments>
                     <argument>--add-modules</argument>
                     <!-- The modules jdeps reports the libraries in target/libs need -->
-                    <argument>java.base,java.compiler,java.desktop,java.instrument,java.management,java.naming,java.prefs,java.scripting,java.sql,jdk.jfr,jdk.net,jdk.unsupported</argument>
+                    <argument>java.base,java.compiler,java.desktop,java.instrument,java.management,java.naming,java.prefs,java.scripting,java.sql,jdk.httpserver,jdk.jfr,jdk.net,jdk.unsupported</argument>
                     <argument>--strip-debug</argument>
                     <argument>--no-man-pages</argument>
                     <argument>--no-header-files</argument>
