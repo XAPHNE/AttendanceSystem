@@ -1,60 +1,86 @@
 # Attendance System
-Attendance System is a JavaFX application that allows users to manage and track the attendance of students or employees. It uses an embedded H2 database (no database server to install) and Maven as the build tool. It is developed using IntelliJ IDEA as the IDE.
+
+A desktop app for keeping track of students, courses and attendance, built with JavaFX. It runs on
+Windows, macOS and Linux. The database is embedded, so there is no server to install: clone, build,
+and log in.
+
+![Dashboard](docs/screenshots/home.png)
 
 ## Features
-- **Login page:** Users can log in to the application using their username and password. The login information is verified with the database
-- **Dashboard:** To view graphs and charts of absent/present
-- **Add Student:** To add student to the system and perform CRUD operation
-- **Available course:** To add courses in the system
-- **Attendance:** To Mark Entry and Exit Time for attendance
 
+- **Login** with two roles. Passwords are stored as bcrypt hashes. An *Admin* can manage users;
+  an *Employee* can't see that screen.
+- **Dashboard** with totals and charts of present and absent students.
+- **Students**: add, edit, delete and search, with an optional photo.
+- **Courses**: add, edit and delete. A course that students still use can't be deleted.
+- **Attendance**: record entry and exit times.
+- **User management** (Admin only): add, edit and delete users and set their role. Nobody can
+  delete themselves, and the last Admin can't be removed or made an Employee.
 
-## Software Requirements
-### Before you dive in, make sure to download and install the following:
+| Login | Students | Courses |
+|---|---|---|
+| ![Login](docs/screenshots/login.png) | ![Students](docs/screenshots/students.png) | ![Courses](docs/screenshots/courses.png) |
+| **Attendance** | **User management** | |
+| ![Attendance](docs/screenshots/attendance.png) | ![Users](docs/screenshots/users.png) | |
 
-1. [Git](https://git-scm.com/)
-2. [SceneBuilder](https://gluonhq.com/products/scene-builder/)
-3. [IntelliJ IDEA IDE](https://www.jetbrains.com/idea/)
-4. [JDK 25](https://adoptium.net/) or newer
+## Try it
 
-## Installation
-### Configuring SceneBuilder
-#### Before opening the `view.fxml` files in SceneBuilder, you need to add essential dependencies.
+### Download
 
-1. Add the following dependencies to SceneBuilder:
-   1. `io.github.palexdev:materialfx:11.17.0`
-   2. `org.kordamp.ikonli:ikonli-fontawesome-pack:12.4.0`
-   3. `org.kordamp.ikonli:ikonli-fontawesome5-pack:12.4.0`
-   4. `org.kordamp.ikonli:ikonli-javafx:12.4.0`
+Each [GitHub Release](../../releases) has a ready-to-run build for Linux (`.deb` or `.tar.gz`),
+Windows (`.zip`) and macOS (`.dmg`). It brings its own Java runtime, so nothing else needs to be
+installed. The Windows and macOS builds aren't signed, so the first start shows a warning. On
+Windows, click **More info** and then **Run anyway**. On macOS, right-click the app, choose
+**Open** and confirm.
 
-2. To add these dependencies, follow these steps within SceneBuilder:
-   1. Select the **Empty** desktop application option.
-   2. On the left panel, click the gear icon next to "Library" and the search bar.
-   3. Choose **JAR/FXML Manager**.
-   4. Click **Search repositories**.
-   5. Search and add the dependencies one by one:
-      1. `io.github.palexdev:materialfx`
-      2. `org.kordamp.ikonli:ikonli-fontawesome-pack`
-      3. `org.kordamp.ikonli:ikonli-fontawesome5-pack`
-      4. `org.kordamp.ikonli:ikonli-javafx`
-   6. Select each item from the search results and click **Add Jar**.
-   7. Choose **Import Component**.
-   8. Repeat these steps until all dependencies are added.
+### Build from source
 
-### Setting Up IntelliJ IDEA IDE
-1. Open IntelliJ IDEA and select **Get from VCS**.
-2. In the "GitHub" tab, log in to your GitHub account.
-3. Click the "Repository URL" tab and paste the project URL: `https://github.com/XAPHNE/AttendanceSystem`. Then click **Clone**.
+You need [JDK 25](https://adoptium.net/) or newer and [Git](https://git-scm.com/). Maven doesn't
+need to be installed: `./mvnw` downloads the right version.
 
-### Running the Project
-Run `./mvnw javafx:run` (Windows: `mvnw.cmd javafx:run`) from the project folder, or press **`Shift + F10`** in IntelliJ on the `src/main/java/com/bsmi/attendancesystem/AttendanceApplication.java` file.
+```sh
+git clone https://github.com/XAPHNE/AttendanceSystem.git
+cd AttendanceSystem
+./mvnw javafx:run
+```
 
-The build stops with a clear message if your JDK is older than 25.
+On Windows, use `mvnw.cmd javafx:run`. The build stops with a clear message if your JDK is older
+than 25. In IntelliJ IDEA, open the folder and run `AttendanceApplication`.
 
-On the first start the app creates its database and fills it with demo data (fictional students, courses and a few days of attendance). Log in with **admin / admin123** (Admin) or **employee / employee123** (Employee).
+### Demo logins
 
-### Where the data is stored
-The database lives in a per-user folder, so the app works from any install location:
+On the first start the app creates its database and fills it with demo data: fictional students,
+three courses and a few days of attendance.
+
+| Username | Password | Role |
+|---|---|---|
+| `admin` | `admin123` | Admin |
+| `employee` | `employee123` | Employee |
+
+## Tech stack
+
+| Part | Choice |
+|---|---|
+| Language | Java 25 (LTS), one Java module |
+| UI | JavaFX 27, FXML, MaterialFX, Ikonli icons, the Inter font |
+| Database | H2 (embedded), schema managed by Flyway migrations |
+| Passwords | bcrypt (jbcrypt) |
+| Build | Maven (wrapper included), jlink and jpackage for installers |
+| Tests | JUnit 6, AssertJ, TestFX, JaCoCo coverage gate |
+| CI | GitHub Actions on Linux, Windows and macOS, Dependabot |
+
+## Docs
+
+- [Architecture](docs/architecture.md): the layers, startup, error handling, and what each test
+  suite covers
+- [Database](docs/database.md): the tables, an ER diagram and the migrations
+- [Design decisions](docs/decisions.md): why H2 and not MySQL (and how to switch), why Flyway,
+  DAOs and bcrypt, the UI design, and the known gaps
+
+## Where the data is stored
+
+The database and student photos live in a per-user folder, so the app works from any install
+location:
 
 | OS      | Folder                                                          |
 |---------|-----------------------------------------------------------------|
@@ -62,14 +88,35 @@ The database lives in a per-user folder, so the app works from any install locat
 | macOS   | `~/Library/Application Support/AttendanceSystem`                |
 | Linux   | `$XDG_DATA_HOME/AttendanceSystem` (default `~/.local/share/AttendanceSystem`) |
 
-Delete that folder to start over with fresh demo data. To use another folder, start the app with `-Dattendance.home=<folder>`. To use another database, set `ATTENDANCE_DB_URL`, `ATTENDANCE_DB_USER` and `ATTENDANCE_DB_PASSWORD`.
+Delete that folder to start over with fresh demo data. To use another folder, start the app with
+`-Dattendance.home=<folder>`. To use another database, set `ATTENDANCE_DB_URL`,
+`ATTENDANCE_DB_USER` and `ATTENDANCE_DB_PASSWORD`.
 
-The schema is created and upgraded by [Flyway](https://documentation.red-gate.com/flyway) from the SQL files in `src/main/resources/db/migration`. To change the schema, add a new `V<next number>__<description>.sql` file there; never edit a file that has already been released.
+The schema is created and upgraded by [Flyway](https://documentation.red-gate.com/flyway) from the
+SQL files in `src/main/resources/db/migration`. To change the schema, add a new
+`V<next number>__<description>.sql` file there; never edit a file that has already been released.
 
 Earlier versions kept the database in the project's `data/` folder. That folder is no longer used.
 
-### Building a version that runs without Java
-Run `./mvnw -Pdist clean package` (Windows: `mvnw.cmd -Pdist clean package`). `target/dist/AttendanceSystem` is then a folder with the app and its own small Java runtime. Copy it to any computer with the same operating system and start `bin/AttendanceSystem` (Windows: `AttendanceSystem.exe`, macOS: `AttendanceSystem.app`). That computer doesn't need Java installed.
+## Running the tests
+
+Run `./mvnw verify` (Windows: `mvnw.cmd verify`).
+
+- The UI tests open the real app and click through it, so they need a display. On a Linux machine
+  without one (a server or CI runner) they are skipped; run `xvfb-run ./mvnw verify` to include
+  them. `./mvnw verify -DexcludedGroups=ui` skips them anywhere.
+- The build fails if the tests cover less than 90% of the lines in the `dao` and `service`
+  packages. The coverage report is at `target/site/jacoco/index.html`.
+- GitHub Actions runs the same build with the UI tests on Linux, Windows and macOS for every push
+  and pull request (`.github/workflows/ci.yml`). A separate job tries the newest Java (27) as an
+  early warning; it is allowed to fail.
+
+## Building a version that runs without Java
+
+Run `./mvnw -Pdist clean package` (Windows: `mvnw.cmd -Pdist clean package`).
+`target/dist/AttendanceSystem` is then a folder with the app and its own small Java runtime. Copy
+it to any computer with the same operating system and start `bin/AttendanceSystem` (Windows:
+`AttendanceSystem.exe`, macOS: `AttendanceSystem.app`). That computer doesn't need Java installed.
 
 To build an installer instead, add `-Ddist.type=` followed by the type:
 
@@ -79,10 +126,16 @@ To build an installer instead, add `-Ddist.type=` followed by the type:
 | Windows | `MSI` | Needs the [WiX Toolset](https://wixtoolset.org/)                                                  |
 | macOS   | `DMG` |                                                                                                   |
 
-How it works: jlink builds a Java runtime that holds only the JDK modules the app needs. jpackage puts that runtime, the app and its libraries in one folder or installer. H2, Flyway and jbcrypt aren't Java modules, and jlink can't put those into a runtime, so they sit next to it in `lib/app/mods`.
+How it works: jlink builds a Java runtime that holds only the JDK modules the app needs. jpackage
+puts that runtime, the app and its libraries in one folder or installer. H2, Flyway and jbcrypt
+aren't Java modules, and jlink can't put those into a runtime, so they sit next to it in
+`lib/app/mods`.
 
-### Publishing a release
-Push a version tag, for example `git tag v1.2.0 && git push origin v1.2.0`. The release workflow (`.github/workflows/release.yml`) then builds the app on Linux, Windows and macOS and attaches the results to a new GitHub Release:
+## Publishing a release
+
+Push a version tag, for example `git tag v1.2.0 && git push origin v1.2.0`. The release workflow
+(`.github/workflows/release.yml`) then builds the app on Linux, Windows and macOS and attaches the
+results to a new GitHub Release:
 
 | File                                     | What it is                                         |
 |------------------------------------------|----------------------------------------------------|
@@ -91,25 +144,29 @@ Push a version tag, for example `git tag v1.2.0 && git push origin v1.2.0`. The 
 | `AttendanceSystem-<version>-windows-x64.zip` | The app folder for Windows; start `AttendanceSystem.exe` |
 | `AttendanceSystem-<version>-macos-arm64.dmg` | The app for Macs with Apple silicon |
 
-The Windows and macOS builds aren't signed, so the first start shows a warning. On Windows, click **More info** and then **Run anyway**. On macOS, right-click the app, choose **Open** and confirm.
+## Checking for dependency updates
 
-### Running the tests
-Run `./mvnw verify` (Windows: `mvnw.cmd verify`).
+Dependabot (`.github/dependabot.yml`) checks every week for newer libraries, build plugins, the
+Maven version and GitHub Actions. It opens a pull request for them, and CI tests the update before
+it is merged.
 
-- The UI tests open the real app and click through it, so they need a display. On a Linux machine without one (a server or CI runner) they are skipped; run `xvfb-run ./mvnw verify` to include them. `./mvnw verify -DexcludedGroups=ui` skips them anywhere.
-- The build fails if the tests cover less than 90% of the lines in the `dao` and `service` packages. The coverage report is at `target/site/jacoco/index.html`.
-- GitHub Actions runs the same build with the UI tests on Linux, Windows and macOS for every push and pull request (`.github/workflows/ci.yml`). A separate job tries the newest Java (27) as an early warning; it is allowed to fail.
+To check by hand, run `./mvnw versions:display-dependency-updates versions:display-plugin-updates`.
+It lists newer stable releases of the libraries and build plugins.
 
-### Checking for dependency updates
-Dependabot (`.github/dependabot.yml`) checks every week for newer libraries, build plugins, the Maven version and GitHub Actions. It opens a pull request for them, and CI tests the update before it is merged.
+## Editing the screens in SceneBuilder
 
-To check by hand, run `./mvnw versions:display-dependency-updates versions:display-plugin-updates`. It lists newer stable releases of the libraries and build plugins.
+The screens are FXML files in `src/main/resources/com/bsmi/attendancesystem/fxml`. To open them in
+[SceneBuilder](https://gluonhq.com/products/scene-builder/), first add the libraries they use:
 
-Now, enjoy the benefits of our Attendance System!
+1. In SceneBuilder, click the gear icon next to **Library** and choose **JAR/FXML Manager**.
+2. Click **Search repositories** and add each of these, then choose **Import Component**:
+   - `io.github.palexdev:materialfx:11.17.0`
+   - `org.kordamp.ikonli:ikonli-javafx:12.4.0`
+   - `org.kordamp.ikonli:ikonli-fontawesome-pack:12.4.0`
+   - `org.kordamp.ikonli:ikonli-fontawesome5-pack:12.4.0`
 
-## Screenshots
-
-![Attendance System Screenshot](https://user-images.githubusercontent.com/127822494/257903527-0e72b5ec-21c2-4c30-87fc-3f47bed03d33.png "Login Screen")
+The look comes from the stylesheets in `src/main/resources/com/bsmi/attendancesystem/css`;
+`theme.css` holds every color.
 
 ## License
 This project is licensed under the GNU General Public License v3.0 - see the [LICENSE](/LICENSE) file for details.
