@@ -4,9 +4,6 @@ A desktop app for keeping track of students, courses and attendance, built with 
 Windows, macOS and Linux. The database is embedded, so there is no server to install: clone, build,
 and log in.
 
-This project started as [XAPHNE/AttendanceSystem](https://github.com/XAPHNE/AttendanceSystem).
-This repo continues it with an embedded database, tests, CI and card scanning.
-
 ![Dashboard](docs/screenshots/home.png)
 
 ## Features
@@ -47,8 +44,8 @@ You need [JDK 25](https://adoptium.net/) or newer and [Git](https://git-scm.com/
 need to be installed: `./mvnw` downloads the right version.
 
 ```sh
-git clone https://github.com/prithirabha/AttendanceSystem-JavaFX.git
-cd AttendanceSystem-JavaFX
+git clone https://github.com/XAPHNE/AttendanceSystem.git
+cd AttendanceSystem
 ./mvnw javafx:run
 ```
 
