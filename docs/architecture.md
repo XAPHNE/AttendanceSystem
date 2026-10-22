@@ -4,6 +4,11 @@ A JavaFX desktop app in one Java module (`com.bsmi.attendancesystem`), with thre
 services and DAOs. Each layer only calls the one below it.
 
 ```mermaid
+---
+config:
+  look: handDrawn
+  theme: neutral
+---
 flowchart TD
     fxml["FXML screens<br/>login-view, dashboard-view + CSS"]
     ctrl["Controllers<br/>LoginController, DashboardController"]

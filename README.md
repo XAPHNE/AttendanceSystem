@@ -113,6 +113,8 @@ again.
 - [Database](docs/database.md): the tables, an ER diagram and the migrations
 - [Design decisions](docs/decisions.md): why H2 and not MySQL (and how to switch), why Flyway,
   DAOs and bcrypt, card readers and the phone scanner, the UI design, and the known gaps
+- [Build and release](docs/build-and-release.md): what CI checks on every push, how a tag
+  becomes the Linux, Windows and macOS downloads, and what could be improved
 
 ## Where the data is stored
 
@@ -170,7 +172,8 @@ in `lib/app/mods`.
 
 ## Publishing a release
 
-Push a version tag, for example `git tag v1.2.0 && git push origin v1.2.0`. The release workflow
+Push a version tag, for example `git tag v1.2.0 && git push origin v1.2.0`. The first number must
+be 1 or more, because the macOS installer refuses versions like `0.1.0`. The release workflow
 (`.github/workflows/release.yml`) then builds the app on Linux, Windows and macOS and attaches the
 results to a new GitHub Release:
 

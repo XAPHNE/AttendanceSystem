@@ -17,6 +17,11 @@ been released: Flyway checks each one's checksum and refuses to start if one has
 ## Tables
 
 ```mermaid
+---
+config:
+  look: handDrawn
+  theme: neutral
+---
 erDiagram
     admin {
         BIGINT id PK
