@@ -3,33 +3,7 @@
 A JavaFX desktop app in one Java module (`com.bsmi.attendancesystem`), with three layers: screens,
 services and DAOs. Each layer only calls the one below it.
 
-```mermaid
----
-config:
-  look: handDrawn
-  theme: neutral
----
-flowchart TD
-    fxml["FXML screens<br/>login-view, dashboard-view + CSS"]
-    ctrl["Controllers<br/>LoginController, DashboardController"]
-    svc["service<br/>AuthService, StudentService, CourseService,<br/>AttendanceService, UserService, ImageStore, StudentCards"]
-    scan["scanner<br/>PhoneScanServer, NetworkAddresses"]
-    phone(["Phone browser"])
-    dao["dao<br/>StudentDao, CourseDao, AttendanceDao, UserDao"]
-    db[("H2 database file")]
-    img[("images/ folder")]
-    start["Startup<br/>AttendanceApplication, DatabaseMigrations"]
-    paths["AppPaths, DatabaseSettings"]
-
-    fxml --> ctrl --> svc --> dao --> db
-    svc --> img
-    ctrl --> scan
-    phone -->|http + token| scan
-    scan -->|"card ID on the UI thread"| ctrl
-    start --> paths
-    start -->|Flyway| db
-    dao --> paths
-```
+![The layers: FXML screens, controllers, services, DAOs and the H2 database, plus the phone scanner and startup](diagrams/architecture.excalidraw.svg)
 
 ## Startup and data folder
 

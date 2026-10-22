@@ -11,29 +11,7 @@ and [Publishing a release](../README.md#publishing-a-release).
 `.github/workflows/ci.yml` runs `./mvnw -B verify` on Linux, Windows and macOS with Java 25. A
 failure on one OS doesn't cancel the others (`fail-fast: false`), so one run shows every broken OS.
 
-```mermaid
----
-config:
-  look: handDrawn
-  theme: neutral
----
-flowchart TD
-    push(["push or pull request"])
-    push --> linux["Linux<br/>xvfb-run ./mvnw verify"]
-    push --> win["Windows<br/>mvnw.cmd verify"]
-    push --> mac["macOS<br/>./mvnw verify"]
-    push --> next["Java 27 early warning<br/>allowed to fail"]
-    linux & win & mac --> verify
-
-    subgraph verify ["./mvnw verify, the same on each OS"]
-        enforce["Enforcer<br/>Java 25+, Maven 3.9+"] --> compile["Compile the module"]
-        compile --> tests["Tests: DAOs, services, phone server,<br/>TestFX UI tests"]
-        tests --> gate{"JaCoCo<br/>90% lines in dao,<br/>service, scanner?"}
-    end
-
-    gate -->|yes| green(["green check"])
-    gate -->|no| red(["red cross + test and<br/>coverage reports uploaded"])
-```
+![CI: each OS runs ./mvnw verify: Enforcer, compile, tests, then the JaCoCo coverage gate](diagrams/ci.excalidraw.svg)
 
 - The Maven wrapper downloads the Maven version in `.mvn/wrapper/maven-wrapper.properties`, so
   CI and your machine build with the same Maven. `setup-java` caches `~/.m2`, so libraries are
@@ -49,30 +27,7 @@ flowchart TD
 Pushing a tag that starts with `v` runs `.github/workflows/release.yml`. Each OS builds its own
 binaries, because jlink and jpackage can only build for the OS they run on.
 
-```mermaid
----
-config:
-  look: handDrawn
-  theme: neutral
----
-flowchart TD
-    tag(["git push origin v1.2.0"]) --> check{"tag looks like<br/>v1.2.0, first number ≥ 1?"}
-    check -->|no| stop(["stop with an error"])
-    check -->|yes| ver["VERSION = 1.2.0"]
-    ver --> build
-
-    subgraph build ["./mvnw -Pdist package, on each OS"]
-        jar["jar + its libraries<br/>→ target/libs"] --> jlink["jlink: a small Java runtime<br/>→ target/runtime"]
-        jlink --> jpackage["jpackage: runtime + app + libraries<br/>→ target/dist"]
-    end
-
-    jpackage --> l["Linux<br/>.tar.gz and .deb"]
-    jpackage --> w["Windows<br/>.zip"]
-    jpackage --> m["macOS<br/>.dmg"]
-    l & w & m --> up["upload each as a<br/>workflow artifact"]
-    up --> publish["publish job:<br/>create the release"]
-    publish --> rel(["GitHub Release<br/>with 4 files"])
-```
+![Release: the tag check, then ./mvnw -Pdist package on each OS, then the publish job](diagrams/release.excalidraw.svg)
 
 ### The `dist` profile, step by step
 
@@ -139,7 +94,7 @@ What checks the build and release, and how to check them yourself.
 | Tag format | `v<1 or more>.<n>.<n>`, checked before anything is built | `release.yml` |
 | Binaries | All three OS builds must succeed before `publish` runs | `release.yml` |
 | Workflow files | [actionlint](https://github.com/rhysd/actionlint) finds YAML, expression and shell mistakes | by hand, see below |
-| Diagrams | [mermaid-cli](https://github.com/mermaid-js/mermaid-cli) renders each diagram in these docs | by hand, see below |
+| Diagrams | Each SVG in `docs/diagrams` still holds its Excalidraw drawing, so it can be edited | by hand, see below |
 
 Checking the workflow files before pushing them:
 
@@ -148,12 +103,20 @@ podman run --rm -v "$PWD":/repo:Z,ro -w /repo docker.io/rhysd/actionlint:latest 
   .github/workflows/ci.yml .github/workflows/release.yml
 ```
 
-No output means no problems. Checking that a diagram renders, after copying it from between
-` ```mermaid ` and ` ``` ` into `diagram.mmd`:
+No output means no problems.
+
+The diagrams in these docs are [Excalidraw](https://excalidraw.com) drawings saved as SVG files in
+`docs/diagrams`. Each file is both the picture GitHub shows and the drawing itself. To change one:
+
+1. Open [excalidraw.com](https://excalidraw.com) and drag the `.excalidraw.svg` file onto the page.
+2. Edit it, then choose **Export image**, **SVG**, with **Embed scene** switched on.
+3. Save it over the old file with the same name.
+
+Without **Embed scene** the file is only a picture and can't be opened for editing again. This lists
+any diagram that lost its drawing, so no output means all of them are still editable:
 
 ```sh
-podman run --rm --userns=keep-id -v "$PWD":/data:Z docker.io/minlag/mermaid-cli:latest \
-  -i diagram.mmd -o diagram.png
+grep -L 'application/vnd.excalidraw+json' docs/diagrams/*.svg
 ```
 
 Checking a release build by hand, on the OS you are on:

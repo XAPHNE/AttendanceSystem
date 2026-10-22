@@ -16,52 +16,7 @@ been released: Flyway checks each one's checksum and refuses to start if one has
 
 ## Tables
 
-```mermaid
----
-config:
-  look: handDrawn
-  theme: neutral
----
-erDiagram
-    admin {
-        BIGINT id PK
-        VARCHAR username UK
-        VARCHAR password_hash "bcrypt"
-        VARCHAR user_role "Admin or Employee"
-    }
-    course {
-        INTEGER id PK
-        VARCHAR course UK "e.g. BCA"
-        VARCHAR description
-        VARCHAR degree
-    }
-    student {
-        BIGINT id PK
-        INTEGER studentNum UK
-        VARCHAR semester
-        VARCHAR course "course name"
-        VARCHAR firstName
-        VARCHAR lastName
-        ENUM gender "Male, Female, Other"
-        DATE birthDate
-        VARCHAR status
-        VARCHAR image "photo file name or empty"
-        VARCHAR card_id UK "NULL means no card"
-        DATE added_on
-    }
-    student_attendance {
-        BIGINT id PK
-        BIGINT student_id FK
-        INTEGER course_id FK
-        TIMESTAMP entry_time
-        TIMESTAMP exit_time
-        VARCHAR status "Present or Absent"
-    }
-
-    student ||--o{ student_attendance : "has"
-    course ||--o{ student_attendance : "for"
-    course ||..o{ student : "by name"
-```
+![The tables admin, course, student and student_attendance, and how they relate](diagrams/database.excalidraw.svg)
 
 - **admin**: the people who can log in. Only a bcrypt hash of the password is stored. An
   *Admin* can manage users; an *Employee* can't.
