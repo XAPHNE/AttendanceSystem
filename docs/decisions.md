@@ -78,6 +78,31 @@ JDK modules, and the libraries sit beside it on the module path.
 - A **Java 27 CI job** runs the build on the next JDK. It is allowed to fail, and works as an
   early warning before the next upgrade.
 
+## Card readers
+
+- **Keyboard mode.** Almost all USB RFID readers, and barcode or QR scanners too, act as a
+  keyboard: they type the card's ID and press Enter. So the Attendance screen has one text field
+  that reacts to Enter. That supports every such device with no drivers and no library, and it
+  can be tested by typing. Every scan goes through `AttendanceService.scan(cardId)`: an open entry
+  today means check out, otherwise check in.
+- **A photo, not a live camera.** The phone stands in for a reader through a small page the app
+  serves on the Wi-Fi. Browsers allow a live camera only on https pages, and https on a LAN
+  address needs a certificate the phone trusts. A photo upload
+  (`<input type="file" accept="image/*" capture>`) works over plain http, and the app decodes the
+  QR code from the photo with ZXing.
+- **Other readers.** A serial or Arduino reader, or a reader with its own SDK, would be one more
+  class that reads IDs and calls `AttendanceService.scan` on the UI thread, the same way
+  `PhoneScanServer` does. Nothing else changes.
+- **Security of the phone server.** It is plain http on the local network, so:
+  - it runs only while "Use phone as scanner" is ticked, and stops on untick, logout and exit
+  - every URL must start with a random 128-bit token (`SecureRandom`); anything else gets 404.
+    Switching it off and on makes a new token
+  - photos over 15 MB and typed IDs over 64 characters are refused
+  - it can only check students in and out, never read or change other data
+
+  Anyone on the same network who sees the pairing QR code could scan cards, so it is meant for a
+  trusted Wi-Fi.
+
 ## Known gap: database work on the UI thread
 
 Every database call runs on the JavaFX application thread, the same thread that draws the

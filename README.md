@@ -13,15 +13,20 @@ and log in.
 - **Dashboard** with totals and charts of present and absent students.
 - **Students**: add, edit, delete and search, with an optional photo.
 - **Courses**: add, edit and delete. A course that students still use can't be deleted.
-- **Attendance**: record entry and exit times.
+- **Attendance**: record entry and exit times by picking a student, or by scanning their card.
+- **Card scanning**: each student can have a card ID. An RFID reader, a barcode or QR scanner, or
+  plain typing fills the scan field; the first scan of the day checks the student in, the next one
+  checks them out. Each student's QR card can be saved as a PNG to print.
+- **Phone as scanner**: no reader at hand? Switch on "Use phone as scanner", scan the pairing QR
+  code with a phone on the same Wi-Fi, and photograph a student's QR card.
 - **User management** (Admin only): add, edit and delete users and set their role. Nobody can
   delete themselves, and the last Admin can't be removed or made an Employee.
 
 | Login | Students | Courses |
 |---|---|---|
 | ![Login](docs/screenshots/login.png) | ![Students](docs/screenshots/students.png) | ![Courses](docs/screenshots/courses.png) |
-| **Attendance** | **User management** | |
-| ![Attendance](docs/screenshots/attendance.png) | ![Users](docs/screenshots/users.png) | |
+| **Attendance** | **User management** | **Phone scanner** |
+| ![Attendance](docs/screenshots/attendance.png) | ![Users](docs/screenshots/users.png) | ![Phone scanner](docs/screenshots/phone-scanner.png) |
 
 ## Try it
 
@@ -57,6 +62,33 @@ three courses and a few days of attendance.
 | `admin` | `admin123` | Admin |
 | `employee` | `employee123` | Employee |
 
+### Scan a card in 30 seconds
+
+1. Log in as `admin` / `admin123` and open **Attendance**.
+2. The **Scan card** field already has focus. Type `DEMO-1001` and press Enter: "Asha Verma
+   checked in" appears and a new row shows up in the table. Every demo student has a card,
+   `DEMO-1001` to `DEMO-1006`.
+3. Wait a few seconds and scan `DEMO-1001` again to check her out.
+4. Optional: tick **Use phone as scanner**, scan the QR code with your phone (same Wi-Fi), and
+   type a card ID on the phone, or photograph a QR card saved with **Save card...** on the
+   Add Student screen.
+
+## Using an RFID reader
+
+Almost every USB RFID reader, and most barcode and QR scanners, work in *keyboard mode*: the
+computer sees them as a keyboard that types the card's number and presses Enter. So no driver or
+setup is needed:
+
+1. Plug the reader in.
+2. On **Add Student**, select a student, click the **Card ID** field and tap their card. The
+   reader types the ID; save the student.
+3. On **Attendance**, tap the card. The scan field has focus, so the reader's Enter checks the
+   student in or out.
+
+Without a reader, typing the ID and pressing Enter does exactly the same thing. A second scan of
+the same card within 5 seconds is ignored, so one tap doesn't check a student in and straight out
+again.
+
 ## Tech stack
 
 | Part | Choice |
@@ -65,6 +97,8 @@ three courses and a few days of attendance.
 | UI | JavaFX 27, FXML, MaterialFX, Ikonli icons, the Inter font |
 | Database | H2 (embedded), schema managed by Flyway migrations |
 | Passwords | bcrypt (jbcrypt) |
+| QR cards | ZXing core |
+| Phone scanner | The JDK's built-in HTTP server (`jdk.httpserver`) |
 | Build | Maven (wrapper included), jlink and jpackage for installers |
 | Tests | JUnit 6, AssertJ, TestFX, JaCoCo coverage gate |
 | CI | GitHub Actions on Linux, Windows and macOS, Dependabot |
@@ -75,7 +109,7 @@ three courses and a few days of attendance.
   suite covers
 - [Database](docs/database.md): the tables, an ER diagram and the migrations
 - [Design decisions](docs/decisions.md): why H2 and not MySQL (and how to switch), why Flyway,
-  DAOs and bcrypt, the UI design, and the known gaps
+  DAOs and bcrypt, card readers and the phone scanner, the UI design, and the known gaps
 
 ## Where the data is stored
 
@@ -105,8 +139,8 @@ Run `./mvnw verify` (Windows: `mvnw.cmd verify`).
 - The UI tests open the real app and click through it, so they need a display. On a Linux machine
   without one (a server or CI runner) they are skipped; run `xvfb-run ./mvnw verify` to include
   them. `./mvnw verify -DexcludedGroups=ui` skips them anywhere.
-- The build fails if the tests cover less than 90% of the lines in the `dao` and `service`
-  packages. The coverage report is at `target/site/jacoco/index.html`.
+- The build fails if the tests cover less than 90% of the lines in the `dao`, `service` and
+  `scanner` packages. The coverage report is at `target/site/jacoco/index.html`.
 - GitHub Actions runs the same build with the UI tests on Linux, Windows and macOS for every push
   and pull request (`.github/workflows/ci.yml`). A separate job tries the newest Java (27) as an
   early warning; it is allowed to fail.
@@ -128,8 +162,8 @@ To build an installer instead, add `-Ddist.type=` followed by the type:
 
 How it works: jlink builds a Java runtime that holds only the JDK modules the app needs. jpackage
 puts that runtime, the app and its libraries in one folder or installer. H2, Flyway and jbcrypt
-aren't Java modules, and jlink can't put those into a runtime, so they sit next to it in
-`lib/app/mods`.
+and ZXing aren't Java modules, and jlink can't put those into a runtime, so they sit next to it
+in `lib/app/mods`.
 
 ## Publishing a release
 

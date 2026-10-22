@@ -9,8 +9,9 @@ to be installed: on every start [Flyway](https://flywaydb.org) runs any migratio
 |---|---|
 | `V1__schema.sql` | Creates the four tables below |
 | `V2__demo_data.sql` | Adds two logins, three courses and a few fictional students with attendance |
+| `V3__student_card_id.sql` | Adds `student.card_id VARCHAR(64)`, unique and nullable, and gives demo students 1001–1006 the cards `DEMO-1001` to `DEMO-1006` |
 
-To change the schema, add a new `V3__what_it_does.sql`. Never edit a migration that has already
+To change the schema, add a new `V4__what_it_does.sql`. Never edit a migration that has already
 been released: Flyway checks each one's checksum and refuses to start if one has changed.
 
 ## Tables
@@ -40,6 +41,7 @@ erDiagram
         DATE birthDate
         VARCHAR status
         VARCHAR image "photo file name or empty"
+        VARCHAR card_id UK "NULL means no card"
         DATE added_on
     }
     student_attendance {
@@ -60,7 +62,8 @@ erDiagram
   *Admin* can manage users; an *Employee* can't.
 - **course**: the courses a student can be enrolled in.
 - **student**: one row per student. `image` holds only a file name. The photo itself is copied
-  into `images/` in the data folder, so the database works on any machine.
+  into `images/` in the data folder, so the database works on any machine. `card_id` is what a
+  card reader types when the student's card is scanned; two students can't share one.
 - **student_attendance**: one row per entry/exit. Deleting a student deletes their attendance
   (`ON DELETE CASCADE`). A course that has attendance rows can't be deleted.
 
