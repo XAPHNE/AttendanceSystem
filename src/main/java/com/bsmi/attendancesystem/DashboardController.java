@@ -1,11 +1,13 @@
 package com.bsmi.attendancesystem;
 
+import javafx.application.Platform;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 import javafx.collections.transformation.SortedList;
 import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
@@ -17,23 +19,55 @@ import javafx.scene.Parent;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.image.PixelFormat;
+import javafx.scene.image.WritableImage;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.Scene;
 import javafx.scene.layout.AnchorPane;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
-import org.mindrot.jbcrypt.BCrypt;
+import javafx.stage.Window;
+import javafx.stage.WindowEvent;
+import javafx.util.StringConverter;
+import com.bsmi.attendancesystem.dao.AttendanceDao;
+import com.bsmi.attendancesystem.dao.CourseDao;
+import com.bsmi.attendancesystem.dao.DataAccessException;
+import com.bsmi.attendancesystem.dao.Database;
+import com.bsmi.attendancesystem.dao.StudentDao;
+import com.bsmi.attendancesystem.dao.UserDao;
+import com.bsmi.attendancesystem.scanner.NetworkAddresses;
+import com.bsmi.attendancesystem.scanner.PhoneScanServer;
+import com.bsmi.attendancesystem.scanner.ScanReply;
+import com.bsmi.attendancesystem.service.AttendanceService;
+import com.bsmi.attendancesystem.service.CourseService;
+import com.bsmi.attendancesystem.service.ImageStore;
+import com.bsmi.attendancesystem.service.NotSelectedException;
+import com.bsmi.attendancesystem.service.StudentCards;
+import com.bsmi.attendancesystem.service.StudentService;
+import com.bsmi.attendancesystem.service.UserForm;
+import com.bsmi.attendancesystem.service.UserService;
+import com.bsmi.attendancesystem.service.ValidationException;
 
 import java.io.File;
+import java.io.IOException;
+import java.awt.image.BufferedImage;
+import java.io.UncheckedIOException;
+import java.net.Inet4Address;
+import java.net.InetSocketAddress;
 import java.net.URL;
-import java.sql.*;
-import java.text.SimpleDateFormat;
+import java.nio.file.Path;
+import java.time.LocalDate;
 import java.util.*;
-import java.util.Date;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.stream.Stream;
 
 public class DashboardController implements Initializable {
+    private static final String ACTIVE_NAV_STYLE = "nav-btn-active";
+
     @FXML
     private Button addStudent_btn;
 
@@ -93,6 +127,9 @@ public class DashboardController implements Initializable {
 
     @FXML
     private TextField addStudent_studentNum;
+
+    @FXML
+    private TextField addStudent_cardId;
 
     @FXML
     private TableView<StudentData> addStudent_tableView;
@@ -212,6 +249,27 @@ public class DashboardController implements Initializable {
     private TextField studentAttendance_search;
 
     @FXML
+    private TextField studentAttendance_scanCard;
+
+    @FXML
+    private Label studentAttendance_scanResult;
+
+    @FXML
+    private CheckBox studentAttendance_phoneScanner;
+
+    @FXML
+    private ImageView studentAttendance_phoneQr;
+
+    @FXML
+    private Label studentAttendance_phoneHint;
+
+    @FXML
+    private ComboBox<Inet4Address> studentAttendance_phoneNetwork;
+
+    @FXML
+    private TextField studentAttendance_phoneAddress;
+
+    @FXML
     private ComboBox<String> studentAttendance_semester;
 
     @FXML
@@ -273,24 +331,21 @@ public class DashboardController implements Initializable {
 
     private double xOffset = 0;
     private double yOffset = 0;
-    private Connection connect;
-    private PreparedStatement prepare;
-    private Statement statement;
-    private ResultSet result;
     private Image image;
+    /** The stored photo name of the student in the Add Student form, empty when none is chosen. */
+    private String chosenPhotoName = "";
     private final String[] semesterList = {"1st Sem", "2nd Sem", "3rd Sem", "4th Sem", "5th Sem", "6th Sem", "7th Sem", "8th Sem", "Graduated"};
     private final String[] genderList = {"Male", "Female", "Other"};
     private final String[] statusList = {"Enrolled", "Graduated", "Dropped Out"};
-    private final String[] userRoleList = {"Admin", "Employee"};
 
     public void roleChecker() {
-        String userRole = GetData.userRole;
-        userManagement_btn.setVisible(Objects.equals(userRole, "Admin"));
+        userManagement_btn.setVisible(UserSession.isAdmin());
     }
 
 //    START CODE FOR MINIMIZE BUTTON
     @FXML
     public void closeBtnOnAction() {
+        stopPhoneScanner();
         System.exit(0);
     }
 //    END CODE FOR MINIMIZE BUTTON
@@ -305,13 +360,19 @@ public class DashboardController implements Initializable {
 
 //    START CODE FOR USERNAME DISPLAY
     public void displayUsername () {
-        username.setText(GetData.username);
+        username.setText(UserSession.current().getUserName());
     }
 //    END CODE FOR USERNAME DISPLAY
 
 //    START CODE FOR DEFAULT NAVIGATION
     public void defaultNav () {
-        home_btn.setStyle("-fx-background-color: linear-gradient(to bottom right, #3f82ae, #26bf7d);");
+        highlightNavButton(home_btn);
+    }
+
+    private void highlightNavButton(Button openScreenButton) {
+        List.of(home_btn, addStudent_btn, availableCourses_btn, studentAttendance_btn, userManagement_btn)
+                .forEach(navButton -> navButton.getStyleClass().remove(ACTIVE_NAV_STYLE));
+        openScreenButton.getStyleClass().add(ACTIVE_NAV_STYLE);
     }
 //    END CODE FOR DEFAULT NAVIGATION
 
@@ -324,11 +385,7 @@ public class DashboardController implements Initializable {
             studentAttendance_form.setVisible(false);
             userManagement_form.setVisible(false);
 
-            home_btn.setStyle("-fx-background-color: linear-gradient(to bottom right, #3f82ae, #26bf7d);");
-            addStudent_btn.setStyle("-fx-background-color: transparent");
-            availableCourses_btn.setStyle("-fx-background-color: transparent");
-            studentAttendance_btn.setStyle("-fx-background-color: transparent");
-            userManagement_btn.setStyle("-fx-background-color: transparent");
+            highlightNavButton(home_btn);
 
             homeDisplayTotalEnrolledStudents();
             homeDisplayPresentToday();
@@ -344,11 +401,7 @@ public class DashboardController implements Initializable {
             studentAttendance_form.setVisible(false);
             userManagement_form.setVisible(false);
 
-            home_btn.setStyle("-fx-background-color: transparent");
-            addStudent_btn.setStyle("-fx-background-color: linear-gradient(to bottom right, #3f82ae, #26bf7d);");
-            availableCourses_btn.setStyle("-fx-background-color: transparent");
-            studentAttendance_btn.setStyle("-fx-background-color: transparent");
-            userManagement_btn.setStyle("-fx-background-color: transparent");
+            highlightNavButton(addStudent_btn);
             //  TO DISPLAY DATA FROM STUDENT TABLE WHEN ADD STUDENT BUTTON IS CLICKED
             addStudentShowListData();
             addStudent_semesterList();
@@ -363,11 +416,7 @@ public class DashboardController implements Initializable {
             studentAttendance_form.setVisible(false);
             userManagement_form.setVisible(false);
 
-            home_btn.setStyle("-fx-background-color: transparent");
-            addStudent_btn.setStyle("-fx-background-color: transparent");
-            availableCourses_btn.setStyle("-fx-background-color: linear-gradient(to bottom right, #3f82ae, #26bf7d);");
-            studentAttendance_btn.setStyle("-fx-background-color: transparent");
-            userManagement_btn.setStyle("-fx-background-color: transparent");
+            highlightNavButton(availableCourses_btn);
 
             availableCourseShowListData();
         } else if (event.getSource() == studentAttendance_btn) {
@@ -377,17 +426,15 @@ public class DashboardController implements Initializable {
             studentAttendance_form.setVisible(true);
             userManagement_form.setVisible(false);
 
-            home_btn.setStyle("-fx-background-color: transparent");
-            addStudent_btn.setStyle("-fx-background-color: transparent");
-            availableCourses_btn.setStyle("-fx-background-color: transparent");
-            studentAttendance_btn.setStyle("-fx-background-color: linear-gradient(to bottom right, #3f82ae, #26bf7d);");
-            userManagement_btn.setStyle("-fx-background-color: transparent");
+            highlightNavButton(studentAttendance_btn);
 
             studentAttendanceShowListData();
             studentAttendanceSemesterList();
             studentAttendanceCourseList();
             studentAttendanceStudentNumList();
             studentAttendanceSearchOnKeyTyped();
+            // A card reader types into whatever has focus, so the scan field gets it
+            Platform.runLater(studentAttendance_scanCard::requestFocus);
         } else if (event.getSource() == userManagement_btn) {
             home_form.setVisible(false);
             addStudent_form.setVisible(false);
@@ -395,11 +442,7 @@ public class DashboardController implements Initializable {
             studentAttendance_form.setVisible(false);
             userManagement_form.setVisible(true);
 
-            home_btn.setStyle("-fx-background-color: transparent");
-            addStudent_btn.setStyle("-fx-background-color: transparent");
-            availableCourses_btn.setStyle("-fx-background-color: transparent");
-            studentAttendance_btn.setStyle("-fx-background-color: transparent");
-            userManagement_btn.setStyle("-fx-background-color: linear-gradient(to bottom right, #3f82ae, #26bf7d);");
+            highlightNavButton(userManagement_btn);
 
             userManagementShowListData();
             userManagement_userRoleList();
@@ -410,39 +453,46 @@ public class DashboardController implements Initializable {
 //    START CODE FOR LOGOUT BUTTON
     @FXML
     public void logoutBtnOnAction () {
+        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+        alert.setTitle("Confirmation Message");
+        alert.setHeaderText(null);
+        alert.setContentText("Are you sure you want to logout?");
+        if (alert.showAndWait().filter(ButtonType.OK::equals).isEmpty()) {
+            return;
+        }
+        UserSession.end();
+        logout_btn.getScene().getWindow().hide();
         try {
-            Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
-            alert.setTitle("Confirmation Message");
-            alert.setHeaderText(null);
-            alert.setContentText("Are you sure you want to logout?");
-            Optional<javafx.scene.control.ButtonType> option = alert.showAndWait();
-            if (option.get().equals(ButtonType.OK)) {
-                logout_btn.getScene().getWindow().hide();
-                Parent root = FXMLLoader.load(getClass().getResource("fxml/login-view.fxml"));
-                Stage stage = new Stage();
-                Scene scene = new Scene(root);
-                stage.setTitle("Login | Student Management System");
-                // Make the window draggable
-                root.setOnMousePressed((MouseEvent event) -> {
-                    xOffset = event.getSceneX();
-                    yOffset = event.getSceneY();
-                });
-                root.setOnMouseDragged((MouseEvent event) -> {
-                    stage.setX(event.getScreenX() - xOffset);
-                    stage.setY(event.getScreenY() - yOffset);
-                    stage.setOpacity(.6);
-                });
+            openLoginScreen();
+        } catch (IOException e) {
+            // A broken FXML file is a packaging bug, not something the user can fix
+            throw new UncheckedIOException("Could not load the login screen", e);
+        }
+    }
 
-                // Reset opacity on mouse release
-                root.setOnMouseReleased((MouseEvent event) -> {
-                    stage.setOpacity(1);
-                });
-                stage.initStyle(StageStyle.TRANSPARENT);
-                stage.setScene(scene);
-                stage.show();
-            }else return;
+    private void openLoginScreen() throws IOException {
+        Parent root = FXMLLoader.load(getClass().getResource("fxml/login-view.fxml"));
+        Stage stage = new Stage();
+        Scene scene = new Scene(root);
+        stage.setTitle("Login | Student Management System");
+        // Make the window draggable
+        root.setOnMousePressed((MouseEvent event) -> {
+            xOffset = event.getSceneX();
+            yOffset = event.getSceneY();
+        });
+        root.setOnMouseDragged((MouseEvent event) -> {
+            stage.setX(event.getScreenX() - xOffset);
+            stage.setY(event.getScreenY() - yOffset);
+            stage.setOpacity(.6);
+        });
 
-        }catch (Exception e) {e.printStackTrace();}
+        // Reset opacity on mouse release
+        root.setOnMouseReleased((MouseEvent event) -> {
+            stage.setOpacity(1);
+        });
+        stage.initStyle(StageStyle.TRANSPARENT);
+        stage.setScene(scene);
+        stage.show();
     }
 //    END CODE FOR LOGOUT BUTTON
 
@@ -473,175 +523,63 @@ public class DashboardController implements Initializable {
     }
     
 //    START CODE FOR HOME FORM
+    private static final int CHART_DAYS = 5;
+
+    private final AttendanceService attendanceService =
+            new AttendanceService(
+                    new AttendanceDao(Database.fromCurrentSettings()),
+                    new StudentDao(Database.fromCurrentSettings()));
+
     public void homeDisplayTotalEnrolledStudents() {
-        String query = "SELECT COUNT(DISTINCT studentNum) AS enrolledCount FROM student WHERE status = 'Enrolled'";
-        connect = DatabaseConnection.connectDb();
-        try {
-            int countEnrolled = 0;
-            prepare = connect.prepareStatement(query);
-            result = prepare.executeQuery();
-            if (result.next()){
-                countEnrolled = result.getInt("enrolledCount");
-            }
-            home_totalEnrolled.setText(String.valueOf(countEnrolled));
-            result.close();
-            prepare.close();
-            connect.close();
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
+        showTodaySummary(summary -> home_totalEnrolled.setText(String.valueOf(summary.enrolled())));
     }
     public void homeDisplayPresentToday() {
-        // Get the current date as a string in the format "yyyy-MM-dd"
-        String absentToday = home_totalEnrolled.getText();
-        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
-        String currentDate = dateFormat.format(new Date());
-        // Mysql query
-        // String query = "SELECT COUNT(DISTINCT student_id) AS presentCount FROM student_attendance WHERE status = 'Present' AND DATE(entry_time) = ?";
-        // H2 database query
-        String query = "SELECT COUNT(DISTINCT student_id) AS presentCount FROM student_attendance WHERE status = 'Present' AND CAST(entry_time AS DATE) = ?";
-
-        connect = DatabaseConnection.connectDb();
-        try {
-            int countPresentToday = 0;
-            prepare = connect.prepareStatement(query);
-            prepare.setString(1, currentDate); // Bind the current date to the query parameter
-            result = prepare.executeQuery();
-            if (result.next()) {
-                countPresentToday = result.getInt("presentCount");
-            }
-            home_presentToday.setText(String.valueOf(countPresentToday));
-            result.close();
-            prepare.close();
-            connect.close();
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
+        showTodaySummary(summary -> home_presentToday.setText(String.valueOf(summary.present())));
     }
     public void homeDisplayAbsentToday() {
-        // Get the total enrolled students from the home_totalEnrolled label
-        int totalEnrolled = Integer.parseInt(home_totalEnrolled.getText());
-
-        // Get the students present today from the home_presentToday label
-        int studentsPresentToday = Integer.parseInt(home_presentToday.getText());
-
-        // Calculate the number of absent students today
-        int studentsAbsentToday = totalEnrolled - studentsPresentToday;
-
-        // Set the text of the home_absentToday label to display the number of absent students
-        home_absentToday.setText(String.valueOf(studentsAbsentToday));
+        showTodaySummary(summary -> home_absentToday.setText(String.valueOf(summary.absent())));
+    }
+    private void showTodaySummary(java.util.function.Consumer<AttendanceService.DaySummary> show) {
+        try {
+            show.accept(attendanceService.summarizeToday());
+        } catch (DataAccessException e) {
+            showDatabaseError(e);
+        }
     }
     public void homeDisplayTotalEnrolledChart () {
-        home_totalEnrolledChart.getData().clear();
-        // MySQL query
-        // String query = "SELECT added_on, COUNT(DISTINCT id) FROM student WHERE status = 'Enrolled' GROUP BY added_on ORDER BY TIMESTAMP(added_on) ASC LIMIT 5";
-        // H2 database query
-        String query = "SELECT added_on, COUNT(DISTINCT id) FROM student WHERE status = 'Enrolled' GROUP BY added_on ORDER BY CAST(added_on AS TIMESTAMP) ASC LIMIT 5";
-        connect = DatabaseConnection.connectDb();
-        try {
-            XYChart.Series chart = new XYChart.Series();
-            prepare = connect.prepareStatement(query);
-            result = prepare.executeQuery();
-            while (result.next()){
-                chart.getData().add(new XYChart.Data(result.getString(1), result.getInt(2)));
-            }
-            home_totalEnrolledChart.getData().add(chart);
-            result.close();
-            prepare.close();
-            connect.close();
-        } catch (Exception e) {e.printStackTrace();}
+        showChart(home_totalEnrolledChart, () -> attendanceService.countEnrolledAddedPerDay(CHART_DAYS));
     }
     public void homeDisplayPresentTodayChart() {
-        // Clear any existing data from the chart
-        home_presentTodayChart.getData().clear();
-
-        // Define the SQL query to retrieve data for the chart
-        // MySQL query
-        // String sql = "SELECT DATE(entry_time) AS date, COUNT(DISTINCT id) FROM student_attendance WHERE DATE(entry_time) = CURDATE() GROUP BY DATE(entry_time)";
-        // H2 database query
-        String sql = "SELECT CAST(entry_time AS DATE) AS date, COUNT(DISTINCT id) FROM student_attendance WHERE CAST(entry_time AS DATE) = CURRENT_DATE GROUP BY CAST(entry_time AS DATE)";
-
-        // Establish a database connection (replace with your connection code)
-        connect = DatabaseConnection.connectDb();
-
-        try {
-            // Create a new XYChart.Series for the line chart
-            XYChart.Series<String, Integer> series = new XYChart.Series<>();
-
-            // Prepare the SQL statement
-            prepare = connect.prepareStatement(sql);
-
-            // Execute the query and retrieve the result set
-            result = prepare.executeQuery();
-
-            // Iterate through the result set and add data to the series
-            while (result.next()) {
-                String date = result.getString("date");
-                int count = result.getInt(2);
-                series.getData().add(new XYChart.Data<>(date, count));
-            }
-
-            // Add the series to the line chart
-            home_presentTodayChart.getData().add(series);
-            result.close();
-            prepare.close();
-            connect.close();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        showChart(home_presentTodayChart, () -> attendanceService.countPresentPerDay(CHART_DAYS));
     }
     public void homeDisplayAbsentTodayChart() {
-        // Clear any existing data from the chart
-        home_absentTodayChart.getData().clear();
-
-        // Get the total enrolled students from the home_totalEnrolled label
-        int totalEnrolled = Integer.parseInt(home_totalEnrolled.getText());
-
-        // Get the students present today from the home_presentTodayChart line chart
-        LineChart.Series<String, Integer> presentSeries = (LineChart.Series<String, Integer>) home_presentTodayChart.getData().get(0);
-
-        // Create a new XYChart.Series for the absent students
-        XYChart.Series<String, Integer> absentSeries = new XYChart.Series<>();
-
-        // Iterate through the data in the presentSeries and calculate absent students
-        for (XYChart.Data<String, Integer> data : presentSeries.getData()) {
-            String date = data.getXValue();
-            int presentCount = data.getYValue();
-            int absentCount = totalEnrolled - presentCount;
-            absentSeries.getData().add(new XYChart.Data<>(date, absentCount));
+        showChart(home_absentTodayChart, () -> attendanceService.countAbsentPerDay(CHART_DAYS));
+    }
+    @SuppressWarnings({"rawtypes", "unchecked"}) // the FXML gives the bar chart wildcard types
+    private void showChart(XYChart chart, java.util.function.Supplier<Map<LocalDate, Integer>> countPerDay) {
+        chart.getData().clear();
+        try {
+            XYChart.Series<String, Integer> series = new XYChart.Series<>();
+            countPerDay.get().forEach((day, count) -> series.getData().add(new XYChart.Data<>(day.toString(), count)));
+            chart.getData().add(series);
+        } catch (DataAccessException e) {
+            showDatabaseError(e);
         }
-
-        // Add the absentSeries to the home_absentTodayChart line chart
-        home_absentTodayChart.getData().add(absentSeries);
     }
 //    END CODE FOR HOME FORM
 
 //    START CODE FOR ADD STUDENT FORM
+    private final StudentService studentService =
+            new StudentService(new StudentDao(Database.fromCurrentSettings()));
+    private final ImageStore imageStore = new ImageStore(AppPaths.dataDirectory().resolve("images"));
+
     public ObservableList<StudentData> addStudentListData () {
-        ObservableList<StudentData> listStudents = FXCollections.observableArrayList();
-        String sql = "SELECT * FROM student";
-        connect = DatabaseConnection.connectDb();
         try {
-            StudentData studentD;
-            prepare = connect.prepareStatement(sql);
-            result = prepare.executeQuery();
-            while (result.next()) {
-                studentD = new StudentData(result.getInt("studentNum"),
-                        result.getString("semester"),
-                        result.getString("course"),
-                        result.getString("firstName"),
-                        result.getString("lastName"),
-                        result.getString("gender"),
-                        result.getDate("birthDate"),
-                        result.getString("status"),
-                        result.getString("image"));
-                listStudents.add(studentD);
-            }
-            result.close();
-            prepare.close();
-            connect.close();
-        }catch (Exception e) {e.printStackTrace();}
-        return listStudents;
+            return FXCollections.observableArrayList(studentService.listAll());
+        } catch (DataAccessException e) {
+            showDatabaseError(e);
+            return FXCollections.observableArrayList();
+        }
     }
     private ObservableList <StudentData> addStudentListD;
     public void addStudentShowListData () {
@@ -674,12 +612,10 @@ public class DashboardController implements Initializable {
         addStudent_gender.getSelectionModel().select(studentD.getGender());
         addStudent_birthDate.setValue(studentD.getBirthDate().toLocalDate());
         addStudent_status.getSelectionModel().select(studentD.getStatus());
+        addStudent_cardId.setText(studentD.getCardId() == null ? "" : studentD.getCardId());
 
 
-        String uri = "file:" + studentD.getImage();
-        image = new Image(uri, 120, 170, false, true);
-        addStudent_imageView.setImage(image);
-        GetData.path = studentD.getImage();
+        showPhoto(studentD.getImage());
     }
     @FXML
     public void addStudent_semesterList() {
@@ -710,198 +646,129 @@ public class DashboardController implements Initializable {
     }
     @FXML
     public void setAddStudent_courseList () {
-        String listCourse = "SELECT * FROM course";
-        connect = DatabaseConnection.connectDb();
         try {
-            ObservableList listC = FXCollections.observableArrayList();
-            prepare = connect.prepareStatement(listCourse);
-            result = prepare.executeQuery();
-            while (result.next()){
-                listC.add(result.getString("course"));
-            }
-            addStudent_course.setItems(listC);
-            result.close();
-            prepare.close();
-            connect.close();
-        } catch (Exception e) {e.printStackTrace();}
+            addStudent_course.setItems(FXCollections.observableArrayList(
+                    courseService.listAll().stream().map(CourseData::getCourse).toList()));
+        } catch (DataAccessException e) {
+            showDatabaseError(e);
+        }
     }
     @FXML
     public void addStudent_insertBtn_onAction(){
         FileChooser open = new FileChooser();
         open.setTitle("Select Image File");
-        open.getExtensionFilters().add(new FileChooser.ExtensionFilter("Image File", "*jpg", "*png"));
+        open.getExtensionFilters().add(new FileChooser.ExtensionFilter("Image File", "*.png", "*.jpg", "*.jpeg"));
         File file = open.showOpenDialog(main_form.getScene().getWindow());
-        if (file != null) {
-            image = new Image(file.toURI().toString(), 120, 170, false, true);
-            addStudent_imageView.setImage(image);
-            GetData.path = file.getAbsolutePath();
+        if (file == null) {
+            return;
+        }
+        try {
+            showPhoto(imageStore.save(file.toPath()));
+        } catch (ValidationException | UncheckedIOException e) {
+            showAlert(Alert.AlertType.ERROR, "Error Message", e.getMessage());
         }
     }
     @FXML
-    public void addStudent_addBtn_onAction(){
-        String insertData = "INSERT INTO student "
-                + "(studentNum, semester, course, firstName, lastName, gender, birthDate, status, image, added_on) "
-                + "VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-        connect = DatabaseConnection.connectDb();
+    public void addStudent_saveCardBtn_onAction() {
         try {
-            Alert alert;
-            if (addStudent_studentNum.getText().isEmpty()
-                    || addStudent_semester.getSelectionModel().getSelectedItem() == null
-                    || addStudent_course.getSelectionModel().getSelectedItem() == null
-                    || addStudent_firstName.getText().isEmpty()
-                    || addStudent_lastName.getText().isEmpty()
-                    || addStudent_gender.getSelectionModel().getSelectedItem() == null
-                    || addStudent_birthDate.getValue() == null
-                    || addStudent_status.getSelectionModel().getSelectedItem() == null
-                    || GetData.path == null || GetData.path == "") {
-                alert = new Alert(Alert.AlertType.ERROR);
-                alert.setTitle("Error Message");
-                alert.setHeaderText(null);
-                alert.setContentText("Fields cannot be empty");
-                alert.showAndWait();
-            } else {
-                // CHECK IF THE STUDENT NUMBER ALREADY EXISTS
-                String checkData = "SELECT studentNum FROM student WHERE studentNum = '" + addStudent_studentNum.getText() + "'";
-                statement = connect.createStatement();
-                result = statement.executeQuery(checkData);
-                if (result.next()) {
-                    alert = new Alert(Alert.AlertType.ERROR);
-                    alert.setTitle("Error Message");
-                    alert.setHeaderText(null);
-                    alert.setContentText("Student #" + addStudent_studentNum.getText() + " already exist!");
-                    alert.showAndWait();
-                } else {
-                    prepare = connect.prepareStatement(insertData);
-                    prepare.setString(1, addStudent_studentNum.getText());
-                    prepare.setString(2, (String) addStudent_semester.getSelectionModel().getSelectedItem());
-                    prepare.setString(3, (String) addStudent_course.getSelectionModel().getSelectedItem());
-                    prepare.setString(4, addStudent_firstName.getText());
-                    prepare.setString(5, addStudent_lastName.getText());
-                    prepare.setString(6, (String) addStudent_gender.getSelectionModel().getSelectedItem());
-                    prepare.setString(7, String.valueOf(addStudent_birthDate.getValue()));
-                    prepare.setString(8, (String) addStudent_status.getSelectionModel().getSelectedItem());
-                    String uri = GetData.path;
-                    uri = uri.replace("\\", "\\\\");
-                    prepare.setString(9, uri);
-                    Date date = new Date();
-                    java.sql.Date sqlDate = new java.sql.Date(date.getTime());
-                    prepare.setString(10, String.valueOf(sqlDate));
-                    prepare.executeUpdate();
-                    alert = new Alert(Alert.AlertType.INFORMATION);
-                    alert.setTitle("Information Message");
-                    alert.setHeaderText(null);
-                    alert.setContentText("Successfully Added!");
-                    alert.showAndWait();
-                    //  TO LOAD THE UPDATED TABLE AFTER OPERATION
-                    addStudentShowListData();
-                    // TO CLEAR THE FIELDS
-                    addStudent_clearBtn_onAction();
-                }
-                prepare.close();
-                result.close();
-                statement.close();
+            StudentData student = addStudent_tableView.getSelectionModel().getSelectedItem();
+            if (student == null) {
+                throw new NotSelectedException("student");
             }
-            connect.close();
-        } catch (Exception e) {e.printStackTrace();}
+            String name = student.getFirstName() + " " + student.getLastName();
+            if (student.getCardId() == null) {
+                if (!confirmed(name + " has no card yet. Give them a new card ID?")) {
+                    return;
+                }
+                student = studentService.issueCard(student);
+                addStudentShowListData();
+                addStudent_cardId.setText(student.getCardId());
+            }
+            FileChooser save = new FileChooser();
+            save.setTitle("Save Student Card");
+            save.setInitialFileName("card-" + student.getStudentNum() + ".png");
+            save.getExtensionFilters().add(new FileChooser.ExtensionFilter("PNG image", "*.png"));
+            File file = save.showSaveDialog(main_form.getScene().getWindow());
+            if (file == null) {
+                return;
+            }
+            Path saved = StudentCards.withPngExtension(file.toPath());
+            StudentCards.savePng(student, saved);
+            showAlert(Alert.AlertType.INFORMATION, "Information Message",
+                    "Saved the card for " + name + " to " + saved);
+        } catch (ValidationException | UncheckedIOException e) {
+            showAlert(Alert.AlertType.ERROR, "Error Message", e.getMessage());
+        } catch (DataAccessException e) {
+            showDatabaseError(e);
+        }
+    }
+    private void showPhoto(String storedName) {
+        image = imageStore.find(storedName)
+                .map(photo -> new Image(photo.toUri().toString(), 120, 170, false, true))
+                .orElse(null);
+        addStudent_imageView.setImage(image);
+        chosenPhotoName = storedName;
+    }
+    private StudentData addStudentForm() {
+        LocalDate birthDate = addStudent_birthDate.getValue();
+        return new StudentData(studentService.parseStudentNumber(addStudent_studentNum.getText()),
+                addStudent_semester.getSelectionModel().getSelectedItem(),
+                addStudent_course.getSelectionModel().getSelectedItem(),
+                addStudent_firstName.getText(),
+                addStudent_lastName.getText(),
+                addStudent_gender.getSelectionModel().getSelectedItem(),
+                birthDate == null ? null : java.sql.Date.valueOf(birthDate),
+                addStudent_status.getSelectionModel().getSelectedItem(),
+                chosenPhotoName,
+                addStudent_cardId.getText());
+    }
+    @FXML
+    public void addStudent_addBtn_onAction(){
+        try {
+            studentService.add(addStudentForm());
+            addStudentChanged("Successfully Added!");
+        } catch (ValidationException e) {
+            showAlert(Alert.AlertType.ERROR, "Error Message", e.getMessage());
+        } catch (DataAccessException e) {
+            showDatabaseError(e);
+        }
     }
     @FXML
     public void addStudent_updateBtn_onAction () {
-        String uri = GetData.path;
-        uri = uri.replace("\\", "\\\\");
-        String updateData = "UPDATE student SET "
-                + "semester = '" + addStudent_semester.getSelectionModel().getSelectedItem()
-                + "', course = '" + addStudent_course.getSelectionModel().getSelectedItem()
-                + "', firstName = '" + addStudent_firstName.getText()
-                + "', lastName = '" + addStudent_lastName.getText()
-                + "', gender = '" + addStudent_gender.getSelectionModel().getSelectedItem()
-                + "', birthDate = '" + addStudent_birthDate.getValue()
-                + "', status = '" + addStudent_status.getSelectionModel().getSelectedItem()
-                + "', image = '" + uri + "' WHERE studentNum = '"
-                + addStudent_studentNum.getText() + "'";
-        connect = DatabaseConnection.connectDb();
         try {
-            Alert alert;
-            if (addStudent_studentNum.getText().isEmpty()
-                    || addStudent_semester.getSelectionModel().getSelectedItem() == null
-                    || addStudent_course.getSelectionModel().getSelectedItem() == null
-                    || addStudent_firstName.getText().isEmpty()
-                    || addStudent_lastName.getText().isEmpty()
-                    || addStudent_gender.getSelectionModel().getSelectedItem() == null
-                    || addStudent_birthDate.getValue() == null
-                    || addStudent_status.getSelectionModel().getSelectedItem() == null
-                    || GetData.path == null || GetData.path == "") {
-                alert = new Alert(Alert.AlertType.ERROR);
-                alert.setTitle("Error Message");
-                alert.setHeaderText(null);
-                alert.setContentText("Fields cannot be empty");
-                alert.showAndWait();
-            } else {
-                alert = new Alert(Alert.AlertType.CONFIRMATION);
-                alert.setTitle("Confirmation Message");
-                alert.setHeaderText(null);
-                alert.setContentText("Are you sure you want to update Student #: " + addStudent_studentNum.getText() + "?");
-                Optional<ButtonType> option = alert.showAndWait();
-                if (option.get().equals(ButtonType.OK)){
-                    statement = connect.createStatement();
-                    statement.executeUpdate(updateData);
-                    alert = new Alert(Alert.AlertType.INFORMATION);
-                    alert.setTitle("Information Message");
-                    alert.setHeaderText(null);
-                    alert.setContentText("Successfully Updated!");
-                    alert.showAndWait();
-                    //  TO LOAD THE UPDATED TABLE AFTER OPERATION
-                    addStudentShowListData();
-                    // TO CLEAR THE FIELDS
-                    addStudent_clearBtn_onAction();
-                } else return;
-                statement.close();
+            StudentData student = addStudentForm();
+            studentService.requireValid(student);
+            if (!confirmed("Are you sure you want to update Student #: " + student.getStudentNum() + "?")) {
+                return;
             }
-            connect.close();
-        } catch (Exception e) {e.printStackTrace();}
+            studentService.update(student);
+            addStudentChanged("Successfully Updated!");
+        } catch (ValidationException e) {
+            showAlert(Alert.AlertType.ERROR, "Error Message", e.getMessage());
+        } catch (DataAccessException e) {
+            showDatabaseError(e);
+        }
     }
     @FXML
     public void addStudent_deleteBtn_onAction () {
-        String deleteData = "DELETE FROM student WHERE studentNum = '" + addStudent_studentNum.getText() + "'";
-        connect = DatabaseConnection.connectDb();
         try {
-            Alert alert;
-            if (addStudent_studentNum.getText().isEmpty()
-                    || addStudent_semester.getSelectionModel().getSelectedItem() == null
-                    || addStudent_course.getSelectionModel().getSelectedItem() == null
-                    || addStudent_firstName.getText().isEmpty()
-                    || addStudent_lastName.getText().isEmpty()
-                    || addStudent_gender.getSelectionModel().getSelectedItem() == null
-                    || addStudent_birthDate.getValue() == null
-                    || addStudent_status.getSelectionModel().getSelectedItem() == null
-                    || GetData.path == null || GetData.path == "") {
-                alert = new Alert(Alert.AlertType.ERROR);
-                alert.setTitle("Error Message");
-                alert.setHeaderText(null);
-                alert.setContentText("Fields cannot be empty");
-                alert.showAndWait();
-            } else {
-                alert = new Alert(Alert.AlertType.CONFIRMATION);
-                alert.setTitle("Confirmation Message");
-                alert.setHeaderText(null);
-                alert.setContentText("Are you sure you want to delete Student #: " + addStudent_studentNum.getText() + "?");
-                Optional<ButtonType> option = alert.showAndWait();
-                if (option.get().equals(ButtonType.OK)){
-                    statement = connect.createStatement();
-                    statement.executeUpdate(deleteData);
-                    alert = new Alert(Alert.AlertType.INFORMATION);
-                    alert.setTitle("Information Message");
-                    alert.setHeaderText(null);
-                    alert.setContentText("Successfully Deleted!");
-                    alert.showAndWait();
-                    //  TO LOAD THE UPDATED TABLE AFTER OPERATION
-                    addStudentShowListData();
-                    // TO CLEAR THE FIELDS
-                    addStudent_clearBtn_onAction();
-                } else return;
-                statement.close();
+            int studentNum = studentService.parseStudentNumber(addStudent_studentNum.getText());
+            if (!confirmed("Are you sure you want to delete Student #: " + studentNum
+                    + " and their attendance records?")) {
+                return;
             }
-            connect.close();
-        } catch (Exception e) {e.printStackTrace();}
+            studentService.delete(studentNum);
+            addStudentChanged("Successfully Deleted!");
+        } catch (ValidationException e) {
+            showAlert(Alert.AlertType.ERROR, "Error Message", e.getMessage());
+        } catch (DataAccessException e) {
+            showDatabaseError(e);
+        }
+    }
+    private void addStudentChanged(String successMessage) {
+        showAlert(Alert.AlertType.INFORMATION, "Information Message", successMessage);
+        addStudentShowListData();
+        addStudent_clearBtn_onAction();
     }
     @FXML
     public void addStudent_clearBtn_onAction () {
@@ -913,8 +780,8 @@ public class DashboardController implements Initializable {
         addStudent_gender.getSelectionModel().clearSelection();
         addStudent_birthDate.setValue(null);
         addStudent_status.getSelectionModel().clearSelection();
-        addStudent_imageView.setImage(null);
-        GetData.path = "";
+        addStudent_cardId.setText("");
+        showPhoto("");
 
         initializeComboBoxes(addStudent_semester, addStudent_course, addStudent_gender, addStudent_status);
     }
@@ -955,25 +822,17 @@ public class DashboardController implements Initializable {
 //    END CODE FOR ADD STUDENT FORM
 
 //    START CODE FOR AVAILABLE COURSES FORM
+    private static final System.Logger LOG = System.getLogger(DashboardController.class.getName());
+    private final CourseService courseService =
+            new CourseService(new CourseDao(Database.fromCurrentSettings()));
+
     public ObservableList <CourseData> availableCourseListData(){
-        ObservableList <CourseData> listCourses = FXCollections.observableArrayList();
-        String sql = "SELECT * FROM course";
         try {
-            CourseData courseD;
-            connect = DatabaseConnection.connectDb();
-            prepare = connect.prepareStatement(sql);
-            result = prepare.executeQuery();
-            while (result.next()){
-                courseD = new CourseData(result.getString("course"),
-                        result.getString("description"),
-                        result.getString("degree"));
-                listCourses.add(courseD);
-            }
-            result.close();
-            prepare.close();
-            connect.close();
-        }catch (Exception e) {e.printStackTrace();}
-        return listCourses;
+            return FXCollections.observableArrayList(courseService.listAll());
+        } catch (DataAccessException e) {
+            showDatabaseError(e);
+            return FXCollections.observableArrayList();
+        }
     }
     private ObservableList <CourseData> availableCourseList;
     public void availableCourseShowListData () {
@@ -994,90 +853,37 @@ public class DashboardController implements Initializable {
         availableCourse_description.setText(courseD.getDescription());
         availableCourse_degree.setText(courseD.getDegree());
     }
+    private CourseData availableCourseForm() {
+        return new CourseData(availableCourse_course.getText(),
+                availableCourse_description.getText(),
+                availableCourse_degree.getText());
+    }
     @FXML
     public void availableCourse_addBtn_onAction () {
-        String insertData = "INSERT INTO course (course, description, degree) VALUES (?, ?, ?)";
-        connect = DatabaseConnection.connectDb();
         try {
-            Alert alert;
-            if (availableCourse_course.getText().isEmpty() || availableCourse_description.getText().isEmpty() || availableCourse_degree.getText().isEmpty()) {
-                alert = new Alert(Alert.AlertType.ERROR);
-                alert.setTitle("Error Message");
-                alert.setHeaderText(null);
-                alert.setContentText("Fields cannot be empty");
-                alert.showAndWait();
-            } else {
-                String checkData = "SELECT course FROM course WHERE course = '" + availableCourse_course.getText() + "'";
-                statement = connect.createStatement();
-                result = statement.executeQuery(checkData);
-                if (result.next()) {
-                    alert = new Alert(Alert.AlertType.ERROR);
-                    alert.setTitle("Error Message");
-                    alert.setHeaderText(null);
-                    alert.setContentText("Course: " + availableCourse_course.getText() + " already exists!");
-                    alert.showAndWait();
-                } else {
-                    prepare = connect.prepareStatement(insertData);
-                    prepare.setString(1, availableCourse_course.getText());
-                    prepare.setString(2, availableCourse_description.getText());
-                    prepare.setString(3, availableCourse_degree.getText());
-                    prepare.executeUpdate();
-
-                    alert = new Alert(Alert.AlertType.INFORMATION);
-                    alert.setTitle("Information Message");
-                    alert.setHeaderText(null);
-                    alert.setContentText("Successfully Added!");
-                    alert.showAndWait();
-                    //  TO LOAD THE UPDATED TABLE AFTER OPERATION
-                    availableCourseShowListData();
-                    //  TO CLEAR THE TEXT FIELDS
-                    availableCourse_clearBtn_onAction();
-                }
-                prepare.close();
-                result.close();
-                statement.close();
-            }
-            connect.close();
-        }catch (Exception e) {e.printStackTrace();}
+            courseService.add(availableCourseForm());
+            availableCourseChanged("Successfully Added!");
+        } catch (ValidationException e) {
+            showAlert(Alert.AlertType.ERROR, "Error Message", e.getMessage());
+        } catch (DataAccessException e) {
+            showDatabaseError(e);
+        }
     }
     @FXML
     public void availableCourse_updateBtn_onAction () {
-        String updateData = "UPDATE course SET description = '"
-                + availableCourse_description.getText() + "', degree = '"
-                + availableCourse_degree.getText() + "' WHERE course = '"
-                + availableCourse_course.getText() + "'";
-        connect = DatabaseConnection.connectDb();
+        CourseData course = availableCourseForm();
         try {
-            Alert alert;
-            if (availableCourse_course.getText().isEmpty() || availableCourse_description.getText().isEmpty() || availableCourse_degree.getText().isEmpty()) {
-                alert = new Alert(Alert.AlertType.ERROR);
-                alert.setTitle("Error Message");
-                alert.setHeaderText(null);
-                alert.setContentText("Fields cannot be empty");
-                alert.showAndWait();
-            } else {
-                alert = new Alert(Alert.AlertType.CONFIRMATION);
-                alert.setTitle("Confirmation Message");
-                alert.setHeaderText(null);
-                alert.setContentText("Are you sure you want to update Course: " + availableCourse_course.getText() + "?");
-                Optional<ButtonType> option = alert.showAndWait();
-                if (option.get().equals(ButtonType.OK)){
-                    statement = connect.createStatement();
-                    statement.executeUpdate(updateData);
-                    alert = new Alert(Alert.AlertType.INFORMATION);
-                    alert.setTitle("Information Message");
-                    alert.setHeaderText(null);
-                    alert.setContentText("Successfully Updated!");
-                    alert.showAndWait();
-                    //  TO LOAD THE UPDATED TABLE AFTER OPERATION
-                    availableCourseShowListData();
-                    //  TO CLEAR THE TEXT FIELDS
-                    availableCourse_clearBtn_onAction();
-                } else return;
-                statement.close();
+            courseService.requireComplete(course);
+            if (!confirmed("Are you sure you want to update Course: " + course.getCourse().strip() + "?")) {
+                return;
             }
-            connect.close();
-        } catch (Exception e) {e.printStackTrace();}
+            courseService.update(course);
+            availableCourseChanged("Successfully Updated!");
+        } catch (ValidationException e) {
+            showAlert(Alert.AlertType.ERROR, "Error Message", e.getMessage());
+        } catch (DataAccessException e) {
+            showDatabaseError(e);
+        }
     }
     @FXML
     public void availableCourse_clearBtn_onAction () {
@@ -1087,83 +893,38 @@ public class DashboardController implements Initializable {
     }
     @FXML
     public void availableCourse_deleteBtn_onAction() {
-        String deleteData = "DELETE FROM course WHERE course = '"
-                + availableCourse_course.getText() +"'";
-        connect = DatabaseConnection.connectDb();
+        String courseName = availableCourse_course.getText();
         try {
-            Alert alert;
-            if (availableCourse_course.getText().isEmpty() || availableCourse_description.getText().isEmpty() || availableCourse_degree.getText().isEmpty()) {
-                alert = new Alert(Alert.AlertType.ERROR);
-                alert.setTitle("Error Message");
-                alert.setHeaderText(null);
-                alert.setContentText("Fields cannot be empty");
-                alert.showAndWait();
-            } else {
-                alert = new Alert(Alert.AlertType.CONFIRMATION);
-                alert.setTitle("Confirmation Message");
-                alert.setHeaderText(null);
-                alert.setContentText("Are you sure you want to delete Course: " + availableCourse_course.getText() + "?");
-                Optional<ButtonType> option = alert.showAndWait();
-                if (option.get().equals(ButtonType.OK)) {
-                    statement = connect.createStatement();
-                    statement.executeUpdate(deleteData);
-                    alert = new Alert(Alert.AlertType.INFORMATION);
-                    alert.setTitle("Information Message");
-                    alert.setHeaderText(null);
-                    alert.setContentText("Successfully Deleted!");
-                    alert.showAndWait();
-                    //  TO LOAD THE UPDATED TABLE AFTER OPERATION
-                    availableCourseShowListData();
-                    //  TO CLEAR THE TEXT FIELDS
-                    availableCourse_clearBtn_onAction();
-                } else return;
-                statement.close();
+            courseService.requireCourseName(courseName);
+            if (!confirmed("Are you sure you want to delete Course: " + courseName.strip() + "?")) {
+                return;
             }
-            connect.close();
-        } catch (Exception e) {e.printStackTrace();}
+            courseService.delete(courseName);
+            availableCourseChanged("Successfully Deleted!");
+        } catch (ValidationException e) {
+            showAlert(Alert.AlertType.ERROR, "Error Message", e.getMessage());
+        } catch (DataAccessException e) {
+            showDatabaseError(e);
+        }
+    }
+    private void availableCourseChanged(String successMessage) {
+        showAlert(Alert.AlertType.INFORMATION, "Information Message", successMessage);
+        availableCourseShowListData();
+        availableCourse_clearBtn_onAction();
     }
 //    END CODE FOR AVAILABLE COURSES FORM
 
 //    START CODE FOR STUDENT ATTENDANCE FORM
+    private static final String SCAN_OK_STYLE = "scan-ok";
+    private static final String SCAN_ERROR_STYLE = "scan-error";
+
     public ObservableList <StudentAttendanceData> studentAttendanceListData(){
-        ObservableList <StudentAttendanceData> listStudentAttendance = FXCollections.observableArrayList();
-        // MySQL query
-        /* String query = "SELECT student.studentNum, student.semester, student.course, " +
-                "student_attendance.entry_time, student_attendance.exit_time, student_attendance.status " +
-                "FROM student_attendance " +
-                "INNER JOIN student ON student_attendance.student_id = student.id " +
-                "INNER JOIN course ON student_attendance.course_id = course.id " +
-                "WHERE DATE(student_attendance.entry_time) = CURDATE()"; */
-        // H2 database query
-        String query = "SELECT student.studentNum, student.semester, student.course, " +
-                "       student_attendance.entry_time, student_attendance.exit_time, student_attendance.status " +
-                "FROM student_attendance " +
-                "INNER JOIN student ON student_attendance.student_id = student.id " +
-                "INNER JOIN course ON student_attendance.course_id = course.id " +
-                "WHERE CAST(student_attendance.entry_time AS DATE) = CURRENT_DATE()";
-        connect = DatabaseConnection.connectDb();
-        if (connect != null) {
-            try {
-                StudentAttendanceData record;
-                prepare = connect.prepareStatement(query);
-                result = prepare.executeQuery();
-                while (result.next()) {
-                    record = new StudentAttendanceData(result.getString("studentNum"),
-                            result.getString("semester"),
-                            result.getString("course"),
-                            result.getString("entry_time"),
-                            result.getString("exit_time"),
-                            result.getString("status"));
-                    listStudentAttendance.add(record);
-                }
-                result.close();
-                prepare.close();
-                connect.close();
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
+        try {
+            return FXCollections.observableArrayList(attendanceService.listToday());
+        } catch (DataAccessException e) {
+            showDatabaseError(e);
+            return FXCollections.observableArrayList();
         }
-        return listStudentAttendance;
     }
     private ObservableList<StudentAttendanceData> observableAttendanceData;
     @FXML
@@ -1180,293 +941,206 @@ public class DashboardController implements Initializable {
     }
     @FXML
     public void studentAttendanceSemesterList(){
-        //  studentAttendance_semester.getItems().clear();
-        List <String> semesterL = new ArrayList<>();
-        for (String data: semesterList){
-            semesterL.add(data);
-        }
-        ObservableList <String> ObList = FXCollections.observableArrayList(semesterL);
-        studentAttendance_semester.setItems(ObList);
-
+        studentAttendance_semester.setItems(FXCollections.observableArrayList(semesterList));
         studentAttendance_semester.setOnAction(e -> studentAttendanceCourseList());
     }
     @FXML
     public void studentAttendanceCourseList(){
-        //  studentAttendance_course.getItems().clear();
         String selectedSemester = studentAttendance_semester.getSelectionModel().getSelectedItem();
-        connect = DatabaseConnection.connectDb();
-        if (connect != null){
-            try {
-                String query = "SELECT DISTINCT course FROM student WHERE semester = ?";
-                prepare = connect.prepareStatement(query);
-                prepare.setString(1, selectedSemester);
-                result = prepare.executeQuery();
-                ObservableList <String> courseList = FXCollections.observableArrayList();
-                while (result.next()){
-                    String course = result.getString("course");
-                    courseList.add(course);
-                }
-                studentAttendance_course.setItems(courseList);
-                result.close();
-                prepare.close();
-                connect.close();
-            } catch (SQLException e) {e.printStackTrace();}
+        try {
+            studentAttendance_course.setItems(
+                    FXCollections.observableArrayList(attendanceService.listCoursesIn(selectedSemester)));
+            // A course of the previous semester would otherwise stay chosen
+            studentAttendance_course.setValue(null);
+        } catch (DataAccessException e) {
+            showDatabaseError(e);
         }
-        
         studentAttendance_course.setOnAction(e -> studentAttendanceStudentNumList());
     }
     @FXML
     public void studentAttendanceStudentNumList(){
         String selectedSemester = studentAttendance_semester.getSelectionModel().getSelectedItem();
         String selectedCourse = studentAttendance_course.getSelectionModel().getSelectedItem();
-        /*
-          studentAttendance_studentNum.getItems().clear();
-        */
-        connect = DatabaseConnection.connectDb();
-        if (connect != null) {
-            try {
-
-                String query = "SELECT DISTINCT studentNum FROM student WHERE semester = ? AND course = ?";
-                prepare = connect.prepareStatement(query);
-                prepare.setString(1, selectedSemester);
-                prepare.setString(2, selectedCourse);
-                
-                result = prepare.executeQuery();
-                ObservableList <String> studentNumList = FXCollections.observableArrayList();
-                while (result.next()) {
-                    String studentNum = result.getString("studentNum");
-                    studentNumList.add(studentNum);
-                }
-                studentAttendance_studentNum.setItems(studentNumList);
-                result.close();
-                prepare.close();
-                connect.close();
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
+        try {
+            List<String> studentNums =
+                    attendanceService.listStudentNumbersIn(selectedSemester, selectedCourse).stream()
+                            .map(String::valueOf)
+                            .toList();
+            studentAttendance_studentNum.setItems(FXCollections.observableArrayList(studentNums));
+            studentAttendance_studentNum.setValue(null);
+        } catch (DataAccessException e) {
+            showDatabaseError(e);
         }
     }
-    // Method to fetch student_id based on studentNum, semester, and course
-    private int fetchStudentId(String studentNum, String semester, String course) {
-        int studentId = -1; // Initialize to a default value (e.g., -1) to indicate no matching student found
-
-        connect = DatabaseConnection.connectDb();
-
-        if (connect != null) {
-            try {
-                String query = "SELECT id FROM student WHERE studentNum = ? AND semester = ? AND course = ?";
-                PreparedStatement preparedStatement = connect.prepareStatement(query);
-                preparedStatement.setString(1, studentNum);
-                preparedStatement.setString(2, semester);
-                preparedStatement.setString(3, course);
-
-                ResultSet resultSet = preparedStatement.executeQuery();
-
-                if (resultSet.next()) {
-                    studentId = resultSet.getInt("id");
-                }
-
-                // Close resources
-                resultSet.close();
-                preparedStatement.close();
-                connect.close();
-            } catch (SQLException e) {
-                e.printStackTrace();
-                // Handle any database-related exceptions here
-            }
-        }
-
-        return studentId;
-    }
-    // Method to fetch course_id based on course
-    private int fetchCourseId(String course) {
-        int courseId = -1; // Initialize to a default value (e.g., -1) to indicate no matching course found
-
-        connect = DatabaseConnection.connectDb();
-
-        if (connect != null) {
-            try {
-                String query = "SELECT id FROM course WHERE course = ?";
-                PreparedStatement preparedStatement = connect.prepareStatement(query);
-                preparedStatement.setString(1, course);
-
-                ResultSet resultSet = preparedStatement.executeQuery();
-
-                if (resultSet.next()) {
-                    courseId = resultSet.getInt("id");
-                }
-
-                // Close resources
-                resultSet.close();
-                preparedStatement.close();
-                connect.close();
-            } catch (SQLException e) {
-                e.printStackTrace();
-                // Handle any database-related exceptions here
-            }
-        }
-
-        return courseId;
+    private Integer selectedAttendanceStudentNum() {
+        String selected = studentAttendance_studentNum.getSelectionModel().getSelectedItem();
+        return selected == null ? null : Integer.valueOf(selected);
     }
     @FXML
     public void studentAttendanceMarkEntryBtnOnAction() {
-        String selectedStudentNum = studentAttendance_studentNum.getValue();
-        String selectedSemester = studentAttendance_semester.getValue();
-        String selectedCourse = studentAttendance_course.getValue();
-
-        // Check if all required fields are selected
-        if (selectedStudentNum != null && selectedSemester != null && selectedCourse != null) {
-            // Get the current timestamp
-            Timestamp entryTime = new Timestamp(new Date().getTime());
-
-            // Database connection and SQL query to insert data
-            connect = DatabaseConnection.connectDb(); // Replace with your actual database connection code
-
-            if (connect != null) {
-                try {
-                    String query = "INSERT INTO student_attendance (student_id, course_id, entry_time, exit_time, status) VALUES (?, ?, ?, NULL, 'Present')";
-                    prepare = connect.prepareStatement(query);
-
-                    // You need to fetch the student_id and course_id based on the selected studentNum, semester, and course
-                    int studentId = fetchStudentId(selectedStudentNum, selectedSemester, selectedCourse);
-                    int courseId = fetchCourseId(selectedCourse);
-
-                    prepare.setInt(1, studentId);
-                    prepare.setInt(2, courseId);
-                    prepare.setTimestamp(3, entryTime);
-
-                    // Execute the insert query
-                    prepare.executeUpdate();
-
-                    // Close the database connection and resources
-                    prepare.close();
-                    connect.close();
-
-                    // Show a success message
-                    Alert successAlert = new Alert(Alert.AlertType.INFORMATION);
-                    successAlert.setTitle("Information Message");
-                    successAlert.setHeaderText(null);
-                    successAlert.setContentText("Attendance marked successfully!");
-                    successAlert.showAndWait();
-
-                    // Optionally, you can perform any other actions here
-                    studentAttendanceShowListData();
-                    studentAttendanceClearBtnOnAction();
-                } catch (SQLException e) {
-                    e.printStackTrace();
-                    // Handle any database-related exceptions here
-
-                    // Display a database error message
-                    Alert errorAlert = new Alert(Alert.AlertType.ERROR);
-                    errorAlert.setTitle("Error Message");
-                    errorAlert.setHeaderText(null);
-                    errorAlert.setContentText("An error occurred while marking attendance. Please try again later.");
-                    errorAlert.showAndWait();
-                }
-            }
-        } else {
-            // Handle the case where not all required fields are selected
-            // Display an error message or take appropriate action
-            Alert missingFieldsAlert = new Alert(Alert.AlertType.ERROR);
-            missingFieldsAlert.setTitle("Error Message");
-            missingFieldsAlert.setHeaderText(null);
-            missingFieldsAlert.setContentText("Please select all required fields.");
-            missingFieldsAlert.showAndWait();
+        try {
+            attendanceService.markEntry(selectedAttendanceStudentNum());
+            attendanceChanged("Entry marked for Student #: " + selectedAttendanceStudentNum());
+        } catch (ValidationException e) {
+            showAlert(Alert.AlertType.ERROR, "Error Message", e.getMessage());
+        } catch (DataAccessException e) {
+            showDatabaseError(e);
         }
     }
     @FXML
     public void studentAttendanceMarkExitOnAction() {
-        String selectedSemester = studentAttendance_semester.getSelectionModel().getSelectedItem();
-        String selectedCourse = studentAttendance_course.getSelectionModel().getSelectedItem();
-        String selectedStudentNum = studentAttendance_studentNum.getSelectionModel().getSelectedItem();
-        connect = DatabaseConnection.connectDb(); // Replace with your actual database connection code
-
-        if (connect != null) {
-            try {
-                // Get the current date and time as a Timestamp
-                Timestamp currentTimestamp = new Timestamp(new Date().getTime());
-
-                // Define a SQL query to update the exit_time
-                String query = "UPDATE student_attendance SET exit_time = ? " +
-                        "WHERE entry_time >= ? AND entry_time < ? " +
-                        "AND exit_time IS NULL " +
-                        "AND student_id IN (SELECT id FROM student WHERE semester = ? AND course = ? AND studentNum = ?)";
-
-                // Set a time range for checking entry_time (e.g., for the current day)
-                // You may need to adjust this time range based on your specific requirements
-                Timestamp startOfDay = new Timestamp(new Date().getTime());
-                startOfDay.setHours(0);
-                startOfDay.setMinutes(0);
-                startOfDay.setSeconds(0);
-
-                Timestamp endOfDay = new Timestamp(new Date().getTime());
-                endOfDay.setHours(23);
-                endOfDay.setMinutes(59);
-                endOfDay.setSeconds(59);
-
-                // Create a PreparedStatement for the query
-                prepare = connect.prepareStatement(query);
-                prepare.setTimestamp(1, currentTimestamp);
-                prepare.setTimestamp(2, startOfDay);
-                prepare.setTimestamp(3, endOfDay);
-                prepare.setString(4, selectedSemester);
-                prepare.setString(5, selectedCourse);
-                prepare.setString(6, selectedStudentNum);
-
-                // Execute the update query
-                int updatedRows = prepare.executeUpdate();
-
-                // Close the PreparedStatement and database connection
-                prepare.close();
-                connect.close();
-
-                if (updatedRows > 0) {
-                    // Show a success message
-                    Alert successAlert = new Alert(Alert.AlertType.INFORMATION);
-                    successAlert.setTitle("Information Message");
-                    successAlert.setHeaderText(null);
-                    successAlert.setContentText("Exit times updated for " + updatedRows + " records.");
-                    successAlert.showAndWait();
-
-                    // Optionally, you can perform any other actions here
-                    studentAttendanceShowListData();
-                    studentAttendanceClearBtnOnAction();
-                } else {
-                    // Show a message when no records were updated
-                    Alert noRecordsAlert = new Alert(Alert.AlertType.INFORMATION);
-                    noRecordsAlert.setTitle("Information Message");
-                    noRecordsAlert.setHeaderText(null);
-                    noRecordsAlert.setContentText("No records found for update.");
-                    noRecordsAlert.showAndWait();
-                }
-            } catch (SQLException e) {
-                e.printStackTrace();
-                // Handle any database-related exceptions here
-
-                // Display a database error message
-                Alert errorAlert = new Alert(Alert.AlertType.ERROR);
-                errorAlert.setTitle("Error Message");
-                errorAlert.setHeaderText(null);
-                errorAlert.setContentText("An error occurred while updating exit times. Please try again later.");
-                errorAlert.showAndWait();
-            }
-        } else {
-            // Handle the case where the database connection is null
-            Alert dbConnectionErrorAlert = new Alert(Alert.AlertType.ERROR);
-            dbConnectionErrorAlert.setTitle("Error Message");
-            dbConnectionErrorAlert.setHeaderText(null);
-            dbConnectionErrorAlert.setContentText("Unable to connect to the database. Please check your database connection.");
-            dbConnectionErrorAlert.showAndWait();
+        try {
+            int closed = attendanceService.markExit(selectedAttendanceStudentNum());
+            attendanceChanged("Exit marked for Student #: " + selectedAttendanceStudentNum()
+                    + (closed > 1 ? " (" + closed + " entries)" : ""));
+        } catch (ValidationException e) {
+            showAlert(Alert.AlertType.ERROR, "Error Message", e.getMessage());
+        } catch (DataAccessException e) {
+            showDatabaseError(e);
         }
+    }
+    @FXML
+    public void studentAttendanceScanOnAction() {
+        scanCard(studentAttendance_scanCard.getText());
+        studentAttendance_scanCard.clear();
+    }
+
+    /** Checks the card's student in or out and shows what happened under the scan field. */
+    private ScanReply scanCard(String cardId) {
+        try {
+            String message = attendanceService.scan(cardId).message();
+            showScanResult(message, SCAN_OK_STYLE);
+            studentAttendanceShowListData();
+            return ScanReply.ok(message);
+        } catch (ValidationException e) {
+            showScanResult(e.getMessage(), SCAN_ERROR_STYLE);
+            return ScanReply.failed(e.getMessage());
+        } catch (DataAccessException e) {
+            showDatabaseError(e);
+            return ScanReply.failed("The app could not reach its database. Try again");
+        }
+    }
+    private void showScanResult(String message, String style) {
+        studentAttendance_scanResult.getStyleClass().removeAll(SCAN_OK_STYLE, SCAN_ERROR_STYLE);
+        studentAttendance_scanResult.getStyleClass().add(style);
+        studentAttendance_scanResult.setText(message);
+    }
+
+    private static final String PHONE_SCANNER_OFF_HINT = "Turn on to check students in with a phone camera.";
+    private static final int PAIRING_QR_SIZE = 110;
+    private static final long PHONE_SCAN_TIMEOUT_SECONDS = 10;
+    private PhoneScanServer phoneScanner;
+    // Logout and the window closing hide it; the phone page must not outlive the screen
+    private final EventHandler<WindowEvent> stopPhoneScannerOnHide = event -> stopPhoneScanner();
+
+    @FXML
+    public void studentAttendancePhoneScannerOnAction() {
+        if (studentAttendance_phoneScanner.isSelected()) {
+            startPhoneScanner();
+        } else {
+            stopPhoneScanner();
+        }
+    }
+    @FXML
+    public void studentAttendancePhoneNetworkOnAction() {
+        Inet4Address chosen = studentAttendance_phoneNetwork.getValue();
+        if (phoneScanner != null && chosen != null) {
+            showPairingCode(chosen);
+        }
+    }
+    private void startPhoneScanner() {
+        if (phoneScanner != null) {
+            return;
+        }
+        // A fixed port is only needed when a firewall or container must let one port through
+        int port = Integer.getInteger("attendance.scanner.port", 0);
+        try {
+            phoneScanner = PhoneScanServer.start(new InetSocketAddress(port), this::scanFromPhone);
+        } catch (IOException e) {
+            studentAttendance_phoneScanner.setSelected(false);
+            showAlert(Alert.AlertType.ERROR, "Error Message",
+                    "Could not start the phone scanner: " + e.getMessage());
+            return;
+        }
+        studentAttendance_phoneScanner.getScene().getWindow()
+                .addEventHandler(WindowEvent.WINDOW_HIDDEN, stopPhoneScannerOnHide);
+
+        List<Inet4Address> networks = NetworkAddresses.forPhones();
+        boolean onANetwork = !networks.isEmpty();
+        studentAttendance_phoneHint.setText(onANetwork
+                ? "Scan this with a phone on the same Wi-Fi, then photograph student cards."
+                : "No Wi-Fi network found. Only a browser on this computer can open the page below.");
+        studentAttendance_phoneNetwork.setItems(FXCollections.observableArrayList(networks));
+        studentAttendance_phoneNetwork.setVisible(networks.size() > 1);
+        Inet4Address address = onANetwork ? networks.getFirst() : NetworkAddresses.thisComputerOnly();
+        studentAttendance_phoneNetwork.setValue(onANetwork ? address : null);
+        showPairingCode(address);
+        studentAttendance_phoneQr.setVisible(true);
+        studentAttendance_phoneAddress.setVisible(true);
+    }
+    private void showPairingCode(Inet4Address address) {
+        String pageAddress = phoneScanner.pageAddress(address).toString();
+        studentAttendance_phoneQr.setImage(toFxImage(StudentCards.qrCode(pageAddress, PAIRING_QR_SIZE)));
+        studentAttendance_phoneAddress.setText(pageAddress);
+    }
+    private void stopPhoneScanner() {
+        if (phoneScanner == null) {
+            return;
+        }
+        phoneScanner.close();
+        phoneScanner = null;
+        Window window = studentAttendance_phoneScanner.getScene().getWindow();
+        if (window != null) {
+            window.removeEventHandler(WindowEvent.WINDOW_HIDDEN, stopPhoneScannerOnHide);
+        }
+        studentAttendance_phoneScanner.setSelected(false);
+        studentAttendance_phoneQr.setImage(null);
+        studentAttendance_phoneQr.setVisible(false);
+        studentAttendance_phoneNetwork.setVisible(false);
+        studentAttendance_phoneAddress.clear();
+        studentAttendance_phoneAddress.setVisible(false);
+        studentAttendance_phoneHint.setText(PHONE_SCANNER_OFF_HINT);
+    }
+
+    // Runs on the phone server's thread; the screen may only be changed on the JavaFX thread
+    private ScanReply scanFromPhone(String cardId) {
+        CompletableFuture<ScanReply> reply = new CompletableFuture<>();
+        Platform.runLater(() -> {
+            try {
+                reply.complete(scanCard(cardId));
+            } catch (RuntimeException e) {
+                reply.completeExceptionally(e);
+            }
+        });
+        try {
+            return reply.get(PHONE_SCAN_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new IllegalStateException("Stopped while waiting for the scan", e);
+        } catch (ExecutionException | TimeoutException e) {
+            throw new IllegalStateException("The app did not finish the scan", e);
+        }
+    }
+
+    // javafx.swing, which has SwingFXUtils for this, isn't one of the app's modules
+    private static WritableImage toFxImage(BufferedImage image) {
+        int width = image.getWidth();
+        int height = image.getHeight();
+        WritableImage fxImage = new WritableImage(width, height);
+        int[] argb = image.getRGB(0, 0, width, height, null, 0, width);
+        fxImage.getPixelWriter().setPixels(0, 0, width, height, PixelFormat.getIntArgbInstance(), argb, 0, width);
+        return fxImage;
+    }
+
+    private void attendanceChanged(String successMessage) {
+        showAlert(Alert.AlertType.INFORMATION, "Information Message", successMessage);
+        studentAttendanceShowListData();
+        studentAttendanceClearBtnOnAction();
     }
     
     @FXML
     public void studentAttendanceClearBtnOnAction() {
-        studentAttendance_semester.getSelectionModel().clearSelection();
-        studentAttendance_course.getSelectionModel().clearSelection();;
-        studentAttendance_studentNum.getSelectionModel().clearSelection();
-
-        initializeComboBoxes(studentAttendance_semester, studentAttendance_course, studentAttendance_studentNum);
+        studentAttendance_semester.setValue(null);
     }
     
     @FXML
@@ -1504,30 +1178,17 @@ public class DashboardController implements Initializable {
 //    END CODE FOR STUDENT ATTENDANCE FORM
 
 //    START MANAGE USERS FORM
-    public ObservableList<UserData> userManagementListData () {
-    ObservableList<UserData> listUsers = FXCollections.observableArrayList();
-    String sql = "SELECT * FROM admin";
-    connect = DatabaseConnection.connectDb();
-    if (connect != null) {
+    private final UserService userService =
+            new UserService(new UserDao(Database.fromCurrentSettings()));
+
+    public ObservableList<UserData> userManagementListData() {
         try {
-            UserData record;
-            prepare = connect.prepareStatement(sql);
-            result = prepare.executeQuery();
-            while (result.next()) {
-                record = new UserData(result.getInt("id"),
-                        result.getString("username"),
-                        result.getString("user_role"));
-                listUsers.add(record);
-            }
-            result.close();
-            prepare.close();
-            connect.close();
-        } catch (Exception e) {
-            e.printStackTrace();
+            return FXCollections.observableArrayList(userService.listAll());
+        } catch (DataAccessException e) {
+            showDatabaseError(e);
+            return FXCollections.observableArrayList();
         }
     }
-    return listUsers;
-}
     private ObservableList <UserData> observableUserManagementData;
     public void userManagementShowListData () {
         observableUserManagementData = userManagementListData();
@@ -1543,11 +1204,9 @@ public class DashboardController implements Initializable {
     }
     @FXML
     public void userManagementSelect() {
-        // Get the selected item from the TableView
         UserData selectedUser = userManagement_tableView.getSelectionModel().getSelectedItem();
 
         if (selectedUser != null) {
-            // Set the selected data to the input fields
             userManagement_id.setText(String.valueOf(selectedUser.getUserId()));
             userManagement_username.setText(selectedUser.getUserName());
             userManagement_userRole.getSelectionModel().select(selectedUser.getUserRole());
@@ -1556,210 +1215,78 @@ public class DashboardController implements Initializable {
 
     @FXML
     public void userManagement_userRoleList() {
-        List<String> userRoleL = new ArrayList<>();
-        Collections.addAll(userRoleL, userRoleList);
-        ObservableList<String> ObList = FXCollections.observableArrayList(userRoleL);
-        userManagement_userRole.setItems(ObList);
+        userManagement_userRole.setItems(FXCollections.observableArrayList(UserService.ROLES));
+    }
+    private UserForm userManagementForm() {
+        String chosenId = userManagement_id.getText();
+        return new UserForm(
+                chosenId == null || chosenId.isBlank() ? null : Integer.valueOf(chosenId),
+                userManagement_username.getText(),
+                userManagement_password.getText(),
+                userManagement_confirmPassword.getText(),
+                userManagement_userRole.getValue());
     }
     @FXML
     public void userManagementAddBtn_onAction() {
-        String username = userManagement_username.getText();
-        String password = userManagement_password.getText();
-        String confirmPassword = userManagement_confirmPassword.getText();
-        String userRole = userManagement_userRole.getValue();
-
-        if (Objects.equals(username, "") || Objects.equals(password, "") || Objects.equals(confirmPassword, "") || userRole == null) {
-            showAlert(Alert.AlertType.ERROR, "Error Message", "Fields cannot be empty");
-            return; // Exit the method if empty
-        }
-
-        // Check if passwords match
-        if (!password.equals(confirmPassword)) {
-            showAlert(Alert.AlertType.ERROR, "Error Message", "Passwords do not match!");
-            return; // Exit the method if passwords don't match
-        }
-
-        // Check if password is shorter than 8 characters and consists only of lowercase letters
-        if (password.length() < 8 || password.matches("^[a-z]+$")) {
-            showAlert(Alert.AlertType.ERROR, "Error Message", "Password must be at least 8 characters long and contain both uppercase and lowercase letters.");
-            return; // Exit the method if password criteria are not met
-        }
-        
-        String hashedPassword = hashPassword(password);
-
-        // Insert the data into the database
-        String query = "INSERT INTO admin (username, password_hash, user_role) VALUES (?, ?, ?)";
-        connect = DatabaseConnection.connectDb();
-
+        UserForm form = userManagementForm();
         try {
-            // Check if the user already exists
-            String checkData = "SELECT username FROM admin WHERE username = ?";
-            assert connect != null;
-            PreparedStatement checkStatement = connect.prepareStatement(checkData);
-            checkStatement.setString(1, username);
-            ResultSet result = checkStatement.executeQuery();
-            if (result.next()) {
-                showAlert(Alert.AlertType.ERROR, "Error Message", "User '" + username + "' already exists!");
-                return; // Exit if user already exists
-            }
-            checkStatement.close();
-
-            // Insert the new user
-            prepare = connect.prepareStatement(query);
-            prepare.setString(1, username);
-            prepare.setString(2, hashedPassword);
-            prepare.setString(3, userRole);
-            prepare.executeUpdate();
-
-            showAlert(Alert.AlertType.INFORMATION, "Information Message", "User added successfully!");
-
-            userManagementShowListData();
-            // Clear the fields if needed
-            userManagementClearBtn_onAction();
-
-            prepare.close();
-            connect.close();
-        } catch (SQLException e) {
-            e.printStackTrace();
-            // Handle database-related exceptions
+            userService.add(form);
+            userManagementChanged("User added successfully!");
+        } catch (ValidationException e) {
+            showAlert(Alert.AlertType.ERROR, "Error Message", e.getMessage());
+        } catch (DataAccessException e) {
+            showDatabaseError(e);
         }
-    }
-    private int fetchUserId(String username) {
-        int userId = -1;
-        connect = DatabaseConnection.connectDb();
-        if (connect != null) {
-            try {
-                String query = "SELECT id FROM admin WHERE username = ?";
-                PreparedStatement preparedStatement = connect.prepareStatement(query);
-                preparedStatement.setString(1, username);
-                ResultSet resultSet = preparedStatement.executeQuery();
-                if (resultSet.next()) {
-                    userId = resultSet.getInt("id");
-                }
-            } catch (SQLException e) {e.printStackTrace();}
-        }
-        return userId;
-    }
-    private boolean usernameExists(String username) {
-        String query = "SELECT COUNT(*) FROM admin WHERE username = ?";
-        try {
-            PreparedStatement preparedStatement = connect.prepareStatement(query);
-            preparedStatement.setString(1, username);
-            ResultSet resultSet = preparedStatement.executeQuery();
-            if (resultSet.next()) {
-                int count = resultSet.getInt(1);
-                return count > 0;
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        return false;
     }
     @FXML
     public void userManagementUpdateBtn_onAction() {
-        String userIdText = userManagement_id.getText();
-        if (userIdText.isEmpty()) {
-            showAlert(Alert.AlertType.ERROR, "Error Message", "Fields cannot be empty");
-            return; 
-        }
-
-        int userId = Integer.parseInt(userIdText);
-        //int userId = Integer.parseInt(userManagement_id.getText());
-        String username = userManagement_username.getText();
-        String password = userManagement_password.getText();
-        String confirmPassword = userManagement_confirmPassword.getText();
-        String userRole = userManagement_userRole.getValue();
-        String hashedPassword = hashPassword(password);
-
-        // Check if fields are empty
-        if (password.isEmpty() || confirmPassword.isEmpty() || userRole == null) {
-            showAlert(Alert.AlertType.ERROR, "Error Message", "Fields cannot be empty");
-            return;
-        }
-
-        // Check if passwords match
-        if (!password.equals(confirmPassword)) {
-            showAlert(Alert.AlertType.ERROR, "Error Message", "Passwords do not match!");
-            return; // Exit the method if passwords don't match
-        }
-
-        connect = DatabaseConnection.connectDb();
-        if (connect != null) {
-            try {
-                if (userId != fetchUserId(username) && usernameExists(username)) {
-                    showAlert(Alert.AlertType.ERROR, "Error Message", "User " + username + " already exists");
-                    return;
-                }
-                String query = "UPDATE admin SET " +
-                        "username = ?, password_hash = ?, user_role = ? " +
-                        "WHERE id = ?";
-                prepare = connect.prepareStatement(query);
-                prepare.setString(1, username);
-                prepare.setString(2, hashedPassword);
-                prepare.setString(3, userRole);
-                prepare.setInt(4, userId);
-
-                Alert alert;
-                alert = new Alert(Alert.AlertType.CONFIRMATION);
-                alert.setTitle("Confirmation Message");
-                alert.setHeaderText(null);
-                alert.setContentText("Are you sure you want to update?");
-                Optional<ButtonType> option = alert.showAndWait();
-                if (option.get().equals(ButtonType.OK)) {
-                    int updatedRows = prepare.executeUpdate();
-                    if (updatedRows > 0) {
-                        showAlert(Alert.AlertType.INFORMATION, "Information Message", "Updated Successfully");
-
-                        userManagementShowListData();
-                        // Clear the fields if needed
-                        userManagementClearBtn_onAction();
-                    } else {
-                        showAlert(Alert.AlertType.ERROR, "Error Message", "No rows were updated.");
-                    }
-                }
-            } catch (SQLException e) {
-                e.printStackTrace();
-            } finally {
-                try {
-                    if (prepare != null) {
-                        prepare.close();
-                    }
-                    if (connect != null) {
-                        connect.close();
-                    }
-                } catch (SQLException e) {
-                    e.printStackTrace();
-                }
+        UserForm form = userManagementForm();
+        try {
+            userService.requireChosen(form.userId());
+            userService.requireValid(form);
+            if (!confirmed("Are you sure you want to update?")) {
+                return;
             }
+            userService.update(form);
+            userManagementChanged("Updated Successfully");
+        } catch (ValidationException e) {
+            showAlert(Alert.AlertType.ERROR, "Error Message", e.getMessage());
+        } catch (DataAccessException e) {
+            showDatabaseError(e);
         }
     }
     @FXML
     public void userManagementDeleteBtn_onAction() {
-        String deleteData = "DELETE FROM admin WHERE id = " + userManagement_id.getText();
-        connect = DatabaseConnection.connectDb();
+        UserForm form = userManagementForm();
         try {
-            Alert alert;
-            if (userManagement_id.getText().isEmpty() || userManagement_username.getText().isEmpty() || userManagement_userRole.getSelectionModel().getSelectedItem().isEmpty()) {
-                showAlert(Alert.AlertType.ERROR, "Error Message", "Fields cannot be empty");
-            } else if (Integer.parseInt(userManagement_id.getText()) == fetchUserId(userManagement_username.getText())){
-                alert = new Alert(Alert.AlertType.CONFIRMATION);
-                alert.setTitle("Confirmation Message");
-                alert.setHeaderText(null);
-                alert.setContentText("Are you sure you want to delete User: " + userManagement_username.getText() + "?");
-                Optional<ButtonType> option = alert.showAndWait();
-                if (option.get().equals(ButtonType.OK)) {
-                    statement = connect.createStatement();
-                    statement.executeUpdate(deleteData);
-                    showAlert(Alert.AlertType.INFORMATION, "Information Message", "Successfully Deleted!");
-                    //  TO LOAD THE UPDATED TABLE AFTER OPERATION
-                    userManagementShowListData();
-                    // Clear the fields if needed
-                    userManagementClearBtn_onAction();
-                } else return;
-                statement.close();
+            UserData chosen = userService.requireChosen(form.userId());
+            if (!confirmed("Are you sure you want to delete User: " + chosen.getUserName() + "?")) {
+                return;
             }
-            connect.close();
-        } catch (Exception e) {e.printStackTrace();}
+            userService.delete(chosen.getUserId(), UserSession.current().getUserName());
+            userManagementChanged("Successfully Deleted!");
+        } catch (ValidationException e) {
+            showAlert(Alert.AlertType.ERROR, "Error Message", e.getMessage());
+        } catch (DataAccessException e) {
+            showDatabaseError(e);
+        }
+    }
+    private void userManagementChanged(String successMessage) {
+        showAlert(Alert.AlertType.INFORMATION, "Information Message", successMessage);
+        userManagementShowListData();
+        userManagementClearBtn_onAction();
+    }
+    private boolean confirmed(String question) {
+        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+        alert.setTitle("Confirmation Message");
+        alert.setHeaderText(null);
+        alert.setContentText(question);
+        return alert.showAndWait().filter(ButtonType.OK::equals).isPresent();
+    }
+    private void showDatabaseError(DataAccessException e) {
+        LOG.log(System.Logger.Level.WARNING, e.getMessage(), e);
+        showAlert(Alert.AlertType.ERROR, "Database Error",
+                e.getMessage() + ". Please try again; if it keeps happening, restart the app.");
     }
     private void showAlert(Alert.AlertType alertType, String title, String contentText) {
         Alert alert = new Alert(alertType);
@@ -1767,14 +1294,6 @@ public class DashboardController implements Initializable {
         alert.setHeaderText(null);
         alert.setContentText(contentText);
         alert.showAndWait();
-    }
-
-    // Implementing a password hashing method here
-    private String hashPassword(String password) {
-        // Generate a salt for hashing (you can configure the strength as needed)
-        String salt = BCrypt.gensalt(12);
-        // Hash the password with the salt
-        return BCrypt.hashpw(password, salt);
     }
 
     @FXML
@@ -1817,11 +1336,23 @@ public class DashboardController implements Initializable {
         availableCourseShowListData();
 
         //  Initialize the ComboBox when the controller is loaded
+        initializeComboBoxes(studentAttendance_semester, studentAttendance_course, studentAttendance_studentNum);
         studentAttendanceSemesterList();
         studentAttendanceCourseList();
         studentAttendanceStudentNumList();
         studentAttendanceShowListData();
         studentAttendanceSearchOnKeyTyped();
+        studentAttendance_phoneNetwork.setConverter(new StringConverter<>() {
+            @Override
+            public String toString(Inet4Address address) {
+                return address == null ? "" : address.getHostAddress();
+            }
+
+            @Override
+            public Inet4Address fromString(String text) {
+                throw new UnsupportedOperationException("The list is not editable");
+            }
+        });
 
         hideUserId();
         userManagementShowListData();

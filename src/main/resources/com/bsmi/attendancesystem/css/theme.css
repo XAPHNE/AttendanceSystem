@@ -1,0 +1,140 @@
+/*
+ * The design tokens: every color the app uses, defined once. The other stylesheets refer to these
+ * names instead of hex values, so changing the look (or adding a dark mode) means changing this
+ * file only. Text colors are checked against their backgrounds for WCAG AA contrast (4.5:1).
+ *
+ * JavaFX CSS can only name colors this way, not sizes, so sizes follow fixed scales:
+ *   spacing 4, 8, 12, 16, 24 px; corner radius 6 px (controls) and 10 px (cards);
+ *   text 12 px (caption), 13 px (body), 15 px (emphasis), 18 px (heading), 24 px (title).
+ */
+.root {
+    -color-primary: #2563eb;
+    -color-primary-hover: #1d4ed8;
+    -color-primary-pressed: #1e40af;
+    -color-primary-soft: #dbeafe;
+    -color-success: #15803d;
+    -color-success-hover: #166534;
+    -color-danger: #b91c1c;
+    -color-danger-hover: #991b1b;
+    -color-danger-pressed: #7f1d1d;
+
+    -color-background: #f1f5f9;
+    -color-surface: #ffffff;
+    -color-surface-alt: #f8fafc;
+    -color-border: #cbd5e1;
+    -color-text: #0f172a;
+    -color-text-muted: #475569;
+    -color-text-on-primary: #ffffff;
+
+    -color-sidebar: #0f172a;
+    -color-sidebar-hover: #1e293b;
+    -color-sidebar-text: #cbd5e1;
+
+    -color-focus: #2563eb;
+
+    /* Modena, the built-in JavaFX theme, takes its colors from these, so plain controls match */
+    -fx-accent: -color-primary;
+    -fx-focus-color: -color-focus;
+    -fx-faint-focus-color: #2563eb22;
+
+    -fx-font-family: "Inter";
+    -fx-font-size: 13px;
+}
+
+/* The type scale; labels use these classes instead of their own font sizes */
+.text-caption {
+    -fx-font-size: 12px;
+}
+.text-emphasis {
+    -fx-font-size: 15px;
+}
+.text-heading {
+    -fx-font-family: "Inter SemiBold";
+    -fx-font-size: 18px;
+}
+.text-title {
+    -fx-font-family: "Inter";
+    -fx-font-weight: bold;
+    -fx-font-size: 24px;
+}
+
+/*
+ * Buttons: primary for the main action of a form, secondary for the other actions, danger for
+ * actions that remove data. Each state looks different. Keyboard focus (not a mouse click) draws
+ * a ring with a gap around the button, using the first two background layers, so Tab navigation
+ * is always visible.
+ */
+.btn-primary,
+.btn-secondary,
+.btn-danger {
+    -fx-font-family: "Inter SemiBold";
+    -fx-font-size: 13px;
+    -fx-background-radius: 6px;
+    -fx-background-insets: 0;
+    -fx-padding: 8px 16px;
+    -fx-cursor: hand;
+}
+
+.btn-primary {
+    -fx-background-color: -color-primary;
+    -fx-text-fill: -color-text-on-primary;
+}
+.btn-primary:hover {
+    -fx-background-color: -color-primary-hover;
+}
+.btn-primary:pressed {
+    -fx-background-color: -color-primary-pressed;
+}
+.btn-primary:focus-visible {
+    -fx-background-color: -color-focus, -color-surface, -color-primary;
+}
+.btn-primary:focus-visible:hover {
+    -fx-background-color: -color-focus, -color-surface, -color-primary-hover;
+}
+
+.btn-secondary {
+    -fx-background-color: -color-border, -color-surface;
+    -fx-background-insets: 0, 1px;
+    -fx-background-radius: 6px, 5px;
+    -fx-text-fill: -color-primary-pressed;
+}
+.btn-secondary:hover {
+    -fx-background-color: -color-primary, -color-primary-soft;
+}
+.btn-secondary:pressed {
+    -fx-background-color: -color-primary-pressed, -color-primary-soft;
+}
+.btn-secondary:focus-visible {
+    -fx-background-color: -color-focus, -color-surface, -color-border, -color-surface;
+}
+.btn-secondary:focus-visible:hover {
+    -fx-background-color: -color-focus, -color-surface, -color-primary, -color-primary-soft;
+}
+
+.btn-danger {
+    -fx-background-color: -color-danger;
+    -fx-text-fill: -color-text-on-primary;
+}
+.btn-danger:hover {
+    -fx-background-color: -color-danger-hover;
+}
+.btn-danger:pressed {
+    -fx-background-color: -color-danger-pressed;
+}
+.btn-danger:focus-visible {
+    -fx-background-color: -color-focus, -color-surface, -color-danger;
+}
+.btn-danger:focus-visible:hover {
+    -fx-background-color: -color-focus, -color-surface, -color-danger-hover;
+}
+
+/* The focus ring sits outside the button: ring, gap, then the button itself */
+.btn-primary:focus-visible,
+.btn-danger:focus-visible {
+    -fx-background-insets: -3px, -1px, 0;
+    -fx-background-radius: 9px, 7px, 6px;
+}
+.btn-secondary:focus-visible {
+    -fx-background-insets: -3px, -1px, 0, 1px;
+    -fx-background-radius: 9px, 7px, 6px, 5px;
+}
