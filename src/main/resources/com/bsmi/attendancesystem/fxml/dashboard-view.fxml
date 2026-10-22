@@ -231,6 +231,7 @@
                                     <ComboBox prefHeight="28.0" fx:id="addStudent_course" layoutX="107.0" layoutY="359.0" prefWidth="166.0" promptText="Choose" styleClass="textfield" stylesheets="@../css/dashboard-style.css" />
                                     <Label alignment="CENTER_RIGHT" prefHeight="28.0" prefWidth="90.0" layoutX="7.0" layoutY="395.0" text="Card ID:" styleClass="text-emphasis" />
                                     <TextField fx:id="addStudent_cardId" layoutX="107.0" layoutY="395.0" prefHeight="28.0" prefWidth="166.0" promptText="Optional, or scan a card" styleClass="textfield" stylesheets="@../css/dashboard-style.css" />
+                                    <Button fx:id="addStudent_saveCardBtn" layoutX="107.0" layoutY="431.0" mnemonicParsing="false" onAction="#addStudent_saveCardBtn_onAction" prefHeight="28.0" prefWidth="166.0" styleClass="btn-secondary" stylesheets="@../css/dashboard-style.css" text="Save card…" />
                                     <Label alignment="CENTER_RIGHT" prefHeight="28.0" prefWidth="100.0" layoutX="300.0" layoutY="287.0" text="First Name:" styleClass="text-emphasis" />
                                     <TextField fx:id="addStudent_firstName" layoutX="410.0" layoutY="287.0" prefHeight="28.0" prefWidth="166.0" styleClass="textfield" stylesheets="@../css/dashboard-style.css" />
                                     <Label alignment="CENTER_RIGHT" prefHeight="28.0" prefWidth="100.0" layoutX="300.0" layoutY="323.0" text="Last Name:" styleClass="text-emphasis" />

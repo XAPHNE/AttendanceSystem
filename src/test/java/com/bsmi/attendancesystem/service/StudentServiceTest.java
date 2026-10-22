@@ -230,6 +230,25 @@ class StudentServiceTest {
     }
 
     @Test
+    void issueCardGivesTheStudentANewSavedCardId() {
+        StudentData noCard = valid(2001).build();
+        service.add(noCard);
+
+        StudentData issued = service.issueCard(noCard);
+
+        assertThat(issued.getCardId()).startsWith("STU-");
+        assertThat(service.listAll().getLast().getCardId()).isEqualTo(issued.getCardId());
+        assertThat(issued.getFirstName()).isEqualTo("Zoya");
+    }
+
+    @Test
+    void issueCardForUnknownStudentFailsWithNotFound() {
+        assertThatThrownBy(() -> service.issueCard(valid(9999).build()))
+                .isInstanceOf(NotFoundException.class)
+                .hasMessage("Student #9999 does not exist");
+    }
+
+    @Test
     void deleteRemovesTheStudent() {
         service.delete(1001);
 

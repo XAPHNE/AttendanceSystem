@@ -33,6 +33,14 @@ class DashboardTest extends AppScreenTest {
     }
 
     @Test
+    void savingACardWithoutChoosingAStudentAsksForOne() {
+        clickOn("#addStudent_btn");
+        clickOn("#addStudent_saveCardBtn");
+
+        assertThat(alertText()).isEqualTo("Please choose a student in the table first");
+    }
+
+    @Test
     void addedCourseAppearsInTheTable() {
         addCourse("PhD");
 

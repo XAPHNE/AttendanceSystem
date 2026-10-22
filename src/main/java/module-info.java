@@ -4,6 +4,9 @@ module com.bsmi.attendancesystem {
 
     requires com.h2database;
     requires java.sql;
+    // BufferedImage and ImageIO, for drawing and reading QR cards
+    requires java.desktop;
+    requires com.google.zxing;
     requires flyway.core;
     requires jbcrypt;
     requires MaterialFX;

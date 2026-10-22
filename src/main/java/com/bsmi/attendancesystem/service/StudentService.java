@@ -102,6 +102,28 @@ public final class StudentService {
     }
 
     /**
+     * Gives a student without a card a new random card ID and saves it.
+     *
+     * @return the student with the new card ID
+     * @throws NotFoundException if no student has this number
+     */
+    public StudentData issueCard(StudentData student) {
+        StudentData withCard = new StudentData(
+                student.getStudentNum(),
+                student.getSemester(),
+                student.getCourse(),
+                student.getFirstName(),
+                student.getLastName(),
+                student.getGender(),
+                student.getBirthDate(),
+                student.getStatus(),
+                student.getImage(),
+                StudentCards.newCardId());
+        update(withCard);
+        return withCard;
+    }
+
+    /**
      * Deletes the student and their attendance records.
      *
      * @throws NotFoundException if no student has this number

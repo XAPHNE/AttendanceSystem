@@ -33,6 +33,8 @@ import com.bsmi.attendancesystem.dao.UserDao;
 import com.bsmi.attendancesystem.service.AttendanceService;
 import com.bsmi.attendancesystem.service.CourseService;
 import com.bsmi.attendancesystem.service.ImageStore;
+import com.bsmi.attendancesystem.service.NotSelectedException;
+import com.bsmi.attendancesystem.service.StudentCards;
 import com.bsmi.attendancesystem.service.StudentService;
 import com.bsmi.attendancesystem.service.UserForm;
 import com.bsmi.attendancesystem.service.UserService;
@@ -42,6 +44,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.net.URL;
+import java.nio.file.Path;
 import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Stream;
@@ -631,6 +634,40 @@ public class DashboardController implements Initializable {
             showPhoto(imageStore.save(file.toPath()));
         } catch (ValidationException | UncheckedIOException e) {
             showAlert(Alert.AlertType.ERROR, "Error Message", e.getMessage());
+        }
+    }
+    @FXML
+    public void addStudent_saveCardBtn_onAction() {
+        try {
+            StudentData student = addStudent_tableView.getSelectionModel().getSelectedItem();
+            if (student == null) {
+                throw new NotSelectedException("student");
+            }
+            String name = student.getFirstName() + " " + student.getLastName();
+            if (student.getCardId() == null) {
+                if (!confirmed(name + " has no card yet. Give them a new card ID?")) {
+                    return;
+                }
+                student = studentService.issueCard(student);
+                addStudentShowListData();
+                addStudent_cardId.setText(student.getCardId());
+            }
+            FileChooser save = new FileChooser();
+            save.setTitle("Save Student Card");
+            save.setInitialFileName("card-" + student.getStudentNum() + ".png");
+            save.getExtensionFilters().add(new FileChooser.ExtensionFilter("PNG image", "*.png"));
+            File file = save.showSaveDialog(main_form.getScene().getWindow());
+            if (file == null) {
+                return;
+            }
+            Path saved = StudentCards.withPngExtension(file.toPath());
+            StudentCards.savePng(student, saved);
+            showAlert(Alert.AlertType.INFORMATION, "Information Message",
+                    "Saved the card for " + name + " to " + saved);
+        } catch (ValidationException | UncheckedIOException e) {
+            showAlert(Alert.AlertType.ERROR, "Error Message", e.getMessage());
+        } catch (DataAccessException e) {
+            showDatabaseError(e);
         }
     }
     private void showPhoto(String storedName) {
