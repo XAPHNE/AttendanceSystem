@@ -5,6 +5,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.nio.file.Path;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.DisabledOnOs;
+import org.junit.jupiter.api.condition.OS;
 
 class DatabaseSettingsTest {
     private static final Path DATA_DIR = Path.of("/home/asha/.local/share/AttendanceSystem");
@@ -13,10 +15,16 @@ class DatabaseSettingsTest {
     void defaultsToEmbeddedFileInDataDirectory() {
         DatabaseSettings settings = DatabaseSettings.fromEnvironment(Map.of(), DATA_DIR);
 
-        assertThat(settings.url())
-                .isEqualTo("jdbc:h2:file:/home/asha/.local/share/AttendanceSystem/attendance_system");
+        assertThat(settings.url()).isEqualTo(DatabaseSettings.embeddedUrl(DATA_DIR));
         assertThat(settings.user()).isEqualTo("admin");
         assertThat(settings.password()).isEqualTo("admin");
+    }
+
+    @Test
+    @DisabledOnOs(OS.WINDOWS) // there the path would get the current drive letter in front
+    void embeddedUrlPointsAtTheDatabaseFileInTheDataDirectory() {
+        assertThat(DatabaseSettings.embeddedUrl(DATA_DIR))
+                .isEqualTo("jdbc:h2:file:/home/asha/.local/share/AttendanceSystem/attendance_system");
     }
 
     @Test

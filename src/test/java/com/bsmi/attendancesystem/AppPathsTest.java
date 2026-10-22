@@ -48,11 +48,13 @@ class AppPathsTest {
 
     @Test
     void linuxUsesAbsoluteXdgDataHome() {
+        // "/data/asha" has no drive letter, so it is not absolute when the tests run on Windows
+        Path xdgDataHome = Path.of("xdg-data").toAbsolutePath();
         Path dir =
                 AppPaths.resolveDataDirectory(
-                        null, "Linux", Map.of("XDG_DATA_HOME", "/data/asha"), HOME);
+                        null, "Linux", Map.of("XDG_DATA_HOME", xdgDataHome.toString()), HOME);
 
-        assertThat(dir).isEqualTo(Path.of("/data/asha/AttendanceSystem"));
+        assertThat(dir).isEqualTo(xdgDataHome.resolve("AttendanceSystem"));
     }
 
     @Test
