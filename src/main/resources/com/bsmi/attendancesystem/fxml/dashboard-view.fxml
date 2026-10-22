@@ -10,6 +10,7 @@
 <?import javafx.scene.control.DatePicker?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.PasswordField?>
+<?import javafx.scene.control.Separator?>
 <?import javafx.scene.control.TableColumn?>
 <?import javafx.scene.control.TableView?>
 <?import javafx.scene.control.TextField?>
@@ -303,15 +304,19 @@
                                     <String fx:value="shadow" />
                                  </styleClass>
                                  <children>
-                                    <Label alignment="CENTER_RIGHT" prefHeight="28.0" prefWidth="90.0" layoutX="13.0" layoutY="122.0" text="Student#:" styleClass="text-emphasis" />
-                                    <Label alignment="CENTER_RIGHT" prefHeight="28.0" prefWidth="90.0" layoutX="13.0" layoutY="50.0" text="Semester:" styleClass="text-emphasis" />
-                                    <Label alignment="CENTER_RIGHT" prefHeight="28.0" prefWidth="90.0" layoutX="13.0" layoutY="86.0" text="Course:" styleClass="text-emphasis" />
-                                    <Button fx:id="studentAttendance_markExitBtn" layoutX="193.0" layoutY="366.0" mnemonicParsing="false" onAction="#studentAttendanceMarkExitOnAction" prefHeight="35.0" prefWidth="110.0" styleClass="btn-secondary" stylesheets="@../css/dashboard-style.css" text="Mark Exit" />
-                                    <Button fx:id="studentAttendance_clearBtn" layoutX="73.0" layoutY="366.0" mnemonicParsing="false" onAction="#studentAttendanceClearBtnOnAction" prefHeight="35.0" prefWidth="110.0" styleClass="btn-secondary" stylesheets="@../css/dashboard-style.css" text="Clear" />
-                                    <ComboBox fx:id="studentAttendance_semester" layoutX="113.0" layoutY="50.0" onAction="#studentAttendanceSemesterList" prefHeight="28.0" prefWidth="190.0" promptText="Choose" styleClass="textfield" stylesheets="@../css/dashboard-style.css" />
-                                    <ComboBox fx:id="studentAttendance_course" layoutX="113.0" layoutY="86.0" onAction="#studentAttendanceCourseList" prefHeight="28.0" prefWidth="190.0" promptText="Choose" styleClass="textfield" stylesheets="@../css/dashboard-style.css" />
-                                    <ComboBox fx:id="studentAttendance_studentNum" layoutX="113.0" layoutY="122.0" prefHeight="28.0" prefWidth="190.0" promptText="Choose" styleClass="textfield" stylesheets="@../css/dashboard-style.css" />
-                                    <Button fx:id="studentAttendance_markEntryBtn" layoutX="193.0" layoutY="321.0" mnemonicParsing="false" onAction="#studentAttendanceMarkEntryBtnOnAction" prefHeight="35.0" prefWidth="110.0" styleClass="btn-primary" stylesheets="@../css/dashboard-style.css" text="Mark Entry" />
+                                    <Label alignment="CENTER_RIGHT" prefHeight="28.0" prefWidth="90.0" layoutX="13.0" layoutY="20.0" text="Scan card:" styleClass="text-emphasis" />
+                                    <TextField fx:id="studentAttendance_scanCard" layoutX="113.0" layoutY="20.0" onAction="#studentAttendanceScanOnAction" prefHeight="28.0" prefWidth="190.0" promptText="Tap a card or type its ID" styleClass="textfield" stylesheets="@../css/dashboard-style.css" />
+                                    <Label fx:id="studentAttendance_scanResult" layoutX="13.0" layoutY="56.0" prefHeight="40.0" prefWidth="290.0" wrapText="true" />
+                                    <Separator layoutX="13.0" layoutY="108.0" prefWidth="290.0" />
+                                    <Label alignment="CENTER_RIGHT" prefHeight="28.0" prefWidth="90.0" layoutX="13.0" layoutY="202.0" text="Student#:" styleClass="text-emphasis" />
+                                    <Label alignment="CENTER_RIGHT" prefHeight="28.0" prefWidth="90.0" layoutX="13.0" layoutY="130.0" text="Semester:" styleClass="text-emphasis" />
+                                    <Label alignment="CENTER_RIGHT" prefHeight="28.0" prefWidth="90.0" layoutX="13.0" layoutY="166.0" text="Course:" styleClass="text-emphasis" />
+                                    <Button fx:id="studentAttendance_markExitBtn" layoutX="193.0" layoutY="446.0" mnemonicParsing="false" onAction="#studentAttendanceMarkExitOnAction" prefHeight="35.0" prefWidth="110.0" styleClass="btn-secondary" stylesheets="@../css/dashboard-style.css" text="Mark Exit" />
+                                    <Button fx:id="studentAttendance_clearBtn" layoutX="73.0" layoutY="446.0" mnemonicParsing="false" onAction="#studentAttendanceClearBtnOnAction" prefHeight="35.0" prefWidth="110.0" styleClass="btn-secondary" stylesheets="@../css/dashboard-style.css" text="Clear" />
+                                    <ComboBox fx:id="studentAttendance_semester" layoutX="113.0" layoutY="130.0" onAction="#studentAttendanceSemesterList" prefHeight="28.0" prefWidth="190.0" promptText="Choose" styleClass="textfield" stylesheets="@../css/dashboard-style.css" />
+                                    <ComboBox fx:id="studentAttendance_course" layoutX="113.0" layoutY="166.0" onAction="#studentAttendanceCourseList" prefHeight="28.0" prefWidth="190.0" promptText="Choose" styleClass="textfield" stylesheets="@../css/dashboard-style.css" />
+                                    <ComboBox fx:id="studentAttendance_studentNum" layoutX="113.0" layoutY="202.0" prefHeight="28.0" prefWidth="190.0" promptText="Choose" styleClass="textfield" stylesheets="@../css/dashboard-style.css" />
+                                    <Button fx:id="studentAttendance_markEntryBtn" layoutX="193.0" layoutY="401.0" mnemonicParsing="false" onAction="#studentAttendanceMarkEntryBtnOnAction" prefHeight="35.0" prefWidth="110.0" styleClass="btn-primary" stylesheets="@../css/dashboard-style.css" text="Mark Entry" />
                                  </children>
                               </AnchorPane>
                               <AnchorPane layoutX="348.0" layoutY="16.0" prefHeight="529.0" prefWidth="538.0" stylesheets="@../css/dashboard-style.css">

@@ -11,13 +11,19 @@ import com.bsmi.attendancesystem.dao.Database;
 import com.bsmi.attendancesystem.dao.StudentDao;
 import com.bsmi.attendancesystem.dao.TestDatabases;
 import com.bsmi.attendancesystem.service.AttendanceService.DaySummary;
+import com.bsmi.attendancesystem.service.ScanResult.Outcome;
 import java.sql.SQLException;
 import java.time.Clock;
+import java.time.Duration;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.NullSource;
+import org.junit.jupiter.params.provider.ValueSource;
 
 class AttendanceServiceTest {
     // The demo data is dated relative to the real today, so the fixed clock stays on that day
@@ -115,6 +121,101 @@ class AttendanceServiceTest {
     }
 
     @Test
+    void scanOfACheckedOutStudentChecksThemIn() {
+        ScanResult result = service.scan("DEMO-1001");
+
+        assertThat(result.outcome()).isEqualTo(Outcome.CHECKED_IN);
+        assertThat(result.student().getStudentNum()).isEqualTo(1001);
+        assertThat(result.message()).isEqualTo("Asha Verma checked in 10:00");
+        assertThat(service.listToday().getLast().getStudentNum()).isEqualTo("1001");
+        assertThat(service.listToday().getLast().getExitTime()).isNull();
+    }
+
+    @Test
+    void scanOfACheckedInStudentChecksThemOut() {
+        MovableClock clock = new MovableClock(TEN_AM);
+        AttendanceService scanner = serviceWith(clock);
+        scanner.scan("DEMO-1001");
+        clock.advance(Duration.ofHours(6));
+
+        ScanResult result = scanner.scan("DEMO-1001");
+
+        assertThat(result.outcome()).isEqualTo(Outcome.CHECKED_OUT);
+        assertThat(result.message()).isEqualTo("Asha Verma checked out 16:00");
+        assertThat(scanner.listToday().getLast().getExitTime()).isEqualTo(TODAY + " 16:00:30");
+    }
+
+    @Test
+    void scanIgnoresSpacesAroundTheCardId() {
+        assertThat(service.scan("  DEMO-1001\t").outcome()).isEqualTo(Outcome.CHECKED_IN);
+    }
+
+    @ParameterizedTest
+    @NullSource
+    @ValueSource(strings = {"", "   ", "\t"})
+    void scanWithoutACardIdNamesTheField(String cardId) {
+        assertThatThrownBy(() -> service.scan(cardId))
+                .isInstanceOf(MissingFieldException.class)
+                .hasMessage("Please fill in the Card ID field");
+    }
+
+    @Test
+    void scanOfAnUnknownCardIsRefused() {
+        assertThatThrownBy(() -> service.scan("NOPE-1"))
+                .isInstanceOf(UnknownCardException.class)
+                .hasMessage("No student has card NOPE-1");
+        assertThat(service.listToday()).hasSize(5);
+    }
+
+    @Test
+    void scanOfAStudentWhoIsNotEnrolledIsRefused() {
+        assertThatThrownBy(() -> service.scan("DEMO-1006"))
+                .isInstanceOf(NotAllowedException.class)
+                .hasMessage("Imran Khan is not enrolled");
+        assertThat(service.listToday()).hasSize(5);
+    }
+
+    @Test
+    void sameCardAgainWithinTheRepeatWindowChangesNothing() {
+        MovableClock clock = new MovableClock(TEN_AM);
+        AttendanceService scanner = serviceWith(clock);
+        scanner.scan("DEMO-1001");
+        clock.advance(AttendanceService.REPEAT_WINDOW.minusMillis(1));
+
+        ScanResult result = scanner.scan("DEMO-1001");
+
+        assertThat(result.outcome()).isEqualTo(Outcome.REPEATED);
+        assertThat(result.message()).isEqualTo("Asha Verma was just scanned");
+        assertThat(scanner.listToday().getLast().getExitTime()).isNull();
+    }
+
+    @Test
+    void sameCardOnceTheRepeatWindowIsOverChecksOut() {
+        MovableClock clock = new MovableClock(TEN_AM);
+        AttendanceService scanner = serviceWith(clock);
+        scanner.scan("DEMO-1001");
+        clock.advance(AttendanceService.REPEAT_WINDOW);
+
+        assertThat(scanner.scan("DEMO-1001").outcome()).isEqualTo(Outcome.CHECKED_OUT);
+    }
+
+    @Test
+    void anotherCardWithinTheRepeatWindowIsScanned() {
+        service.scan("DEMO-1001");
+
+        assertThat(service.scan("DEMO-1002").outcome()).isEqualTo(Outcome.CHECKED_IN);
+        assertThat(service.listToday()).hasSize(7);
+    }
+
+    @Test
+    void aRefusedScanDoesNotStartTheRepeatWindow() {
+        assertThatThrownBy(() -> service.scan("DEMO-1006")).isInstanceOf(NotAllowedException.class);
+        service.scan("DEMO-1001");
+
+        assertThat(service.scan("DEMO-1001").outcome()).isEqualTo(Outcome.REPEATED);
+    }
+
+    @Test
     void summarizeTodayCountsEnrolledPresentAndAbsent() {
         assertThat(service.summarizeToday()).isEqualTo(new DaySummary(5, 4, 1));
     }
@@ -187,6 +288,7 @@ class AttendanceServiceTest {
         assertThatThrownBy(broken::listToday).isInstanceOf(DataAccessException.class);
         assertThatThrownBy(() -> broken.markEntry(1001)).isInstanceOf(DataAccessException.class);
         assertThatThrownBy(() -> broken.markExit(1001)).isInstanceOf(DataAccessException.class);
+        assertThatThrownBy(() -> broken.scan("DEMO-1001")).isInstanceOf(DataAccessException.class);
         assertThatThrownBy(broken::summarizeToday).isInstanceOf(DataAccessException.class);
         assertThatThrownBy(() -> broken.countAbsentPerDay(5))
                 .isInstanceOf(DataAccessException.class);
@@ -198,7 +300,39 @@ class AttendanceServiceTest {
 
     private AttendanceService serviceAt(LocalDateTime now) {
         ZoneId zone = ZoneId.systemDefault();
-        Clock fixed = Clock.fixed(now.atZone(zone).toInstant(), zone);
-        return new AttendanceService(new AttendanceDao(database), new StudentDao(database), fixed);
+        return serviceWith(Clock.fixed(now.atZone(zone).toInstant(), zone));
+    }
+
+    private AttendanceService serviceWith(Clock clock) {
+        return new AttendanceService(new AttendanceDao(database), new StudentDao(database), clock);
+    }
+
+    /** A clock that stands still until the test moves it forward. */
+    private static final class MovableClock extends Clock {
+        private final ZoneId zone = ZoneId.systemDefault();
+        private Instant now;
+
+        MovableClock(LocalDateTime start) {
+            now = start.atZone(zone).toInstant();
+        }
+
+        void advance(Duration duration) {
+            now = now.plus(duration);
+        }
+
+        @Override
+        public Instant instant() {
+            return now;
+        }
+
+        @Override
+        public ZoneId getZone() {
+            return zone;
+        }
+
+        @Override
+        public Clock withZone(ZoneId newZone) {
+            throw new UnsupportedOperationException("the tests use one zone");
+        }
     }
 }

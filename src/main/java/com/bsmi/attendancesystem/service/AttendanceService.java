@@ -1,9 +1,13 @@
 package com.bsmi.attendancesystem.service;
 
 import com.bsmi.attendancesystem.StudentAttendanceData;
+import com.bsmi.attendancesystem.StudentData;
 import com.bsmi.attendancesystem.dao.AttendanceDao;
 import com.bsmi.attendancesystem.dao.StudentDao;
+import com.bsmi.attendancesystem.service.ScanResult.Outcome;
 import java.time.Clock;
+import java.time.Duration;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
@@ -15,13 +19,22 @@ import java.util.Map;
  * The rules for attendance and the numbers on the Home screen. A student checks in (entry) and
  * out (exit) on the same day, and can't check in again while still checked in. Times are taken
  * from the clock, to the second.
+ *
+ * <p>A scanned card checks its student in, or out if they are checked in. Card readers and phone
+ * scans all end up in {@link #scan}.
  */
 public final class AttendanceService {
     private static final String STUDENT_NUMBER = "Student #";
+    private static final String CARD_ID = "Card ID";
+    private static final String ENROLLED = "Enrolled";
+    /** One tap can reach a reader twice; a second scan this soon is not a check-out. */
+    static final Duration REPEAT_WINDOW = Duration.ofSeconds(5);
 
     private final AttendanceDao attendance;
     private final StudentDao students;
     private final Clock clock;
+    private String lastScannedCard;
+    private Instant lastScanAt;
 
     public AttendanceService(AttendanceDao attendance, StudentDao students) {
         this(attendance, students, Clock.systemDefaultZone());
@@ -65,6 +78,45 @@ public final class AttendanceService {
             throw new NotFoundException("An open entry today for " + describe(studentNum));
         }
         return closed;
+    }
+
+    /**
+     * Checks the card's student in, or out if they are checked in today. The same card scanned
+     * again within {@link #REPEAT_WINDOW} changes nothing.
+     *
+     * @throws MissingFieldException if the card ID is empty
+     * @throws UnknownCardException if no student has this card
+     * @throws NotAllowedException if the student is not enrolled
+     */
+    public ScanResult scan(String cardId) {
+        String id = cardId == null ? "" : cardId.strip();
+        if (id.isEmpty()) {
+            throw new MissingFieldException(CARD_ID);
+        }
+        StudentData student = students.findByCardId(id).orElseThrow(() -> new UnknownCardException(id));
+        if (!ENROLLED.equals(student.getStatus())) {
+            throw new NotAllowedException(
+                    student.getFirstName() + " " + student.getLastName() + " is not enrolled");
+        }
+        if (isRepeat(id)) {
+            return new ScanResult(student, Outcome.REPEATED, now());
+        }
+        Outcome outcome;
+        if (attendance.hasOpenEntry(student.getStudentNum(), today())) {
+            markExit(student.getStudentNum());
+            outcome = Outcome.CHECKED_OUT;
+        } else {
+            markEntry(student.getStudentNum());
+            outcome = Outcome.CHECKED_IN;
+        }
+        lastScannedCard = id;
+        lastScanAt = clock.instant();
+        return new ScanResult(student, outcome, now());
+    }
+
+    private boolean isRepeat(String cardId) {
+        return cardId.equals(lastScannedCard)
+                && clock.instant().isBefore(lastScanAt.plus(REPEAT_WINDOW));
     }
 
     public DaySummary summarizeToday() {

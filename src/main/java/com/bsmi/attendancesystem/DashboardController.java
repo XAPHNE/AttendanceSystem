@@ -1,5 +1,6 @@
 package com.bsmi.attendancesystem;
 
+import javafx.application.Platform;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -229,6 +230,12 @@ public class DashboardController implements Initializable {
     private TextField studentAttendance_search;
 
     @FXML
+    private TextField studentAttendance_scanCard;
+
+    @FXML
+    private Label studentAttendance_scanResult;
+
+    @FXML
     private ComboBox<String> studentAttendance_semester;
 
     @FXML
@@ -391,6 +398,8 @@ public class DashboardController implements Initializable {
             studentAttendanceCourseList();
             studentAttendanceStudentNumList();
             studentAttendanceSearchOnKeyTyped();
+            // A card reader types into whatever has focus, so the scan field gets it
+            Platform.runLater(studentAttendance_scanCard::requestFocus);
         } else if (event.getSource() == userManagement_btn) {
             home_form.setVisible(false);
             addStudent_form.setVisible(false);
@@ -837,6 +846,9 @@ public class DashboardController implements Initializable {
 //    END CODE FOR AVAILABLE COURSES FORM
 
 //    START CODE FOR STUDENT ATTENDANCE FORM
+    private static final String SCAN_OK_STYLE = "scan-ok";
+    private static final String SCAN_ERROR_STYLE = "scan-error";
+
     public ObservableList <StudentAttendanceData> studentAttendanceListData(){
         try {
             return FXCollections.observableArrayList(attendanceService.listToday());
@@ -917,6 +929,28 @@ public class DashboardController implements Initializable {
         } catch (DataAccessException e) {
             showDatabaseError(e);
         }
+    }
+    @FXML
+    public void studentAttendanceScanOnAction() {
+        scanCard(studentAttendance_scanCard.getText());
+        studentAttendance_scanCard.clear();
+    }
+
+    /** Checks the card's student in or out and shows what happened under the scan field. */
+    public void scanCard(String cardId) {
+        try {
+            showScanResult(attendanceService.scan(cardId).message(), SCAN_OK_STYLE);
+            studentAttendanceShowListData();
+        } catch (ValidationException e) {
+            showScanResult(e.getMessage(), SCAN_ERROR_STYLE);
+        } catch (DataAccessException e) {
+            showDatabaseError(e);
+        }
+    }
+    private void showScanResult(String message, String style) {
+        studentAttendance_scanResult.getStyleClass().removeAll(SCAN_OK_STYLE, SCAN_ERROR_STYLE);
+        studentAttendance_scanResult.getStyleClass().add(style);
+        studentAttendance_scanResult.setText(message);
     }
     private void attendanceChanged(String successMessage) {
         showAlert(Alert.AlertType.INFORMATION, "Information Message", successMessage);

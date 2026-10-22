@@ -194,3 +194,11 @@
 .insert-btn:hover{
     -fx-background-color: -color-primary-soft;
 }
+.scan-ok{
+    -fx-text-fill: -color-success;
+    -fx-font-family: "Inter SemiBold";
+}
+.scan-error{
+    -fx-text-fill: -color-danger;
+    -fx-font-family: "Inter SemiBold";
+}
