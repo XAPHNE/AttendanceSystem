@@ -1,0 +1,338 @@
+package com.bsmi.attendancesystem.service;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.entry;
+
+import com.bsmi.attendancesystem.StudentAttendanceData;
+import com.bsmi.attendancesystem.dao.AttendanceDao;
+import com.bsmi.attendancesystem.dao.DataAccessException;
+import com.bsmi.attendancesystem.dao.Database;
+import com.bsmi.attendancesystem.dao.StudentDao;
+import com.bsmi.attendancesystem.dao.TestDatabases;
+import com.bsmi.attendancesystem.service.AttendanceService.DaySummary;
+import com.bsmi.attendancesystem.service.ScanResult.Outcome;
+import java.sql.SQLException;
+import java.time.Clock;
+import java.time.Duration;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.NullSource;
+import org.junit.jupiter.params.provider.ValueSource;
+
+class AttendanceServiceTest {
+    // The demo data is dated relative to the real today, so the fixed clock stays on that day
+    private static final LocalDate TODAY = LocalDate.now();
+    private static final LocalDateTime TEN_AM = TODAY.atTime(10, 0, 30, 999_000_000);
+
+    private Database database;
+    private AttendanceService service;
+
+    @BeforeEach
+    void useFreshDatabase() {
+        database = TestDatabases.migratedInMemory();
+        service = serviceAt(TEN_AM);
+    }
+
+    @Test
+    void listTodayReturnsOnlyTodaysRecords() {
+        assertThat(service.listToday())
+                .hasSize(5)
+                .allSatisfy(record -> assertThat(record.getEntryTime()).startsWith(TODAY.toString()));
+    }
+
+    @Test
+    void markEntryAddsARecordAtTheCurrentSecond() {
+        service.markEntry(1001);
+
+        StudentAttendanceData added = service.listToday().getLast();
+        assertThat(added.getStudentNum()).isEqualTo("1001");
+        assertThat(added.getEntryTime()).isEqualTo(TODAY + " 10:00:30");
+    }
+
+    @Test
+    void markEntryWithoutAChosenStudentNamesTheField() {
+        assertThatThrownBy(() -> service.markEntry(null))
+                .isInstanceOf(MissingFieldException.class)
+                .hasMessage("Please fill in the Student # field");
+    }
+
+    @Test
+    void markEntryWhileStillCheckedInIsRefused() {
+        service.markEntry(1001);
+
+        assertThatThrownBy(() -> service.markEntry(1001))
+                .isInstanceOf(AlreadyExistsException.class)
+                .hasMessage("An entry today for Student #1001 already exists");
+        assertThat(service.listToday()).hasSize(6);
+    }
+
+    @Test
+    void markEntryAfterAnExitStartsANewRecord() {
+        service.markEntry(1001);
+        service.markExit(1001);
+
+        service.markEntry(1001);
+
+        assertThat(service.listToday()).hasSize(7);
+    }
+
+    @Test
+    void markEntryOfUnknownStudentIsRefused() {
+        assertThatThrownBy(() -> service.markEntry(9999))
+                .isInstanceOf(NotFoundException.class)
+                .hasMessage("Student #9999 does not exist");
+    }
+
+    @Test
+    void markExitClosesTodaysOpenEntry() {
+        service.markEntry(1001);
+        AttendanceService later = serviceAt(TODAY.atTime(16, 5));
+
+        assertThat(later.markExit(1001)).isEqualTo(1);
+
+        assertThat(later.listToday().getLast().getExitTime()).isEqualTo(TODAY + " 16:05:00");
+    }
+
+    @Test
+    void markExitWithoutAChosenStudentNamesTheField() {
+        assertThatThrownBy(() -> service.markExit(null))
+                .isInstanceOf(MissingFieldException.class)
+                .hasMessage("Please fill in the Student # field");
+    }
+
+    @Test
+    void markExitWithoutAnOpenEntryIsRefused() {
+        assertThatThrownBy(() -> service.markExit(1001))
+                .isInstanceOf(NotFoundException.class)
+                .hasMessage("An open entry today for Student #1001 does not exist");
+    }
+
+    @Test
+    void markExitDoesNotCloseYesterdaysEntry() {
+        serviceAt(TODAY.minusDays(1).atTime(10, 0)).markEntry(1001);
+
+        assertThatThrownBy(() -> service.markExit(1001)).isInstanceOf(NotFoundException.class);
+    }
+
+    @Test
+    void scanOfACheckedOutStudentChecksThemIn() {
+        ScanResult result = service.scan("DEMO-1001");
+
+        assertThat(result.outcome()).isEqualTo(Outcome.CHECKED_IN);
+        assertThat(result.student().getStudentNum()).isEqualTo(1001);
+        assertThat(result.message()).isEqualTo("Asha Verma checked in 10:00");
+        assertThat(service.listToday().getLast().getStudentNum()).isEqualTo("1001");
+        assertThat(service.listToday().getLast().getExitTime()).isNull();
+    }
+
+    @Test
+    void scanOfACheckedInStudentChecksThemOut() {
+        MovableClock clock = new MovableClock(TEN_AM);
+        AttendanceService scanner = serviceWith(clock);
+        scanner.scan("DEMO-1001");
+        clock.advance(Duration.ofHours(6));
+
+        ScanResult result = scanner.scan("DEMO-1001");
+
+        assertThat(result.outcome()).isEqualTo(Outcome.CHECKED_OUT);
+        assertThat(result.message()).isEqualTo("Asha Verma checked out 16:00");
+        assertThat(scanner.listToday().getLast().getExitTime()).isEqualTo(TODAY + " 16:00:30");
+    }
+
+    @Test
+    void scanIgnoresSpacesAroundTheCardId() {
+        assertThat(service.scan("  DEMO-1001\t").outcome()).isEqualTo(Outcome.CHECKED_IN);
+    }
+
+    @ParameterizedTest
+    @NullSource
+    @ValueSource(strings = {"", "   ", "\t"})
+    void scanWithoutACardIdNamesTheField(String cardId) {
+        assertThatThrownBy(() -> service.scan(cardId))
+                .isInstanceOf(MissingFieldException.class)
+                .hasMessage("Please fill in the Card ID field");
+    }
+
+    @Test
+    void scanOfAnUnknownCardIsRefused() {
+        assertThatThrownBy(() -> service.scan("NOPE-1"))
+                .isInstanceOf(UnknownCardException.class)
+                .hasMessage("No student has card NOPE-1");
+        assertThat(service.listToday()).hasSize(5);
+    }
+
+    @Test
+    void scanOfAStudentWhoIsNotEnrolledIsRefused() {
+        assertThatThrownBy(() -> service.scan("DEMO-1006"))
+                .isInstanceOf(NotAllowedException.class)
+                .hasMessage("Imran Khan is not enrolled");
+        assertThat(service.listToday()).hasSize(5);
+    }
+
+    @Test
+    void sameCardAgainWithinTheRepeatWindowChangesNothing() {
+        MovableClock clock = new MovableClock(TEN_AM);
+        AttendanceService scanner = serviceWith(clock);
+        scanner.scan("DEMO-1001");
+        clock.advance(AttendanceService.REPEAT_WINDOW.minusMillis(1));
+
+        ScanResult result = scanner.scan("DEMO-1001");
+
+        assertThat(result.outcome()).isEqualTo(Outcome.REPEATED);
+        assertThat(result.message()).isEqualTo("Asha Verma was just scanned");
+        assertThat(scanner.listToday().getLast().getExitTime()).isNull();
+    }
+
+    @Test
+    void sameCardOnceTheRepeatWindowIsOverChecksOut() {
+        MovableClock clock = new MovableClock(TEN_AM);
+        AttendanceService scanner = serviceWith(clock);
+        scanner.scan("DEMO-1001");
+        clock.advance(AttendanceService.REPEAT_WINDOW);
+
+        assertThat(scanner.scan("DEMO-1001").outcome()).isEqualTo(Outcome.CHECKED_OUT);
+    }
+
+    @Test
+    void anotherCardWithinTheRepeatWindowIsScanned() {
+        service.scan("DEMO-1001");
+
+        assertThat(service.scan("DEMO-1002").outcome()).isEqualTo(Outcome.CHECKED_IN);
+        assertThat(service.listToday()).hasSize(7);
+    }
+
+    @Test
+    void aRefusedScanDoesNotStartTheRepeatWindow() {
+        assertThatThrownBy(() -> service.scan("DEMO-1006")).isInstanceOf(NotAllowedException.class);
+        service.scan("DEMO-1001");
+
+        assertThat(service.scan("DEMO-1001").outcome()).isEqualTo(Outcome.REPEATED);
+    }
+
+    @Test
+    void summarizeTodayCountsEnrolledPresentAndAbsent() {
+        assertThat(service.summarizeToday()).isEqualTo(new DaySummary(5, 4, 1));
+    }
+
+    @Test
+    void summarizeTodayOfDayWithoutAttendanceCountsEveryoneAbsent() {
+        assertThat(serviceAt(TODAY.plusDays(1).atTime(10, 0)).summarizeToday())
+                .isEqualTo(new DaySummary(5, 0, 5));
+    }
+
+    @Test
+    void summarizeTodayNeverGoesNegativeWhenPresentStudentsLeave() throws SQLException {
+        TestDatabases.execute(database, "UPDATE student SET status = 'Graduated'");
+
+        assertThat(service.summarizeToday()).isEqualTo(new DaySummary(0, 0, 0));
+    }
+
+    @Test
+    void countPresentPerDayFillsEveryDayOldestFirst() {
+        AttendanceService tomorrow = serviceAt(TODAY.plusDays(1).atTime(10, 0));
+
+        assertThat(tomorrow.countPresentPerDay(3))
+                .containsExactly(
+                        entry(TODAY.minusDays(1), 4), entry(TODAY, 4), entry(TODAY.plusDays(1), 0));
+    }
+
+    @Test
+    void countAbsentPerDayIsTodaysEnrolledMinusPresent() {
+        assertThat(service.countAbsentPerDay(5))
+                .containsExactly(
+                        entry(TODAY.minusDays(4), 1),
+                        entry(TODAY.minusDays(3), 2),
+                        entry(TODAY.minusDays(2), 1),
+                        entry(TODAY.minusDays(1), 1),
+                        entry(TODAY, 1));
+    }
+
+    @Test
+    void countEnrolledAddedPerDayGivesTheLatestDays() {
+        assertThat(service.countEnrolledAddedPerDay(1)).containsExactly(entry(TODAY.minusDays(5), 1));
+    }
+
+    @Test
+    void listCoursesInChosenSemester() {
+        assertThat(service.listCoursesIn("3rd Sem")).containsExactly("BCA");
+    }
+
+    @Test
+    void listCoursesBeforeASemesterIsChosenIsEmpty() {
+        assertThat(service.listCoursesIn(null)).isEmpty();
+    }
+
+    @Test
+    void listStudentNumbersInChosenSemesterAndCourse() {
+        assertThat(service.listStudentNumbersIn("3rd Sem", "BCA")).containsExactly(1001, 1002);
+    }
+
+    @Test
+    void listStudentNumbersBeforeBothAreChosenIsEmpty() {
+        assertThat(service.listStudentNumbersIn(null, "BCA")).isEmpty();
+        assertThat(service.listStudentNumbersIn("3rd Sem", null)).isEmpty();
+    }
+
+    @Test
+    void databaseFailuresReachTheCallerUnchanged() {
+        Database offline = TestDatabases.unreachable();
+        AttendanceService broken =
+                new AttendanceService(new AttendanceDao(offline), new StudentDao(offline));
+
+        assertThatThrownBy(broken::listToday).isInstanceOf(DataAccessException.class);
+        assertThatThrownBy(() -> broken.markEntry(1001)).isInstanceOf(DataAccessException.class);
+        assertThatThrownBy(() -> broken.markExit(1001)).isInstanceOf(DataAccessException.class);
+        assertThatThrownBy(() -> broken.scan("DEMO-1001")).isInstanceOf(DataAccessException.class);
+        assertThatThrownBy(broken::summarizeToday).isInstanceOf(DataAccessException.class);
+        assertThatThrownBy(() -> broken.countAbsentPerDay(5))
+                .isInstanceOf(DataAccessException.class);
+        assertThatThrownBy(() -> broken.countEnrolledAddedPerDay(5))
+                .isInstanceOf(DataAccessException.class);
+        assertThatThrownBy(() -> broken.listCoursesIn("3rd Sem"))
+                .isInstanceOf(DataAccessException.class);
+    }
+
+    private AttendanceService serviceAt(LocalDateTime now) {
+        ZoneId zone = ZoneId.systemDefault();
+        return serviceWith(Clock.fixed(now.atZone(zone).toInstant(), zone));
+    }
+
+    private AttendanceService serviceWith(Clock clock) {
+        return new AttendanceService(new AttendanceDao(database), new StudentDao(database), clock);
+    }
+
+    /** A clock that stands still until the test moves it forward. */
+    private static final class MovableClock extends Clock {
+        private final ZoneId zone = ZoneId.systemDefault();
+        private Instant now;
+
+        MovableClock(LocalDateTime start) {
+            now = start.atZone(zone).toInstant();
+        }
+
+        void advance(Duration duration) {
+            now = now.plus(duration);
+        }
+
+        @Override
+        public Instant instant() {
+            return now;
+        }
+
+        @Override
+        public ZoneId getZone() {
+            return zone;
+        }
+
+        @Override
+        public Clock withZone(ZoneId newZone) {
+            throw new UnsupportedOperationException("the tests use one zone");
+        }
+    }
+}

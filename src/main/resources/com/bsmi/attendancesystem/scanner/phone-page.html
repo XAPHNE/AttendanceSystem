@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Card scanner | Attendance System</title>
+<style>
+  body { font-family: system-ui, sans-serif; margin: 0; padding: 16px; background: #f4f6fa; color: #1f2937; }
+  h1 { font-size: 1.3rem; margin: 0 0 4px; }
+  p { margin: 0 0 16px; color: #4b5563; }
+  button, input { font: inherit; width: 100%; box-sizing: border-box; padding: 14px; border-radius: 10px; }
+  button { border: 0; background: #2563eb; color: #fff; font-weight: 600; }
+  button:disabled { background: #93a3c4; }
+  input[type=text] { border: 1px solid #cbd5e1; margin: 8px 0; }
+  #photo { display: none; }
+  .or { text-align: center; margin: 16px 0 4px; color: #6b7280; }
+  #result { margin-top: 20px; padding: 14px; border-radius: 10px; min-height: 1.4em; }
+  .ok { background: #dcfce7; color: #166534; }
+  .error { background: #fee2e2; color: #991b1b; }
+  .busy { background: #e0e7ff; color: #3730a3; }
+</style>
+</head>
+<body>
+<h1>Card scanner</h1>
+<p>Take a photo of a student's card. The app checks them in, or out if they are already in.</p>
+<input id="photo" type="file" accept="image/*" capture="environment">
+<button id="take">Take photo</button>
+<div class="or">or type the card ID</div>
+<form id="typed">
+  <input id="cardId" type="text" maxlength="64" autocomplete="off" autocapitalize="characters"
+         placeholder="DEMO-1001">
+  <button type="submit">Send</button>
+</form>
+<div id="result" role="status" aria-live="polite"></div>
+<script>
+  const result = document.getElementById("result");
+  const photo = document.getElementById("photo");
+  const buttons = document.querySelectorAll("button");
+
+  function show(text, style) {
+    result.textContent = text;
+    result.className = style;
+  }
+
+  async function send(body, contentType) {
+    buttons.forEach(b => b.disabled = true);
+    show("Checking…", "busy");
+    try {
+      const response = await fetch("scan", { method: "POST", headers: { "Content-Type": contentType }, body });
+      show(await response.text(), response.ok ? "ok" : "error");
+    } catch (e) {
+      show("Can't reach the app. Is the phone on the same Wi-Fi and the scanner still on?", "error");
+    } finally {
+      buttons.forEach(b => b.disabled = false);
+    }
+  }
+
+  document.getElementById("take").addEventListener("click", () => photo.click());
+  photo.addEventListener("change", () => {
+    const file = photo.files[0];
+    if (file) {
+      send(file, file.type || "application/octet-stream");
+    }
+    photo.value = "";
+  });
+  document.getElementById("typed").addEventListener("submit", event => {
+    event.preventDefault();
+    const field = document.getElementById("cardId");
+    const cardId = field.value.trim();
+    if (cardId) {
+      send(cardId, "text/plain; charset=utf-8");
+      field.value = "";
+    }
+  });
+</script>
+</body>
+</html>

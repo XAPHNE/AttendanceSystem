@@ -1,161 +1,204 @@
-.top-form{
-    -fx-background-color: #2c2c2c;
-    -fx-border-color: #fff;
-    -fx-border-width: .4px .4px .2px .4px;
+.main-form{
+    -fx-background-color: -color-background;
 }
-.semi-top-form{
-    -fx-background-color: #3f3f3f;
-    -fx-border-color: #000;
-    -fx-border-width: .2px .4px .2px .4px;
+.top-form{
+    -fx-background-color: -color-sidebar;
+}
+.top-form .label,
+.top-form .ikonli-font-icon{
+    -fx-text-fill: -color-surface;
+    -fx-icon-color: -color-surface;
 }
 .close{
     -fx-background-color: transparent;
     -fx-cursor: hand;
 }
 .close:hover{
-    -fx-background-color: red;
+    -fx-background-color: -color-danger;
 }
 .minimize{
     -fx-background-color: transparent;
     -fx-cursor: hand;
 }
 .minimize:hover{
-    -fx-background-color: #ddd;
+    -fx-background-color: -color-sidebar-hover;
 }
 .nav-form{
-    -fx-background-color:linear-gradient(to bottom right, #2d658c, #2ca772);
+    -fx-background-color: -color-sidebar;
+}
+.nav-form .label,
+.nav-form .ikonli-font-icon{
+    -fx-text-fill: -color-surface;
+    -fx-icon-color: -color-surface;
 }
 .nav-btn{
     -fx-background-color: transparent;
+    -fx-background-radius: 6px;
     -fx-cursor: hand;
-    -fx-text-fill: #fff;
+    -fx-text-fill: -color-sidebar-text;
     -fx-font-size: 15px;
-    -fx-font-family: "Arial";
     -fx-alignment: CENTER-LEFT;
 }
+.nav-btn .ikonli-font-icon{
+    -fx-icon-color: -color-sidebar-text;
+}
+.nav-btn:hover{
+    -fx-background-color: -color-sidebar-hover;
+}
+/* The open screen's button; DashboardController moves this class on navigation. */
+.nav-btn-active,
+.nav-btn-active:hover{
+    -fx-background-color: -color-primary;
+    -fx-text-fill: -color-text-on-primary;
+}
+.nav-btn-active .ikonli-font-icon{
+    -fx-icon-color: -color-text-on-primary;
+}
 .logout{
-    -fx-background-color: #2c84bf;
+    -fx-background-color: -color-sidebar-hover;
     -fx-background-radius: 10px;
     -fx-cursor: hand;
 }
 .logout:hover{
-    -fx-background-color: #1593e7;
+    -fx-background-color: -color-primary;
 }
 .shadow{
-    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.4), 6,0,0,0);
+    -fx-effect: dropshadow(gaussian, rgba(15, 23, 42, 0.08), 12, 0, 0, 2);
 }
 .white-bg{
-    -fx-background-color: #fff;
-    -fx-background-radius: 8px;
+    -fx-background-color: -color-surface;
+    -fx-background-radius: 10px;
 }
 .card{
-    -fx-background-color: linear-gradient(to bottom right, #344250, #3c6382);
-    -fx-background-radius: 4px;
+    -fx-background-color: -color-surface;
+    -fx-background-radius: 10px;
+}
+.card .ikonli-font-icon{
+    -fx-icon-color: -color-primary;
+}
+.card .text-title{
+    -fx-text-fill: -color-text;
+}
+.card .text-emphasis{
+    -fx-text-fill: -color-text-muted;
+}
+.chart-bar{
+    -fx-bar-fill: -color-primary;
+}
+.default-color0.chart-series-line{
+    -fx-stroke: -color-primary;
+}
+.default-color0.chart-line-symbol{
+    -fx-background-color: -color-primary, -color-surface;
+}
+.chart-absent .default-color0.chart-series-line{
+    -fx-stroke: -color-danger;
+}
+.chart-absent .default-color0.chart-line-symbol{
+    -fx-background-color: -color-danger, -color-surface;
+}
+/* Fields draw their border as an outer background layer, so the thicker
+   focus border doesn't change the field's size or move its text. */
+.search,
+.textfield{
+    -fx-background-color: -color-border, -color-surface;
+    -fx-background-insets: 0, 1px;
+    -fx-background-radius: 6px, 5px;
+    -fx-border-color: transparent;
+    -fx-text-fill: -color-text;
+    -fx-prompt-text-fill: -color-text-muted;
+    -fx-highlight-fill: -color-primary-soft;
+    -fx-highlight-text-fill: -color-text;
 }
 .search{
-    -fx-background-color: transparent;
-    -fx-border-color:linear-gradient(to bottom right, #2d658c, #2ca772);
-    -fx-border-width: .8px;
-    -fx-border-radius: 8px;
-    -fx-font-family: "Tahoma";
+    -fx-background-radius: 14px, 13px;
     -fx-font-size: 14px;
     -fx-padding: 0px 0px 0px 28px;
 }
-.search:focused{
-    -fx-border-width: 1.8px;
+.search:hover,
+.textfield:hover{
+    -fx-background-color: -color-text-muted, -color-surface;
+}
+.search:focused,
+.textfield:focused,
+.textfield:showing{
+    -fx-background-color: -color-focus, -color-surface;
+    -fx-background-insets: 0, 2px;
+}
+.textfield .arrow-button{
+    -fx-background-color: transparent;
+}
+.textfield .arrow{
+    -fx-background-color: -color-text-muted;
+}
+.textfield .list-cell{
+    -fx-text-fill: -color-text;
+}
+.textfield .text-field{
+    -fx-background-color: transparent;
+    -fx-text-fill: -color-text;
 }
 .table-view{
-    -fx-background-color: transparent;
+    -fx-background-color: -color-surface;
     -fx-padding: 0px;
-    -fx-border-color: linear-gradient(to bottom right, #2d658c, #2ca772);
-    -fx-border-width: 2px;
-    -fx-border-radius: 8px;
+    -fx-border-color: -color-border;
+    -fx-border-width: 1px;
+    -fx-border-radius: 10px;
+    -fx-background-radius: 10px;
 }
 .table-view .table-column{
     -fx-alignment: CENTER;
 }
 .table-view .column-header-background{
-    -fx-background-color:linear-gradient(to bottom right, #2d658c, #2ca772);
-    -fx-background-radius: 8px 8px 0px 0px;
-    -fx-background-inset: 0 0 0 0;
+    -fx-background-color: -color-surface-alt;
+    -fx-background-radius: 10px 10px 0px 0px;
+    -fx-border-color: transparent transparent -color-border transparent;
 }
 .table-view .column-header, .filter{
     -fx-background-color: transparent;
-    -fx-size: 40px;
+    -fx-padding: 4px 0px;
 }
 .table-view .column-header .label{
-    -fx-text-fill: #fff;
-    -fx-font-family: "Arial";
+    -fx-text-fill: -color-text-muted;
+    -fx-font-family: "Inter SemiBold";
 }
-.textfield{
-    -fx-background-color:linear-gradient(to bottom right, #efefef, #eee);
-    -fx-border-radius: 4px;
-    -fx-border-color: linear-gradient(to bottom right, #2d658c, #2ca772);
-    -fx-border-width: .8px;
-    -fx-font-family: "Tahoma";
-    -fx-border-radius: 4px;
+.table-view .table-cell{
+    -fx-padding: 3px 2px;
+    -fx-text-fill: -color-text;
 }
-.textfield:focused{
-    -fx-background-color: #fff;
-    -fx-border-width: 1px;
+/* Striped rows make a long row easier to follow across eight columns. */
+.table-row-cell{
+    -fx-background-color: -color-surface;
+    -fx-table-cell-border-color: transparent;
+}
+.table-row-cell:odd{
+    -fx-background-color: -color-surface-alt;
+}
+.table-row-cell:filled:hover{
+    -fx-background-color: -color-primary-soft;
+}
+.table-row-cell:selected{
+    -fx-background-color: -color-primary;
+}
+.table-row-cell:selected .table-cell{
+    -fx-text-fill: -color-text-on-primary;
 }
 .insert-btn{
     -fx-background-color: transparent;
-    -fx-text-fill: red;
+    -fx-background-radius: 6px;
+    -fx-text-fill: -color-primary;
+    -fx-font-family: "Inter SemiBold";
     -fx-font-size: 14px;
-    -fx-font-family: "Arial";
     -fx-cursor: hand;
 }
-.add-btn{
-    -fx-background-color: #2d5278;
-    -fx-background-radius: 8px;
-    -fx-cursor: hand;
-    -fx-text-fill: #fff;
-    -fx-font-size: 14px;
-    -fx-font-family: "Arial";
+.insert-btn:hover{
+    -fx-background-color: -color-primary-soft;
 }
-.add-btn:hover{
-    -fx-background-color: #2268ae;
+.scan-ok{
+    -fx-text-fill: -color-success;
+    -fx-font-family: "Inter SemiBold";
 }
-.update-btn{
-    -fx-background-color: #2d7755;
-    -fx-background-radius: 8px;
-    -fx-cursor: hand;
-    -fx-text-fill: #fff;
-    -fx-font-size: 14px;
-    -fx-font-family: "Arial";
-}
-.update-btn:hover{
-    -fx-background-color: #22ad72;
-}
-.delete-btn{
-    -fx-background-color: #90242f;
-    -fx-background-radius: 8px;
-    -fx-cursor: hand;
-    -fx-text-fill: #fff;
-    -fx-font-size: 14px;
-    -fx-font-family: "Arial";
-}
-.delete-btn:hover{
-    -fx-background-color: #c51f32;
-}
-.clear-btn{
-    -fx-background-color: #6e2275;
-    -fx-background-radius: 8px;
-    -fx-cursor: hand;
-    -fx-text-fill: #fff;
-    -fx-font-size: 14px;
-    -fx-font-family: "Arial";
-}
-.clear-btn:hover{
-    -fx-background-color: #ae21ac;
-}
-.label-info{
-    -fx-background-color: #fff;
-    -fx-border-radius: 4px;
-    -fx-border-color: linear-gradient(to bottom right, #2d658c, #2ca772);
-    -fx-border-width: .8px;
-    -fx-font-family: "Tahoma";
-    -fx-border-radius: 4px;
-    -fx-padding: 0px 0px 0px 5px;
+.scan-error{
+    -fx-text-fill: -color-danger;
+    -fx-font-family: "Inter SemiBold";
 }

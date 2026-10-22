@@ -1,0 +1,19 @@
+version: 2
+updates:
+  # Libraries, build plugins and the Maven version in .mvn/wrapper
+  - package-ecosystem: maven
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      # One PR a week for small updates; each major update gets its own PR
+      minor-and-patch:
+        update-types: [minor, patch]
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      minor-and-patch:
+        update-types: [minor, patch]

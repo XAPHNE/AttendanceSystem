@@ -12,8 +12,15 @@ public class StudentData {
     private Date birthDate;
     private String status;
     private String image;
+    private String cardId;
 
+    /** A student without a card. */
     public StudentData (Integer studentNum, String semester, String course, String firstName, String lastName, String gender, Date birthDate, String status, String image) {
+        this(studentNum, semester, course, firstName, lastName, gender, birthDate, status, image, null);
+    }
+
+    /** @param cardId what the student's card gives when scanned, or null for no card */
+    public StudentData (Integer studentNum, String semester, String course, String firstName, String lastName, String gender, Date birthDate, String status, String image, String cardId) {
         this.studentNum = studentNum;
         this.semester = semester;
         this.course = course;
@@ -23,6 +30,7 @@ public class StudentData {
         this.birthDate = birthDate;
         this.status = status;
         this.image = image;
+        this.cardId = cardId;
     }
 
     public Integer getStudentNum() {
@@ -59,5 +67,9 @@ public class StudentData {
 
     public String getImage() {
         return image;
+    }
+
+    public String getCardId() {
+        return cardId;
     }
 }
